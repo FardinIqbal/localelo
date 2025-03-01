@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_03_01_224150) do
+ActiveRecord::Schema[7.1].define(version: 2025_03_01_231930) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -20,6 +20,19 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_01_224150) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["subdomain"], name: "index_gyms_on_subdomain", unique: true
+  end
+
+  create_table "match_requests", force: :cascade do |t|
+    t.bigint "challenger_id", null: false
+    t.bigint "opponent_id", null: false
+    t.bigint "gym_id", null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["challenger_id"], name: "index_match_requests_on_challenger_id"
+    t.index ["gym_id"], name: "index_match_requests_on_gym_id"
+    t.index ["opponent_id"], name: "index_match_requests_on_opponent_id"
   end
 
   create_table "matches", force: :cascade do |t|
@@ -59,6 +72,9 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_01_224150) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "match_requests", "gyms"
+  add_foreign_key "match_requests", "players", column: "challenger_id"
+  add_foreign_key "match_requests", "players", column: "opponent_id"
   add_foreign_key "matches", "gyms"
   add_foreign_key "matches", "players", column: "player1_id"
   add_foreign_key "matches", "players", column: "player2_id"

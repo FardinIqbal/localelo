@@ -17,7 +17,13 @@ Rails.application.routes.draw do
 
   # Player and match routes
   resources :players, only: [:show]
-  resources :matches, only: [:index, :create]
+  resources :matches, only: [:index, :create] do
+    collection do
+      post :create_request
+      post :accept_request
+      post :decline_request
+    end
+  end
 
   # API namespace
   namespace :api do
