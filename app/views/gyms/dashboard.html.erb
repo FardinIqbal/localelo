@@ -1,0 +1,35 @@
+<h1><%= @gym.name %> - Dashboard</h1>
+
+<h2>Leaderboard</h2>
+<table>
+  <tr>
+    <th>Rank</th>
+    <th>Player</th>
+    <th>Elo</th>
+  </tr>
+  <% @players.each_with_index do |player, index| %>
+    <tr>
+      <td><%= index + 1 %></td>
+      <td><%= player.user.email %></td>
+      <td><%= player.elo %></td>
+    </tr>
+  <% end %>
+</table>
+
+<h2>Recent Matches</h2>
+<table>
+  <tr>
+    <th>Player 1</th>
+    <th>Player 2</th>
+    <th>Winner</th>
+    <th>Submission</th>
+  </tr>
+  <% @matches.each do |match| %>
+    <tr>
+      <td><%= match.player1.user.email %></td>
+      <td><%= match.player2.user.email %></td>
+      <td><%= match.winner ? match.winner.user.email : 'Draw' %></td>
+      <td><%= match.submission || 'N/A' %></td>
+    </tr>
+  <% end %>
+</table>

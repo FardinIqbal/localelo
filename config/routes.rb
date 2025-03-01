@@ -8,7 +8,12 @@ Rails.application.routes.draw do
   root "home#index"
 
   # Gym-related routes (each gym has its own page)
-  resources :gyms, only: [:show]
+  resources :gyms, only: [:show] do
+    member do
+      get 'dashboard'
+    end
+  end
+
 
   # Player and match routes
   resources :players, only: [:show]
