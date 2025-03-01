@@ -1,0 +1,4 @@
+:schedule:
+  expire_match_requests:
+    cron: "*/5 * * * *"  # Runs every 5 minutes
+    class: "ExpireMatchRequestsJob"
