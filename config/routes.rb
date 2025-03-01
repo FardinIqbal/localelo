@@ -1,11 +1,24 @@
 Rails.application.routes.draw do
   devise_for :users
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
-  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
-  # Can be used by load balancers and uptime monitors to verify that the app is live.
+  # Health check endpoint
   get "up" => "rails/health#show", as: :rails_health_check
 
-  # Defines the root path route ("/")
-  # root "posts#index"
+  # Root path (redirect to dashboard if logged in, otherwise to login)
+  root "home#index"
+
+  # Gym-related routes (each gym has its own page)
+  resources :gyms, only: [:show]
+
+  # Player and match routes
+  resources :players, only: [:show]
+  resources :matches, only: [:index, :create]
+
+  # API namespace
+  namespace :api do
+    namespace :v1 do
+      resources :matches, only: [:index, :create]
+      resources :players, only: [:index, :show]
+    end
+  end
 end
