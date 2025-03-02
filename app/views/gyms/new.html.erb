@@ -1,0 +1,14 @@
+<div class="container">
+  <h1>Create a Gym</h1>
+  <%= form_with model: @gym, local: true do |form| %>
+    <div class="mb-3">
+      <%= form.label :name, "Gym Name" %>
+      <%= form.text_field :name, class: "form-control" %>
+    </div>
+    <div class="mb-3">
+      <%= form.label :subdomain, "Gym Subdomain" %>
+      <%= form.text_field :subdomain, class: "form-control" %>
+    </div>
+    <%= form.submit "Create Gym", class: "btn btn-success" %>
+  <% end %>
+</div>

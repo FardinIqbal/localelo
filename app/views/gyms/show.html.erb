@@ -1,2 +1,64 @@
-<h1>Gyms#show</h1>
-<p>Find me in app/views/gyms/show.html.erb</p>
+<div class="container">
+  <h1><%= @gym.name %> (<%= @gym.subdomain %>)</h1>
+
+  <h2>Leaderboard</h2>
+  <% if @players.any? %>
+    <table class="table table-striped">
+      <thead>
+      <tr>
+        <th>Rank</th>
+        <th>Player</th>
+        <th>Elo</th>
+        <th>Actions</th>
+      </tr>
+      </thead>
+      <tbody>
+      <% @players.each_with_index do |player, index| %>
+        <tr>
+          <td><%= index + 1 %></td>
+          <td><%= link_to player.user.email, player_path(player) %></td>
+          <td><%= player.elo %></td>
+          <td>
+            <% unless player.user == current_user %>
+              <%= link_to "Challenge", new_match_request_path(opponent_id: player.id, gym_id: @gym.id),
+                          class: "btn btn-sm btn-primary" %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p>No players have joined this gym yet.</p>
+  <% end %>
+
+  <h2>Recent Matches</h2>
+  <% if @gym.matches.any? %>
+    <table class="table">
+      <thead>
+      <tr>
+        <th>Winner</th>
+        <th>Loser</th>
+        <th>Submission</th>
+        <th>Time</th>
+        <th>Date</th>
+      </tr>
+      </thead>
+      <tbody>
+      <% @gym.matches.each do |match| %>
+        <tr>
+          <td><%= match.winner.user.email %></td>
+          <td><%= match.player1 == match.winner ? match.player2.user.email : match.player1.user.email %></td>
+          <td><%= match.submission %></td>
+          <td><%= match.match_time %></td>
+          <td><%= match.created_at.strftime("%b %d, %Y") %></td>
+        </tr>
+      <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p>No matches recorded yet.</p>
+  <% end %>
+
+  <%= link_to "Back to Dashboard", dashboard_gym_path(@gym), class: "btn btn-secondary mt-3" %>
+</div>

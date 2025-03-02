@@ -1,0 +1,16 @@
+<div class="container">
+  <h1>Your Gyms</h1>
+
+  <% if @gyms.any? %>
+    <ul class="list-group">
+      <% @gyms.each do |gym| %>
+        <li class="list-group-item">
+          <%= link_to gym.name, gym_path(gym), class: "text-decoration-none" %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p>You are not part of any gyms yet.</p>
+    <%= link_to "Find or Create a Gym", new_gym_path, class: "btn btn-primary" %>
+  <% end %>
+</div>

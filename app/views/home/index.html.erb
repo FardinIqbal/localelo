@@ -1,2 +1,11 @@
-<h1>Home#index</h1>
-<p>Find me in app/views/home/index.html.erb</p>
+<div class="container text-center mt-5">
+  <h1 class="display-4">Welcome to Ranked BJJ</h1>
+  <p class="lead">Track your No-Gi BJJ Elo, challenge opponents, and climb the leaderboard in your gym.</p>
+
+  <% if user_signed_in? %>
+    <%= link_to "Go to Your Gyms", gyms_path, class: "btn btn-primary btn-lg" %>
+  <% else %>
+    <%= link_to "Sign Up", new_user_registration_path, class: "btn btn-success btn-lg mx-2" %>
+    <%= link_to "Login", new_user_session_path, class: "btn btn-outline-secondary btn-lg mx-2" %>
+  <% end %>
+</div>

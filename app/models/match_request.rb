@@ -3,13 +3,27 @@ class MatchRequest < ApplicationRecord
   belongs_to :opponent, class_name: "Player"
   belongs_to :gym
 
-  validates :status, inclusion: { in: %w[pending accepted declined expired] }
+  enum status: { pending: "pending", accepted: "accepted", declined: "declined", expired: "expired" }
+
+  validates :status, inclusion: { in: statuses.keys }
   validates :expires_at, presence: true
+  validates :challenger_id, uniqueness: { scope: [:opponent_id, :gym_id, :status], message: "Match request already exists", conditions: -> { where(status: "pending") } }
 
-  scope :active, -> { where(status: "pending").where("expires_at > ?", Time.current) }
+  before_validation :set_expiration, on: :create
 
-  # Automatically expire old match requests every hour
+  scope :active, -> { pending.where("expires_at > ?", Time.current) }
+
   def self.expire_old_requests
-    where("expires_at < ?", Time.current).where(status: "pending").update_all(status: "expired")
+    active.where("expires_at < ?", Time.current).update_all(status: "expired")
+  end
+
+  def cancel!
+    update!(status: "expired") if pending?
+  end
+
+  private
+
+  def set_expiration
+    self.expires_at ||= 1.hour.from_now
   end
 end

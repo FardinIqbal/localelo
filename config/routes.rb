@@ -4,15 +4,19 @@ Rails.application.routes.draw do
   # Health check endpoint
   get "up" => "rails/health#show", as: :rails_health_check
 
-  # Root path (redirect to dashboard if logged in, otherwise to login)
+  # Root path (homepage)
+  authenticated :user do
+    root to: "gyms#index", as: :authenticated_root
+  end
   root "home#index"
 
-  # Gym-related routes (each gym has its own page)
-  resources :gyms, only: [:show] do
+  # Gym-related routes
+  resources :gyms, only: [:index, :show, :new, :create] do
     member do
-      get 'dashboard', to: 'gyms#dashboard', as: 'dashboard'  # This defines gym_dashboard_path
+      get 'dashboard', to: 'gyms#dashboard', as: 'dashboard'
     end
   end
+
 
   # Player and match routes
   resources :players, only: [:show]
@@ -20,8 +24,8 @@ Rails.application.routes.draw do
   # Match Requests routes (create, accept, decline)
   resources :match_requests, only: [:create] do
     member do
-      post :accept  # Change from PATCH to POST to match the view
-      post :decline # Change from PATCH to POST to match the view
+      post :accept
+      post :decline
     end
   end
 
@@ -31,8 +35,7 @@ Rails.application.routes.draw do
     end
   end
 
-
-  # Matches routes (you can keep this if you want to manage match details separately)
+  # Matches routes
   resources :matches, only: [:index, :create]
 
   # API namespace
