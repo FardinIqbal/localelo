@@ -25,6 +25,13 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :notifications, only: [] do
+    member do
+      patch :mark_as_read
+    end
+  end
+
+
   # Matches routes (you can keep this if you want to manage match details separately)
   resources :matches, only: [:index, :create]
 

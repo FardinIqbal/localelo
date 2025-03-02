@@ -70,3 +70,18 @@
     <% end %>
   <% end %>
 </table>
+
+<h2>Notifications</h2>
+<% @notifications = current_user.notifications.unread %>
+<% if @notifications.any? %>
+  <ul>
+    <% @notifications.each do |notification| %>
+      <li>
+        <%= notification.message %>
+        <%= link_to "Mark as Read", mark_as_read_notification_path(notification), method: :patch %>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <p>No new notifications.</p>
+<% end %>
