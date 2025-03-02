@@ -1,16 +1,17 @@
-<div class="container">
-  <h1>Your Gyms</h1>
+<div class="container mx-auto px-6 py-10">
+  <h1 class="text-3xl font-bold text-gray-900 mb-6">Your Gyms</h1>
 
   <% if @gyms.any? %>
-    <ul class="list-group">
+    <ul class="space-y-4">
       <% @gyms.each do |gym| %>
-        <li class="list-group-item">
-          <%= link_to gym.name, gym_path(gym), class: "text-decoration-none" %>
+        <li class="bg-white shadow-md rounded-lg p-4 transition duration-300 hover:bg-gray-100">
+          <%= link_to gym.name, gym_path(gym), class: "text-lg font-semibold text-blue-700 hover:underline" %>
         </li>
       <% end %>
     </ul>
   <% else %>
-    <p>You are not part of any gyms yet.</p>
-    <%= link_to "Find or Create a Gym", new_gym_path, class: "btn btn-primary" %>
+    <p class="text-gray-600 mb-4">You are not part of any gyms yet.</p>
+    <%= link_to "Find or Create a Gym", new_gym_path,
+                class: "inline-block px-6 py-3 bg-blue-700 text-white font-medium rounded-lg hover:bg-blue-800 transition duration-300" %>
   <% end %>
 </div>

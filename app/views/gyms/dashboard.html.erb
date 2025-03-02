@@ -1,87 +1,135 @@
-<h1><%= @gym.name %> - Dashboard</h1>
+<div class="container mx-auto px-6 py-10 space-y-10">
+  <!-- Dashboard Header -->
+  <h1 class="text-3xl font-bold text-gray-900"><%= @gym.name %> - Dashboard</h1>
 
-<h2>Leaderboard</h2>
-<table>
-  <tr>
-    <th>Rank</th>
-    <th>Player</th>
-    <th>Elo</th>
-  </tr>
-  <% @players.each_with_index do |player, index| %>
-    <tr>
-      <td><%= index + 1 %></td>
-      <td><%= player.user.email %></td>
-      <td><%= player.elo %></td>
-    </tr>
-  <% end %>
-</table>
+  <!-- Leaderboard -->
+  <section>
+    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Leaderboard</h2>
+    <div class="overflow-x-auto bg-white shadow-md rounded-lg">
+      <table class="w-full border-collapse border border-gray-300">
+        <thead>
+        <tr class="bg-blue-700 text-white">
+          <th class="p-3 text-left">Rank</th>
+          <th class="p-3 text-left">Player</th>
+          <th class="p-3 text-left">Elo</th>
+        </tr>
+        </thead>
+        <tbody>
+        <% @players.each_with_index do |player, index| %>
+          <tr class="<%= index.even? ? 'bg-gray-100' : 'bg-white' %> hover:bg-gray-200 transition">
+            <td class="p-3"><%= index + 1 %></td>
+            <td class="p-3"><%= player.user.email %></td>
+            <td class="p-3 font-semibold"><%= player.elo %></td>
+          </tr>
+        <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
 
-<h2>Recent Matches</h2>
-<table>
-  <tr>
-    <th>Player 1</th>
-    <th>Player 2</th>
-    <th>Winner</th>
-    <th>Submission</th>
-  </tr>
-  <% @matches.each do |match| %>
-    <tr>
-      <td><%= match.player1.user.email %></td>
-      <td><%= match.player2.user.email %></td>
-      <td><%= match.winner ? match.winner.user.email : 'Draw' %></td>
-      <td><%= match.submission || 'N/A' %></td>
-    </tr>
-  <% end %>
-</table>
+  <!-- Recent Matches -->
+  <section>
+    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Recent Matches</h2>
+    <div class="overflow-x-auto bg-white shadow-md rounded-lg">
+      <table class="w-full border-collapse border border-gray-300">
+        <thead>
+        <tr class="bg-blue-700 text-white">
+          <th class="p-3 text-left">Player 1</th>
+          <th class="p-3 text-left">Player 2</th>
+          <th class="p-3 text-left">Winner</th>
+          <th class="p-3 text-left">Submission</th>
+        </tr>
+        </thead>
+        <tbody>
+        <% @matches.each do |match| %>
+          <tr class="hover:bg-gray-200 transition">
+            <td class="p-3"><%= match.player1.user.email %></td>
+            <td class="p-3"><%= match.player2.user.email %></td>
+            <td class="p-3 font-semibold"><%= match.winner ? match.winner.user.email : 'Draw' %></td>
+            <td class="p-3"><%= match.submission || 'N/A' %></td>
+          </tr>
+        <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
 
-<h2>Pending Match Requests</h2>
-<table>
-  <tr>
-    <th>Challenger</th>
-    <th>Action</th>
-  </tr>
-  <% @pending_requests.each do |request| %>
-    <tr>
-      <td><%= request.challenger.user.email %></td>
-      <td>
-        <%= button_to "Accept", accept_match_request_path(request), method: :post %>
-        <%= button_to "Decline", decline_match_request_path(request), method: :post %>
-      </td>
-    </tr>
-  <% end %>
-</table>
+  <!-- Pending Match Requests -->
+  <section>
+    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Pending Match Requests</h2>
+    <div class="overflow-x-auto bg-white shadow-md rounded-lg">
+      <table class="w-full border-collapse border border-gray-300">
+        <thead>
+        <tr class="bg-blue-700 text-white">
+          <th class="p-3 text-left">Challenger</th>
+          <th class="p-3 text-left">Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        <% @pending_requests.each do |request| %>
+          <tr class="hover:bg-gray-200 transition">
+            <td class="p-3"><%= request.challenger.user.email %></td>
+            <td class="p-3">
+              <%= button_to "Accept", accept_match_request_path(request), method: :post,
+                            class: "px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-300" %>
+              <%= button_to "Decline", decline_match_request_path(request), method: :post,
+                            class: "ml-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-300" %>
+            </td>
+          </tr>
+        <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
 
-<h2>Challenge a Player</h2>
-<table>
-  <tr>
-    <th>Player</th>
-    <th>Elo</th>
-    <th>Action</th>
-  </tr>
-  <% @players.each do |player| %>
-    <% unless player.user == current_user %>
-      <tr>
-        <td><%= player.user.email %></td>
-        <td><%= player.elo %></td>
-        <td>
-          <%= button_to "Challenge", match_requests_path(opponent_id: player.id), method: :post %>
-        </td>
-      </tr>
+  <!-- Challenge a Player -->
+  <section>
+    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Challenge a Player</h2>
+    <div class="overflow-x-auto bg-white shadow-md rounded-lg">
+      <table class="w-full border-collapse border border-gray-300">
+        <thead>
+        <tr class="bg-blue-700 text-white">
+          <th class="p-3 text-left">Player</th>
+          <th class="p-3 text-left">Elo</th>
+          <th class="p-3 text-left">Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        <% @players.each do |player| %>
+          <% unless player.user == current_user %>
+            <tr class="hover:bg-gray-200 transition">
+              <td class="p-3"><%= player.user.email %></td>
+              <td class="p-3 font-semibold"><%= player.elo %></td>
+              <td class="p-3">
+                <%= button_to "Challenge", match_requests_path(opponent_id: player.id), method: :post,
+                              class: "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300" %>
+              </td>
+            </tr>
+          <% end %>
+        <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Notifications -->
+  <section>
+    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Notifications</h2>
+    <% @notifications = current_user.notifications.unread %>
+    <% if @notifications.any? %>
+      <div class="bg-white shadow-md rounded-lg p-4">
+        <ul class="space-y-3">
+          <% @notifications.each do |notification| %>
+            <li class="flex justify-between items-center p-3 bg-gray-100 rounded-lg">
+              <span class="text-gray-700"><%= notification.message %></span>
+              <%= link_to "Mark as Read", mark_as_read_notification_path(notification), method: :patch,
+                          class: "px-3 py-1 bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-900 transition duration-300" %>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    <% else %>
+      <p class="text-gray-600">No new notifications.</p>
     <% end %>
-  <% end %>
-</table>
-
-<h2>Notifications</h2>
-<% @notifications = current_user.notifications.unread %>
-<% if @notifications.any? %>
-  <ul>
-    <% @notifications.each do |notification| %>
-      <li>
-        <%= notification.message %>
-        <%= link_to "Mark as Read", mark_as_read_notification_path(notification), method: :patch %>
-      </li>
-    <% end %>
-  </ul>
-<% else %>
-  <p>No new notifications.</p>
-<% end %>
+  </section>
+</div>
