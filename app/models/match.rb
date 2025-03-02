@@ -6,6 +6,7 @@ class Match < ApplicationRecord
 
   after_create :update_elo_ratings
 
+  # This method will be used to process Elo after the match is created
   private
 
   def update_elo_ratings
@@ -27,6 +28,7 @@ class Match < ApplicationRecord
       p2_new_elo = p2.elo + k_factor * (1 - p2_expected)
     end
 
+    # Update the Elo ratings of both players after the match
     p1.update!(elo: p1_new_elo.round)
     p2.update!(elo: p2_new_elo.round)
   end

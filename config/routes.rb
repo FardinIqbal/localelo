@@ -10,20 +10,23 @@ Rails.application.routes.draw do
   # Gym-related routes (each gym has its own page)
   resources :gyms, only: [:show] do
     member do
-      get 'dashboard'
+      get 'dashboard', to: 'gyms#dashboard', as: 'dashboard'  # This defines gym_dashboard_path
     end
   end
-
 
   # Player and match routes
   resources :players, only: [:show]
-  resources :matches, only: [:index, :create] do
-    collection do
-      post :create_request
-      post :accept_request
-      post :decline_request
+
+  # Match Requests routes (create, accept, decline)
+  resources :match_requests, only: [:create] do
+    member do
+      post :accept  # Change from PATCH to POST to match the view
+      post :decline # Change from PATCH to POST to match the view
     end
   end
+
+  # Matches routes (you can keep this if you want to manage match details separately)
+  resources :matches, only: [:index, :create]
 
   # API namespace
   namespace :api do

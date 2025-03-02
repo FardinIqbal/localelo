@@ -44,8 +44,8 @@
     <tr>
       <td><%= request.challenger.user.email %></td>
       <td>
-        <%= button_to "Accept", accept_request_matches_path(id: request.id), method: :post %>
-        <%= button_to "Decline", decline_request_matches_path(id: request.id), method: :post %>
+        <%= button_to "Accept", accept_match_request_path(request), method: :post %>
+        <%= button_to "Decline", decline_match_request_path(request), method: :post %>
       </td>
     </tr>
   <% end %>
@@ -64,7 +64,7 @@
         <td><%= player.user.email %></td>
         <td><%= player.elo %></td>
         <td>
-          <%= button_to "Challenge", create_request_matches_path(opponent_id: player.id), method: :post %>
+          <%= button_to "Challenge", match_requests_path(opponent_id: player.id), method: :post %>
         </td>
       </tr>
     <% end %>
