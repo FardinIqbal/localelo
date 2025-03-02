@@ -74,3 +74,5 @@ gem "devise", "~> 4.9"
 gem "sidekiq", "~> 7.3"
 
 gem "sidekiq-cron", "~> 2.1"
+
+gem "tailwindcss-rails", "~> 4.1"

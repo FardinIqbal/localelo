@@ -2,44 +2,120 @@
 <html lang="en">
 <head>
   <title>RankedBJJ</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <%= csrf_meta_tags %>
   <%= csp_meta_tag %>
-
-  <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+  <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
   <%= javascript_importmap_tags %>
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+      /* Custom hover underline animation for nav links */
+      .nav-link {
+          position: relative;
+      }
+      .nav-link::after {
+          content: '';
+          position: absolute;
+          width: 0;
+          height: 2px;
+          background-color: white;
+          left: 0;
+          bottom: -4px;
+          transition: width 0.3s;
+      }
+      .nav-link:hover::after {
+          width: 100%;
+      }
+  </style>
 </head>
 
-<body>
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
-  <div class="container">
-    <%= link_to "RankedBJJ", root_path, class: "navbar-brand" %>
+<body class="min-h-screen flex flex-col bg-gray-50 text-gray-800">
 
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
+<!-- Navbar -->
+<nav class="bg-blue-700 shadow-lg fixed top-0 w-full z-50">
+  <div class="container mx-auto flex justify-between items-center py-3 px-4 lg:px-6">
 
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav ml-auto">
-        <% if user_signed_in? %>
-          <li class="nav-item">
-            <%= link_to "My Gyms", gyms_path, class: "nav-link" %>
-          </li>
-          <li class="nav-item">
-            <%= link_to "Logout", destroy_user_session_path, method: :delete, class: "nav-link text-danger", data: { turbo_method: :delete } %>
-          </li>
-        <% else %>
-          <li class="nav-item">
-            <%= link_to "Sign In", new_user_session_path, class: "nav-link" %>
-          </li>
-        <% end %>
-      </ul>
+    <!-- Logo -->
+    <%= link_to root_path, class: "text-2xl font-bold text-white hover:text-blue-100 transition duration-300 flex items-center" do %>
+      <span class="bg-white text-blue-700 px-1 rounded mr-1">R</span>ankedBJJ
+    <% end %>
+
+    <!-- Desktop Navigation -->
+    <div class="hidden md:flex space-x-8 items-center">
+      <%= link_to "Leaderboard", gyms_path, class: "text-white hover:text-blue-200 font-medium transition duration-300 nav-link" %>
+      <%= link_to "About", "#", class: "text-white hover:text-blue-200 font-medium transition duration-300 nav-link" %>
+
+      <% if user_signed_in? %>
+        <%= link_to "My Gyms", gyms_path, class: "text-white hover:text-blue-200 font-medium transition duration-300 nav-link" %>
+        <%= link_to "Logout", destroy_user_session_path, method: :delete, class: "text-white bg-red-600 font-medium py-1.5 px-4 rounded-md hover:bg-red-700 transition duration-300 ml-2" %>
+      <% else %>
+        <%= link_to "Sign In", new_user_session_path, class: "bg-white text-blue-700 font-medium py-1.5 px-4 rounded-md hover:bg-blue-50 transition duration-300 ml-2" %>
+      <% end %>
     </div>
+
+    <!-- Mobile Menu Button -->
+    <button id="mobile-menu-button" class="md:hidden text-white hover:bg-blue-800 p-2 rounded-md transition duration-300">
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
+
+  <!-- Mobile Navigation -->
+  <div id="mobile-menu" class="hidden md:hidden bg-blue-700 border-t border-blue-600 shadow-inner">
+    <%= link_to "Leaderboard", gyms_path, class: "block py-2 px-6 text-white hover:bg-blue-800 transition duration-300" %>
+    <%= link_to "About", "#", class: "block py-2 px-6 text-white hover:bg-blue-800 transition duration-300" %>
+    <% if user_signed_in? %>
+      <%= link_to "My Gyms", gyms_path, class: "block py-2 px-6 text-white hover:bg-blue-800 transition duration-300" %>
+      <div class="px-6 py-3">
+        <%= link_to "Logout", destroy_user_session_path, method: :delete, class: "block w-full text-center bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition duration-300" %>
+      </div>
+    <% else %>
+      <div class="px-6 py-3">
+        <%= link_to "Sign In", new_user_session_path, class: "block w-full text-center bg-white text-blue-700 py-2 px-4 rounded-md hover:bg-blue-50 transition duration-300 font-medium" %>
+      </div>
+    <% end %>
   </div>
 </nav>
 
-<div class="container mt-4">
+<!-- Main Content -->
+<main class="flex-grow pt-14">
   <%= yield %>
-</div>
+</main>
+
+<!-- Footer -->
+<footer class="bg-blue-800 text-white py-8">
+  <div class="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center">
+    <div class="mb-6 md:mb-0 text-center md:text-left">
+      <h3 class="text-xl font-bold flex items-center justify-center md:justify-start">
+        <span class="bg-white text-blue-700 px-1 rounded mr-1">R</span>ankedBJJ
+      </h3>
+      <p class="text-sm text-blue-200 mt-1">Track your journey to black belt.</p>
+    </div>
+
+    <div class="flex space-x-8">
+      <%= link_to "#", class: "text-blue-200 hover:text-white transition duration-300 flex items-center" do %>
+        <i class="fab fa-instagram mr-2"></i> Instagram
+      <% end %>
+      <%= link_to "#", class: "text-blue-200 hover:text-white transition duration-300 flex items-center" do %>
+        <i class="fab fa-twitter mr-2"></i> Twitter
+      <% end %>
+      <%= link_to "#", class: "text-blue-200 hover:text-white transition duration-300 flex items-center" do %>
+        <i class="fas fa-envelope mr-2"></i> Contact
+      <% end %>
+    </div>
+  </div>
+
+  <div class="mt-6 text-center text-sm text-blue-200">
+    &copy; <%= Time.current.year %> RankedBJJ. All rights reserved.
+  </div>
+</footer>
+
+<!-- Mobile Menu Toggle -->
+<script>
+    document.getElementById("mobile-menu-button").addEventListener("click", function () {
+        document.getElementById("mobile-menu").classList.toggle("hidden");
+    });
+</script>
+
 </body>
 </html>
