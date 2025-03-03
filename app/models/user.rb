@@ -4,10 +4,8 @@ class User < ApplicationRecord
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
 
-  has_many :players, dependent: :destroy
-  has_many :gyms, through: :players
-  has_many :notifications, dependent: :destroy
-
+  has_many :gym_memberships, dependent: :destroy  # Tracks user-gym relationships
+  has_many :gyms, through: :gym_memberships  # Users can join multiple gyms
 
   validates :email, presence: true, uniqueness: true
 end

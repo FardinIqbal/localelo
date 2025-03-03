@@ -1,0 +1,258 @@
+<div class="container mx-auto px-6 py-10">
+  <!-- Form Header with Enhanced Animation -->
+  <div class="text-center mb-8">
+    <h1 class="text-4xl font-bold text-blue-800 animate-pulse transition-all duration-700">Log Your Match</h1>
+    <p class="text-gray-600 mt-2 max-w-xl mx-auto">Track your progress and climb the rankings with every submission!</p>
+    <div class="mt-3 inline-block h-1 w-20 bg-blue-700 rounded animate-pulse"></div>
+  </div>
+
+  <!-- Card with improved gradient background and shadow -->
+  <div class="max-w-3xl mx-auto transform hover:scale-101 transition-all duration-300">
+    <div class="bg-gradient-to-br from-blue-50 to-white rounded-xl shadow-2xl overflow-hidden border border-blue-100 hover:shadow-blue-100/40">
+      <!-- Top decoration banner with improved gradient -->
+      <div class="h-3 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-800"></div>
+
+      <!-- Form content with enhanced icons -->
+      <%= form_with model: @match, url: matches_path, method: :post, class: "p-8 space-y-6" do |f| %>
+        <!-- Match Info Section with improved design -->
+        <div class="bg-blue-100 p-4 rounded-lg mb-6 border-l-4 border-blue-600 transform hover:translate-x-1 transition-all duration-300">
+          <h2 class="text-xl font-semibold text-blue-800 flex items-center">
+            <i class="fas fa-info-circle mr-2 text-blue-600"></i> Match Information
+          </h2>
+          <p class="text-blue-700 text-sm">Fill in the details of your match to update your ranking</p>
+        </div>
+
+        <!-- Select Gym with enhanced hover effects -->
+        <div class="space-y-2 group">
+          <label for="gym_id" class="block text-gray-700 font-medium flex items-center group-hover:text-blue-700 transition-colors">
+            <i class="fas fa-dumbbell mr-2 text-blue-600 group-hover:text-blue-800 transition-colors"></i> Gym Location:
+          </label>
+          <div class="relative">
+            <%= f.collection_select :gym_id, @gyms, :id, :name, { selected: @gyms.first&.id }, { class: "w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition pl-10 group-hover:border-blue-400 hover:shadow-md", id: "match_gym_id" } %>
+            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <i class="fas fa-building text-gray-400 group-hover:text-blue-500 transition-colors"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Select Opponent with improved UI -->
+        <div class="space-y-2 group">
+          <label for="opponent_id" class="block text-gray-700 font-medium flex items-center group-hover:text-blue-700 transition-colors">
+            <i class="fas fa-user-friends mr-2 text-blue-600 group-hover:text-blue-800 transition-colors"></i> Your Opponent:
+          </label>
+          <div class="relative">
+            <select id="opponent-select" name="match[opponent_id]" class="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition pl-10 group-hover:border-blue-400 hover:shadow-md">
+              <option value="">Loading opponents...</option>
+            </select>
+            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <i class="fas fa-user text-gray-400 group-hover:text-blue-500 transition-colors"></i>
+            </div>
+          </div>
+          <p class="text-xs text-blue-600 hidden" id="opponent-loading">
+            <i class="fas fa-spinner fa-spin mr-1"></i> Loading opponents from selected gym...
+          </p>
+        </div>
+
+        <!-- Select Result with fixed radio buttons -->
+        <div class="space-y-3">
+          <label class="block text-gray-700 font-medium flex items-center hover:text-blue-700 transition-colors">
+            <i class="fas fa-trophy mr-2 text-blue-600 hover:text-blue-800 transition-colors"></i> Match Result:
+          </label>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Win Option - FIXED -->
+            <div class="relative">
+              <%= f.radio_button :result, "win", class: "sr-only", id: "win_result" %>
+              <label for="win_result" class="flex p-4 bg-white border-2 border-gray-300 rounded-lg cursor-pointer hover:border-green-500 hover:shadow-md transition-all hover:-translate-y-1 duration-300">
+                <div class="w-8 h-8 mr-3 rounded-full bg-green-100 flex items-center justify-center">
+                  <i class="fas fa-check text-green-600"></i>
+                </div>
+                <div>
+                  <span class="font-medium block text-gray-800">Victory</span>
+                  <span class="text-sm text-gray-500">I won this match</span>
+                </div>
+              </label>
+            </div>
+
+            <!-- Loss Option - FIXED -->
+            <div class="relative">
+              <%= f.radio_button :result, "loss", class: "sr-only", id: "loss_result" %>
+              <label for="loss_result" class="flex p-4 bg-white border-2 border-gray-300 rounded-lg cursor-pointer hover:border-red-500 hover:shadow-md transition-all hover:-translate-y-1 duration-300">
+                <div class="w-8 h-8 mr-3 rounded-full bg-red-100 flex items-center justify-center">
+                  <i class="fas fa-times text-red-600"></i>
+                </div>
+                <div>
+                  <span class="font-medium block text-gray-800">Defeat</span>
+                  <span class="text-sm text-gray-500">I lost this match</span>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submission Type with enhanced input -->
+        <div class="space-y-2 group">
+          <label for="match_submission" class="block text-gray-700 font-medium flex items-center group-hover:text-blue-700 transition-colors">
+            <i class="fas fa-fist-raised mr-2 text-blue-600 group-hover:text-blue-800 transition-colors"></i> Submission Type:
+          </label>
+          <div class="relative">
+            <%= f.text_field :submission, class: "w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition pl-10 group-hover:border-blue-400 hover:shadow-md", placeholder: "e.g., Armbar, Triangle, Kimura, etc." %>
+            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <i class="fas fa-hand-rock text-gray-400 group-hover:text-blue-500 transition-colors"></i>
+            </div>
+            <div class="absolute right-3 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <i class="fas fa-info-circle text-blue-400" title="Common submissions: Armbar, Triangle, Guillotine, Rear Naked Choke"></i>
+            </div>
+          </div>
+          <p class="text-sm text-gray-500 italic">Leave blank if the match ended by points or decision</p>
+        </div>
+
+        <!-- Submit Button with enhanced animation -->
+        <div class="pt-4">
+          <%= f.submit "Log Match Results", class: "w-full py-4 px-6 bg-gradient-to-r from-blue-600 to-blue-800 text-white font-medium rounded-lg hover:from-blue-700 hover:to-blue-900 transform hover:-translate-y-1 hover:shadow-lg transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-lg" %>
+        </div>
+
+        <!-- Progress indicator -->
+        <div class="relative pt-2 hidden" id="submit-progress">
+          <div class="overflow-hidden h-2 text-xs flex rounded bg-blue-200">
+            <div class="progress-bar w-0 shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500 transition-all duration-1000"></div>
+          </div>
+          <p class="text-xs text-center text-blue-600 mt-1">Submitting your match data...</p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript with improved functionality and fixed radio buttons -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const gymSelect = document.querySelector("#match_gym_id");
+        const opponentSelect = document.querySelector("#opponent-select");
+        const opponentLoading = document.querySelector("#opponent-loading");
+
+        // Load opponents for the default gym on page load
+        if (gymSelect.value) {
+            loadOpponents(gymSelect.value);
+        }
+
+        // Function to load opponents
+        function loadOpponents(gymId) {
+            opponentSelect.disabled = true;
+            opponentSelect.innerHTML = "<option>Loading opponents...</option>";
+            opponentLoading.classList.remove("hidden");
+
+            fetch(`/gyms/${gymId}/members`, {
+                headers: { "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok");
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    opponentSelect.innerHTML = "<option value=''>Select an Opponent</option>";
+
+                    if (data.length === 0) {
+                        opponentSelect.innerHTML = "<option>No opponents available at this gym</option>";
+                        opponentSelect.disabled = true;
+                    } else {
+                        data.forEach(user => {
+                            let option = document.createElement("option");
+                            option.value = user.id;
+                            option.textContent = user.email;
+                            opponentSelect.appendChild(option);
+                        });
+                        opponentSelect.disabled = false;
+                    }
+
+                    // Add success indication
+                    opponentSelect.classList.add("border-green-300");
+                    setTimeout(() => {
+                        opponentSelect.classList.remove("border-green-300");
+                    }, 1000);
+                })
+                .catch(error => {
+                    console.error("Error fetching opponents:", error);
+                    opponentSelect.innerHTML = "<option>Error loading opponents</option>";
+
+                    // Add error indication
+                    opponentSelect.classList.add("border-red-300");
+                    setTimeout(() => {
+                        opponentSelect.classList.remove("border-red-300");
+                    }, 1000);
+                })
+                .finally(() => {
+                    opponentLoading.classList.add("hidden");
+                });
+        }
+
+        // Event listener for gym selection change
+        gymSelect.addEventListener("change", function() {
+            if (gymSelect.value) {
+                loadOpponents(gymSelect.value);
+            } else {
+                opponentSelect.innerHTML = "<option value=''>Select a gym first</option>";
+                opponentSelect.disabled = true;
+            }
+        });
+
+        // Fix for radio button styling
+        const winRadio = document.getElementById("win_result");
+        const lossRadio = document.getElementById("loss_result");
+        const winLabel = document.querySelector('label[for="win_result"]');
+        const lossLabel = document.querySelector('label[for="loss_result"]');
+
+        winRadio.addEventListener("change", function() {
+            if (this.checked) {
+                winLabel.classList.add("border-green-600", "bg-green-50");
+                lossLabel.classList.remove("border-red-600", "bg-red-50");
+            }
+        });
+
+        lossRadio.addEventListener("change", function() {
+            if (this.checked) {
+                lossLabel.classList.add("border-red-600", "bg-red-50");
+                winLabel.classList.remove("border-green-600", "bg-green-50");
+            }
+        });
+
+        // Enhanced form submission with progress bar
+        const form = document.querySelector("form");
+        const submitProgress = document.querySelector("#submit-progress");
+        const progressBar = document.querySelector(".progress-bar");
+
+        form.addEventListener("submit", function(e) {
+            const submitButton = form.querySelector("input[type=submit]");
+            submitButton.value = "Submitting...";
+            submitButton.disabled = true;
+            submitButton.classList.add("opacity-75");
+
+            // Show progress indicator
+            submitProgress.classList.remove("hidden");
+
+            // Simulate progress (in a real app, this would be tied to actual request progress)
+            let width = 0;
+            const interval = setInterval(function() {
+                if (width >= 90) {
+                    clearInterval(interval);
+                } else {
+                    width += 5;
+                    progressBar.style.width = width + "%";
+                }
+            }, 100);
+        });
+
+        // Enhance the hover effects for select elements
+        const selectElements = document.querySelectorAll("select");
+        selectElements.forEach(select => {
+            select.addEventListener("focus", function() {
+                this.parentElement.classList.add("ring", "ring-blue-200");
+            });
+
+            select.addEventListener("blur", function() {
+                this.parentElement.classList.remove("ring", "ring-blue-200");
+            });
+        });
+    });
+</script>

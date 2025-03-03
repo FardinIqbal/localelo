@@ -27,6 +27,16 @@
       .nav-link:hover::after {
           width: 100%;
       }
+
+      /* Animation styles */
+      @keyframes float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+      }
+
+      .animate-float {
+          animation: float 3s ease-in-out infinite;
+      }
   </style>
 </head>
 
@@ -48,10 +58,12 @@
 
       <% if user_signed_in? %>
         <%= link_to "My Gyms", gyms_path, class: "text-white hover:text-blue-200 font-medium transition duration-300 nav-link" %>
-        <%= link_to "Logout", destroy_user_session_path, method: :delete, class: "text-white bg-red-600 font-medium py-1.5 px-4 rounded-md hover:bg-red-700 transition duration-300 ml-2" %>
+        <%= link_to "Logout", destroy_user_session_path, method: :delete, data: { turbo_method: :delete }, class: "text-white bg-red-600 font-medium py-1.5 px-4 rounded-md hover:bg-red-700 transition duration-300 ml-2" %>
       <% else %>
-        <%= link_to "Sign In", new_user_session_path, class: "bg-white text-blue-700 font-medium py-1.5 px-4 rounded-md hover:bg-blue-50 transition duration-300 ml-2" %>
+        <%= link_to "Sign In", new_user_session_path,
+                    class: "bg-white text-blue-700 font-medium py-1.5 px-4 rounded-md hover:bg-blue-50 transition duration-300 ml-2" %>
       <% end %>
+
     </div>
 
     <!-- Mobile Menu Button -->

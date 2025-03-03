@@ -4,45 +4,30 @@ Rails.application.routes.draw do
   # Health check endpoint
   get "up" => "rails/health#show", as: :rails_health_check
 
-  # Root path (homepage)
+  # Root path (Homepage)
   authenticated :user do
-    root to: "gyms#index", as: :authenticated_root
+    root to: "users#show", as: :authenticated_root  # Redirects logged-in users to their profile
   end
   root "home#index"
 
+  # User profile routes
+  resources :users, only: [:show, :edit, :update]  # Profiles for each user
+
   # Gym-related routes
-  resources :gyms, only: [:index, :show, :new, :create] do
-    member do
-      get 'dashboard', to: 'gyms#dashboard', as: 'dashboard'
-    end
+  resources :gyms, only: [:index, :show, :new, :create]
+  resources :gyms do
+    get 'members', on: :member  # Adds /gyms/:id/members route
   end
 
+  # Matches & Match History
+  resources :matches, only: [:index, :new, :create]
+  get "matches/:id", to: "matches#show", as: "match"  # View individual match details
 
-  # Player and match routes
-  resources :players, only: [:show]
-
-  # Match Requests routes (create, accept, decline)
-  resources :match_requests, only: [:create] do
-    member do
-      post :accept
-      post :decline
-    end
-  end
-
-  resources :notifications, only: [] do
-    member do
-      patch :mark_as_read
-    end
-  end
-
-  # Matches routes
-  resources :matches, only: [:index, :create]
-
-  # API namespace
+  # API Routes
   namespace :api do
     namespace :v1 do
       resources :matches, only: [:index, :create]
-      resources :players, only: [:index, :show]
+      resources :users, only: [:index, :show]  # Using `users` instead of `players`
     end
   end
 end

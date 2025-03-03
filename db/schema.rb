@@ -10,9 +10,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_03_02_003413) do
+ActiveRecord::Schema[7.1].define(version: 2025_03_03_212853) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "gym_memberships", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "gym_id", null: false
+    t.integer "elo", default: 1500
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["gym_id"], name: "index_gym_memberships_on_gym_id"
+    t.index ["user_id"], name: "index_gym_memberships_on_user_id"
+  end
 
   create_table "gyms", force: :cascade do |t|
     t.string "name", null: false
@@ -22,54 +32,19 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_02_003413) do
     t.index ["subdomain"], name: "index_gyms_on_subdomain", unique: true
   end
 
-  create_table "match_requests", force: :cascade do |t|
-    t.bigint "challenger_id", null: false
-    t.bigint "opponent_id", null: false
-    t.bigint "gym_id", null: false
-    t.string "status", default: "pending", null: false
-    t.datetime "expires_at", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["challenger_id"], name: "index_match_requests_on_challenger_id"
-    t.index ["gym_id"], name: "index_match_requests_on_gym_id"
-    t.index ["opponent_id"], name: "index_match_requests_on_opponent_id"
-  end
-
   create_table "matches", force: :cascade do |t|
-    t.bigint "player1_id", null: false
-    t.bigint "player2_id", null: false
+    t.bigint "user1_id", null: false
+    t.bigint "opponent_id", null: false
     t.bigint "winner_id"
     t.bigint "gym_id", null: false
-    t.string "match_time"
     t.string "submission"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "match_time"
     t.index ["gym_id"], name: "index_matches_on_gym_id"
-    t.index ["player1_id"], name: "index_matches_on_player1_id"
-    t.index ["player2_id"], name: "index_matches_on_player2_id"
+    t.index ["opponent_id"], name: "index_matches_on_opponent_id"
+    t.index ["user1_id"], name: "index_matches_on_user1_id"
     t.index ["winner_id"], name: "index_matches_on_winner_id"
-  end
-
-  create_table "notifications", force: :cascade do |t|
-    t.bigint "user_id", null: false
-    t.string "notifiable_type", null: false
-    t.bigint "notifiable_id", null: false
-    t.string "message"
-    t.boolean "read", default: false, null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["notifiable_type", "notifiable_id"], name: "index_notifications_on_notifiable"
-    t.index ["user_id"], name: "index_notifications_on_user_id"
-  end
-
-  create_table "players", force: :cascade do |t|
-    t.bigint "user_id", null: false
-    t.bigint "gym_id", null: false
-    t.integer "elo", default: 1500, null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["gym_id"], name: "index_players_on_gym_id"
-    t.index ["user_id"], name: "index_players_on_user_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -84,14 +59,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_02_003413) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
-  add_foreign_key "match_requests", "gyms"
-  add_foreign_key "match_requests", "players", column: "challenger_id"
-  add_foreign_key "match_requests", "players", column: "opponent_id"
+  add_foreign_key "gym_memberships", "gyms"
+  add_foreign_key "gym_memberships", "users"
   add_foreign_key "matches", "gyms"
-  add_foreign_key "matches", "players", column: "player1_id"
-  add_foreign_key "matches", "players", column: "player2_id"
-  add_foreign_key "matches", "players", column: "winner_id"
-  add_foreign_key "notifications", "users"
-  add_foreign_key "players", "gyms"
-  add_foreign_key "players", "users"
 end
