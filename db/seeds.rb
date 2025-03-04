@@ -2,17 +2,18 @@ puts "Clearing existing data..."
 
 Match.destroy_all
 GymMembership.destroy_all  # Ensure memberships are deleted before gyms
-User.destroy_all           # Destroy users next
 Gym.destroy_all            # Now gyms can be safely deleted
+User.destroy_all           # Destroy users next
 
 puts "Old data removed ✅"
 
 puts "Creating users..."
-belts = ["White Belt", "Blue Belt", "Purple Belt", "Brown Belt", "Black Belt"]
 users = []
 
 10.times do |i|
   users << User.create!(
+    first_name: "User#{i + 1}",
+    last_name: "Test",
     email: "user#{i + 1}@bjjtest.com",
     password: "password",
     created_at: rand(1..12).months.ago
@@ -24,7 +25,8 @@ puts "Users created: #{users.count} ✅"
 puts "Creating gyms..."
 gym_names = ["NYC BJJ Academy", "Gracie SF", "Ronin BJJ"]
 gyms = gym_names.map do |name|
-  Gym.create!(name: name, subdomain: name.parameterize)
+  # Assign the first user as the owner for each gym.
+  Gym.create!(name: name, subdomain: name.parameterize, user: users.first)
 end
 
 puts "Gyms created: #{gyms.count} ✅"
@@ -53,14 +55,14 @@ gyms.each do |gym|
 
   5.times do
     player1, opponent = members.sample(2)  # Pick 2 random members
-    winner = [player1, opponent].sample  # Randomly select winner
+    winner = [player1, opponent].sample       # Randomly select winner
 
     matches << Match.create!(
       gym: gym,
       user1: player1,
-      opponent_id: opponent.id,  # ✅ Uses `opponent_id` instead of `user2`
+      opponent_id: opponent.id,  # Use opponent_id instead of user2
       winner: winner,
-      match_time: Time.current,  # ✅ Ensures current time is used
+      match_time: Time.current,  # Use current time
       submission: %w[Armbar Triangle Kimura Decision Choke].sample
     )
   end

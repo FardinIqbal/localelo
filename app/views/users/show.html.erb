@@ -1,141 +1,132 @@
-<!-- Player Profile Header -->
-<section class="bg-gradient-to-r from-blue-700 to-blue-800 text-white py-10 px-4 md:px-6">
-  <div class="container mx-auto">
-    <div class="flex flex-col md:flex-row items-center md:items-start">
-      <!-- Player Avatar -->
-      <div class="w-32 h-32 rounded-full bg-white flex items-center justify-center mb-6 md:mb-0 md:mr-8 shadow-lg border-4 border-white overflow-hidden">
-        <i class="fas fa-user text-5xl text-blue-700"></i>
-      </div>
-
-      <!-- Player Info -->
-      <div class="text-center md:text-left flex-grow">
-        <h1 class="text-3xl md:text-4xl font-bold mb-2">John Smith</h1>
-        <div class="flex flex-wrap justify-center md:justify-start items-center mb-4">
-          <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold mr-3 mb-2">
-            <i class="fas fa-certificate mr-1"></i> Blue Belt
-          </span>
-          <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold mr-3 mb-2">
-            <i class="fas fa-medal mr-1"></i> Rank: #2
-          </span>
-          <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold mr-3 mb-2">
-            <i class="fas fa-chart-line mr-1"></i> Elo: 1856
-          </span>
-        </div>
-        <p class="text-blue-100 max-w-xl">
-          Member since June 2023 • NYC BJJ Academy • 45 matches
-        </p>
-      </div>
-
-      <!-- Quick Actions -->
-      <div class="mt-6 md:mt-0 flex flex-col md:flex-row md:items-start space-y-3 md:space-y-0 md:space-x-3">
-        <%= link_to new_match_path, class: "bg-white text-blue-700 hover:bg-blue-50 py-2 px-4 rounded-lg font-medium transition duration-300" do %>
-          <i class="fas fa-gamepad mr-2"></i> Log a Match
-        <% end %>
-
-        <%= link_to "#", class: "bg-transparent text-white border border-white hover:bg-blue-600 py-2 px-4 rounded-lg font-medium transition duration-300" do %>
-          <i class="fas fa-edit mr-2"></i> Edit Profile
-        <% end %>
-      </div>
-    </div>
+<!-- USER PROFILE HEADER - Enhanced with gradient animation -->
+<section class="bg-gradient-to-r from-indigo-600 to-purple-700 text-white py-16 px-4 md:px-6 relative overflow-hidden transform transition-all duration-500 hover:shadow-2xl">
+  <!-- Animated background particles -->
+  <div class="absolute inset-0 overflow-hidden">
+    <div class="particles-container opacity-20"></div>
   </div>
 
-  <!-- Wave Divider -->
-  <div class="w-full mt-10">
-    <div class="relative h-20 overflow-hidden">
-      <div class="absolute bottom-0 w-full">
-        <i class="fas fa-water text-gray-50 text-8xl w-full" style="display: block;"></i>
+  <div class="container mx-auto relative z-10">
+    <div class="text-center transform transition-all duration-500 hover:scale-105">
+      <div class="inline-block mb-4 p-2 rounded-full bg-white/10 backdrop-blur-sm">
+        <div class="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-3xl font-bold border-4 border-white/30">
+          <%= @user.full_name.first %>
+        </div>
       </div>
+      <h1 class="text-4xl md:text-5xl font-bold mb-2 tracking-tight"><%= @user.full_name %></h1>
+      <p class="text-indigo-200 inline-block px-4 py-1 rounded-full bg-white/10 backdrop-blur-sm">
+        <span class="mr-2">✦</span> Member since <%= @user.created_at.strftime("%B %Y") %> <span class="ml-2">✦</span>
+      </p>
     </div>
   </div>
 </section>
 
-<!-- Stats Cards Section -->
-<section class="py-10 bg-gray-50">
+<!-- OVERALL PERFORMANCE SECTION - Glass morphism design -->
+<section class="py-16 bg-gradient-to-b from-slate-100 to-white relative">
   <div class="container mx-auto px-4 md:px-6">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <!-- Win/Loss Record -->
-      <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-bold text-gray-800">Win/Loss Record</h3>
-          <i class="fas fa-trophy text-blue-600 text-2xl"></i>
-        </div>
-        <div class="flex justify-between items-center mb-4">
-          <div class="text-center">
-            <div class="text-3xl font-bold text-green-600">32</div>
-            <div class="text-sm text-gray-500">Wins</div>
-          </div>
-          <div class="h-16 w-0.5 bg-gray-200"></div>
-          <div class="text-center">
-            <div class="text-3xl font-bold text-red-600">13</div>
-            <div class="text-sm text-gray-500">Losses</div>
-          </div>
-          <div class="h-16 w-0.5 bg-gray-200"></div>
-          <div class="text-center">
-            <div class="text-3xl font-bold text-blue-600">71%</div>
-            <div class="text-sm text-gray-500">Win Rate</div>
-          </div>
-        </div>
-        <div class="w-full bg-gray-200 rounded-full h-3">
-          <div class="bg-blue-600 h-3 rounded-full" style="width: 71%"></div>
-        </div>
-      </div>
+    <h2 class="text-3xl font-bold text-gray-800 mb-8 relative inline-block">
+      Overall Performance
+      <div class="h-1 w-1/2 bg-indigo-500 absolute bottom-0 left-0 rounded-full"></div>
+    </h2>
 
-      <!-- Elo History -->
-      <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-bold text-gray-800">Elo History</h3>
-          <i class="fas fa-chart-line text-blue-600 text-2xl"></i>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <!-- GLOBAL STATS CARD -->
+      <div class="bg-white/80 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/50 transform transition-all duration-300 hover:translate-y-[-5px] hover:shadow-2xl">
+        <div class="flex items-center mb-6">
+          <div class="p-3 rounded-xl bg-indigo-100 text-indigo-600 mr-3">
+            <i class="fas fa-chart-pie text-xl"></i>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-800">Global Stats</h3>
         </div>
-        <div class="flex flex-col space-y-4">
-          <div class="flex justify-between items-center">
-            <span class="text-gray-600">Starting Elo:</span>
-            <span class="font-semibold">1500</span>
+        <div class="space-y-4 text-gray-700">
+          <div class="flex justify-between items-center group">
+            <p class="font-medium">Total Matches</p>
+            <p class="font-bold text-indigo-600 group-hover:scale-110 transition-all"><%= @total_matches %></p>
           </div>
-          <div class="flex justify-between items-center">
-            <span class="text-gray-600">Current Elo:</span>
-            <span class="font-semibold">1856</span>
+          <div class="flex justify-between items-center group">
+            <p class="font-medium">Wins</p>
+            <p class="font-bold text-green-600 group-hover:scale-110 transition-all"><%= @win_count %></p>
           </div>
-          <div class="flex justify-between items-center">
-            <span class="text-gray-600">Highest Elo:</span>
-            <span class="font-semibold">1892</span>
+          <div class="flex justify-between items-center group">
+            <p class="font-medium">Losses</p>
+            <p class="font-bold text-red-500 group-hover:scale-110 transition-all"><%= @loss_count %></p>
           </div>
-          <div class="flex justify-between items-center">
-            <span class="text-gray-600">Gain/Loss (30 days):</span>
-            <span class="font-semibold text-green-600">+42</span>
+          <div class="flex justify-between items-center group">
+            <p class="font-medium">Win Rate</p>
+            <p class="font-bold text-indigo-600 group-hover:scale-110 transition-all"><%= @win_rate %>%</p>
+          </div>
+          <div class="h-1 w-full bg-gray-100 rounded-full my-2">
+            <div class="h-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full" style="width: <%= @win_rate %>%"></div>
+          </div>
+          <div class="flex justify-between items-center group">
+            <p class="font-medium">Highest Elo</p>
+            <p class="font-bold text-amber-500 group-hover:scale-110 transition-all"><%= @elo_highest %></p>
+          </div>
+          <div class="flex justify-between items-center group">
+            <p class="font-medium">30-Day Elo Gain</p>
+            <p class="font-bold <%= @elo_gain_last_30_days >= 0 ? 'text-green-600' : 'text-red-500' %> group-hover:scale-110 transition-all">
+              <%= @elo_gain_last_30_days %>
+            </p>
           </div>
         </div>
       </div>
 
-      <!-- Gym Rankings -->
-      <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-bold text-gray-800">Gym Rankings</h3>
-          <i class="fas fa-medal text-blue-600 text-2xl"></i>
+      <!-- ANALYTICS CARD -->
+      <div class="bg-white/80 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/50 transform transition-all duration-300 hover:translate-y-[-5px] hover:shadow-2xl">
+        <div class="flex items-center mb-6">
+          <div class="p-3 rounded-xl bg-purple-100 text-purple-600 mr-3">
+            <i class="fas fa-brain text-xl"></i>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-800">Analytics</h3>
         </div>
-        <div class="space-y-4">
-          <div class="flex items-center p-2 bg-blue-50 rounded-lg">
-            <div class="bg-blue-700 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">2</div>
-            <div class="ml-3">
-              <div class="font-medium">NYC BJJ Academy</div>
-              <div class="text-sm text-gray-500">Rank #2 of 48 members</div>
+        <div class="space-y-6 text-gray-700">
+          <div>
+            <p class="font-medium mb-2">Most Used Submission</p>
+            <div class="p-3 rounded-xl bg-gradient-to-r from-purple-50 to-indigo-50 border border-indigo-100 group transition-all duration-300 hover:shadow-md">
+              <p class="font-bold text-indigo-700 group-hover:text-purple-700 transition-all">
+                <%= @most_used_submission %>
+              </p>
             </div>
-            <div class="ml-auto font-bold text-blue-700">1856</div>
           </div>
-          <div class="flex items-center p-2 bg-gray-50 rounded-lg">
-            <div class="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">5</div>
-            <div class="ml-3">
-              <div class="font-medium">Ronin BJJ</div>
-              <div class="text-sm text-gray-500">Rank #5 of 32 members</div>
+          <div>
+            <p class="font-medium mb-2">Top Rival</p>
+            <div class="p-3 rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 border border-purple-100 group transition-all duration-300 hover:shadow-md">
+              <p class="font-bold text-purple-700 group-hover:text-indigo-700 transition-all">
+                <%= @top_rival[:opponent] %>
+              </p>
+              <p class="text-sm text-gray-500 mt-1">
+                <%= @top_rival[:matches_played] %> matches played
+              </p>
             </div>
-            <div class="ml-auto font-bold text-blue-700">1780</div>
           </div>
-          <div class="flex items-center p-2 bg-gray-50 rounded-lg">
-            <div class="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">1</div>
-            <div class="ml-3">
-              <div class="font-medium">Gracie NYC</div>
-              <div class="text-sm text-gray-500">Rank #1 of 15 members</div>
+        </div>
+      </div>
+
+      <!-- RECENT PERFORMANCE CARD -->
+      <div class="bg-white/80 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/50 transform transition-all duration-300 hover:translate-y-[-5px] hover:shadow-2xl">
+        <div class="flex items-center mb-6">
+          <div class="p-3 rounded-xl bg-blue-100 text-blue-600 mr-3">
+            <i class="fas fa-bolt text-xl"></i>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-800">Recent Performance</h3>
+        </div>
+        <div class="space-y-6 text-gray-700">
+          <div>
+            <p class="font-medium mb-2">Current Streak</p>
+            <div class="p-3 rounded-xl bg-gradient-to-r from-blue-50 to-green-50 border border-blue-100 group transition-all duration-300 hover:shadow-md">
+              <p class="font-bold text-blue-700 group-hover:text-green-700 transition-all">
+                2 Wins (Example)
+              </p>
             </div>
-            <div class="ml-auto font-bold text-blue-700">1820</div>
+          </div>
+          <div>
+            <p class="font-medium mb-2">Last 5 Matches</p>
+            <div class="flex justify-between mt-3">
+              <div class="w-12 h-12 rounded-full bg-green-500 text-white flex items-center justify-center transform transition hover:scale-110">W</div>
+              <div class="w-12 h-12 rounded-full bg-red-500 text-white flex items-center justify-center transform transition hover:scale-110">L</div>
+              <div class="w-12 h-12 rounded-full bg-green-500 text-white flex items-center justify-center transform transition hover:scale-110">W</div>
+              <div class="w-12 h-12 rounded-full bg-green-500 text-white flex items-center justify-center transform transition hover:scale-110">W</div>
+              <div class="w-12 h-12 rounded-full bg-red-500 text-white flex items-center justify-center transform transition hover:scale-110">L</div>
+            </div>
           </div>
         </div>
       </div>
@@ -143,201 +134,248 @@
   </div>
 </section>
 
-<!-- Recent Matches Section -->
-<section class="py-10 bg-white">
-  <div class="container mx-auto px-4 md:px-6">
-    <div class="flex justify-between items-center mb-8">
-      <h2 class="text-2xl font-bold text-gray-800">
-        <i class="fas fa-history text-blue-600 mr-2"></i> Recent Matches
-      </h2>
-      <%= link_to "#", class: "text-blue-600 hover:text-blue-800 font-medium flex items-center transition duration-300" do %>
-        View All Matches
-        <i class="fas fa-arrow-right ml-2"></i>
+<!-- GYM MEMBERSHIPS SECTION - Card hover effects -->
+<section class="py-16 bg-gradient-to-b from-slate-50 to-indigo-50 relative">
+  <div class="absolute top-0 right-0 w-full h-32 bg-gradient-to-b from-white to-transparent"></div>
+  <div class="container mx-auto px-4 md:px-6 relative z-10">
+    <h2 class="text-3xl font-bold text-gray-800 mb-8 relative inline-block">
+      Your Gyms
+      <div class="h-1 w-1/2 bg-indigo-500 absolute bottom-0 left-0 rounded-full"></div>
+    </h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <% @gym_stats.each do |stats| %>
+        <div class="bg-white rounded-2xl shadow-xl p-8 relative overflow-hidden transform transition-all duration-300 hover:translate-y-[-8px] hover:shadow-2xl border border-indigo-50 group">
+          <!-- Background accent -->
+          <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-bl-full transform transition-all duration-500 group-hover:scale-125"></div>
+
+          <!-- GYM NAME -->
+          <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <span class="inline-block w-8 h-8 mr-2 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center">
+              <i class="fas fa-dumbbell"></i>
+            </span>
+            <%= stats[:gym].name %>
+          </h3>
+
+          <!-- GYM STATS -->
+          <div class="mb-8 space-y-3 text-gray-700">
+            <div class="flex items-center group/item transition-all duration-300 hover:pl-2">
+              <i class="fas fa-medal text-amber-500 mr-3 text-lg group-hover/item:scale-110 transition-all"></i>
+              <div>
+                <p class="text-sm text-gray-500">Rank</p>
+                <p class="font-bold">#<%= stats[:rank] %></p>
+              </div>
+            </div>
+
+            <div class="flex items-center group/item transition-all duration-300 hover:pl-2">
+              <i class="fas fa-chart-line text-blue-600 mr-3 text-lg group-hover/item:scale-110 transition-all"></i>
+              <div>
+                <p class="text-sm text-gray-500">Elo</p>
+                <p class="font-bold text-blue-700"><%= stats[:elo] %></p>
+              </div>
+            </div>
+
+            <div class="flex items-center group/item transition-all duration-300 hover:pl-2">
+              <i class="fas fa-trophy text-green-600 mr-3 text-lg group-hover/item:scale-110 transition-all"></i>
+              <div>
+                <p class="text-sm text-gray-500">Wins</p>
+                <p class="font-bold text-green-700"><%= stats[:wins] %></p>
+              </div>
+            </div>
+
+            <div class="flex items-center group/item transition-all duration-300 hover:pl-2">
+              <i class="fas fa-times-circle text-red-500 mr-3 text-lg group-hover/item:scale-110 transition-all"></i>
+              <div>
+                <p class="text-sm text-gray-500">Losses</p>
+                <p class="font-bold text-red-600"><%= stats[:losses] %></p>
+              </div>
+            </div>
+
+            <div class="flex items-center group/item transition-all duration-300 hover:pl-2">
+              <i class="fas fa-percentage text-blue-600 mr-3 text-lg group-hover/item:scale-110 transition-all"></i>
+              <div>
+                <p class="text-sm text-gray-500">Win Rate</p>
+                <p class="font-bold text-blue-700"><%= stats[:win_rate] %>%</p>
+              </div>
+            </div>
+
+            <!-- Progress bar for win rate -->
+            <div class="h-2 w-full bg-gray-100 rounded-full my-2">
+              <div class="h-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transform transition-all duration-500" style="width: <%= stats[:win_rate] %>%"></div>
+            </div>
+
+            <% if stats[:most_faced_opponent].present? && stats[:most_faced_opponent] != "None" %>
+              <div class="flex items-center group/item transition-all duration-300 hover:pl-2 mt-4">
+                <i class="fas fa-user-friends text-purple-600 mr-3 text-lg group-hover/item:scale-110 transition-all"></i>
+                <div>
+                  <p class="text-sm text-gray-500">Rival in This Gym</p>
+                  <p class="font-bold text-purple-700">
+                    <%= stats[:most_faced_opponent] %>
+                    <span class="text-sm font-normal text-gray-500">(<%= stats[:matches_against_rival] %> matches)</span>
+                  </p>
+                </div>
+              </div>
+            <% end %>
+
+            <div class="flex items-center group/item transition-all duration-300 hover:pl-2 mt-4">
+              <i class="fas fa-calendar-alt text-indigo-600 mr-3 text-lg group-hover/item:scale-110 transition-all"></i>
+              <div>
+                <p class="text-sm text-gray-500">Joined</p>
+                <p class="font-bold text-indigo-700"><%= stats[:join_date] %></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- GYM LINK BUTTON -->
+          <%= link_to gym_path(stats[:gym]), class: "inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold text-sm transition-all duration-300 hover:from-indigo-700 hover:to-purple-700 hover:shadow-lg hover:shadow-indigo-200 transform hover:-translate-y-1 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:outline-none" do %>
+            <span>Visit Gym</span>
+            <i class="fas fa-arrow-right ml-2 transition-transform duration-300 group-hover:translate-x-1"></i>
+          <% end %>
+        </div>
       <% end %>
     </div>
+  </div>
+</section>
 
-    <div class="overflow-x-auto">
-      <table class="min-w-full bg-white rounded-lg shadow-md">
+<!-- RECENT MATCHES SECTION - Interactive Table -->
+<section class="py-16 bg-white relative">
+  <div class="container mx-auto px-4 md:px-6">
+    <h2 class="text-3xl font-bold text-gray-800 mb-8 relative inline-block">
+      Recent Matches
+      <div class="h-1 w-1/2 bg-indigo-500 absolute bottom-0 left-0 rounded-full"></div>
+    </h2>
+
+    <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-indigo-50">
+      <table class="w-full">
         <thead>
-        <tr class="bg-gray-100 text-gray-600 uppercase text-sm">
-          <th class="py-3 px-4 text-left">Date</th>
-          <th class="py-3 px-4 text-left">Opponent</th>
-          <th class="py-3 px-4 text-left">Result</th>
-          <th class="py-3 px-4 text-left">Elo Change</th>
-          <th class="py-3 px-4 text-left">Gym</th>
+        <tr class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
+          <th class="py-4 px-6 text-left font-semibold">Date</th>
+          <th class="py-4 px-6 text-left font-semibold">Opponent</th>
+          <th class="py-4 px-6 text-left font-semibold">Result</th>
+          <th class="py-4 px-6 text-left font-semibold">Elo Change</th>
         </tr>
         </thead>
-        <tbody class="text-gray-700">
-        <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-200">
-          <td class="py-4 px-4">Mar 1, 2025</td>
-          <td class="py-4 px-4">
-            <div class="flex items-center">
-              <div class="w-8 h-8 bg-blue-700 rounded-full flex items-center justify-center text-white">
-                <i class="fas fa-user text-xs"></i>
+        <tbody>
+        <% @matches.each_with_index do |match, index| %>
+          <tr class="border-b border-gray-100 transform transition-all duration-200 hover:bg-indigo-50/50 <%= index.even? ? 'bg-white' : 'bg-slate-50/50' %>">
+            <td class="py-4 px-6 text-gray-700"><%= match.match_time.strftime("%b %d, %Y") %></td>
+            <td class="py-4 px-6">
+              <div class="flex items-center">
+                <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center mr-3">
+                  <%= match.opponent_for(@user)&.full_name&.first || "?" %>
+                </div>
+                <span class="font-medium text-gray-800"><%= match.opponent_for(@user)&.full_name || "Unknown" %></span>
               </div>
-              <span class="ml-2 font-medium">Alex Chen</span>
-            </div>
-          </td>
-          <td class="py-4 px-4">
-            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-lg text-xs font-semibold">WIN</span>
-          </td>
-          <td class="py-4 px-4 text-green-600 font-semibold">+12</td>
-          <td class="py-4 px-4">NYC BJJ Academy</td>
-        </tr>
-        <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-200">
-          <td class="py-4 px-4">Feb 24, 2025</td>
-          <td class="py-4 px-4">
-            <div class="flex items-center">
-              <div class="w-8 h-8 bg-blue-700 rounded-full flex items-center justify-center text-white">
-                <i class="fas fa-user text-xs"></i>
-              </div>
-              <span class="ml-2 font-medium">Sarah Lee</span>
-            </div>
-          </td>
-          <td class="py-4 px-4">
-            <span class="px-2 py-1 bg-red-100 text-red-800 rounded-lg text-xs font-semibold">LOSS</span>
-          </td>
-          <td class="py-4 px-4 text-red-600 font-semibold">-8</td>
-          <td class="py-4 px-4">NYC BJJ Academy</td>
-        </tr>
-        <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-200">
-          <td class="py-4 px-4">Feb 17, 2025</td>
-          <td class="py-4 px-4">
-            <div class="flex items-center">
-              <div class="w-8 h-8 bg-blue-700 rounded-full flex items-center justify-center text-white">
-                <i class="fas fa-user text-xs"></i>
-              </div>
-              <span class="ml-2 font-medium">Mike Johnson</span>
-            </div>
-          </td>
-          <td class="py-4 px-4">
-            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-lg text-xs font-semibold">WIN</span>
-          </td>
-          <td class="py-4 px-4 text-green-600 font-semibold">+15</td>
-          <td class="py-4 px-4">Ronin BJJ</td>
-        </tr>
-        <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-200">
-          <td class="py-4 px-4">Feb 10, 2025</td>
-          <td class="py-4 px-4">
-            <div class="flex items-center">
-              <div class="w-8 h-8 bg-blue-700 rounded-full flex items-center justify-center text-white">
-                <i class="fas fa-user text-xs"></i>
-              </div>
-              <span class="ml-2 font-medium">David Park</span>
-            </div>
-          </td>
-          <td class="py-4 px-4">
-            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-lg text-xs font-semibold">WIN</span>
-          </td>
-          <td class="py-4 px-4 text-green-600 font-semibold">+9</td>
-          <td class="py-4 px-4">Gracie NYC</td>
-        </tr>
-        <tr class="hover:bg-gray-50 transition duration-200">
-          <td class="py-4 px-4">Jan 29, 2025</td>
-          <td class="py-4 px-4">
-            <div class="flex items-center">
-              <div class="w-8 h-8 bg-blue-700 rounded-full flex items-center justify-center text-white">
-                <i class="fas fa-user text-xs"></i>
-              </div>
-              <span class="ml-2 font-medium">Carlos Rodriguez</span>
-            </div>
-          </td>
-          <td class="py-4 px-4">
-            <span class="px-2 py-1 bg-red-100 text-red-800 rounded-lg text-xs font-semibold">LOSS</span>
-          </td>
-          <td class="py-4 px-4 text-red-600 font-semibold">-11</td>
-          <td class="py-4 px-4">NYC BJJ Academy</td>
-        </tr>
+            </td>
+            <td class="py-4 px-6">
+              <% if match.winner_id == @user.id %>
+                <span class="px-3 py-1 rounded-full bg-green-100 text-green-800 font-medium inline-flex items-center">
+                  <i class="fas fa-check-circle mr-1"></i> WIN
+                </span>
+              <% elsif match.winner_id.nil? %>
+                <span class="px-3 py-1 rounded-full bg-gray-100 text-gray-800 font-medium inline-flex items-center">
+                  <i class="fas fa-equals mr-1"></i> DRAW
+                </span>
+              <% else %>
+                <span class="px-3 py-1 rounded-full bg-red-100 text-red-800 font-medium inline-flex items-center">
+                  <i class="fas fa-times-circle mr-1"></i> LOSS
+                </span>
+              <% end %>
+            </td>
+            <td class="py-4 px-6">
+              <% if match.elo_change.to_i > 0 %>
+                <span class="font-medium text-green-600 inline-flex items-center">
+                  <i class="fas fa-arrow-up mr-1"></i> +<%= match.elo_change || "N/A" %>
+                </span>
+              <% elsif match.elo_change.to_i < 0 %>
+                <span class="font-medium text-red-600 inline-flex items-center">
+                  <i class="fas fa-arrow-down mr-1"></i> <%= match.elo_change || "N/A" %>
+                </span>
+              <% else %>
+                <span class="font-medium text-gray-600"><%= match.elo_change || "N/A" %></span>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
         </tbody>
       </table>
     </div>
   </div>
 </section>
 
-<!-- Performance Stats Section -->
-<section class="py-10 bg-gray-50">
-  <div class="container mx-auto px-4 md:px-6">
-    <h2 class="text-2xl font-bold text-gray-800 mb-8">
-      <i class="fas fa-chart-pie text-blue-600 mr-2"></i> Performance Statistics
-    </h2>
+<!-- Add CSS for animations -->
+<style>
+    /* Animated background particles */
+    .particles-container {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background-image: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+        background-size: 20px 20px;
+        animation: particleAnimation 20s linear infinite;
+    }
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <!-- Performance Card 1 -->
-      <div class="bg-white rounded-xl shadow-md p-6">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">Match Outcomes</h3>
-        <div class="flex justify-around">
-          <div class="text-center">
-            <div class="w-24 h-24 flex items-center justify-center mx-auto">
-              <i class="fas fa-thumbs-up text-5xl text-green-500"></i>
-            </div>
-            <div class="mt-2 text-2xl font-bold text-gray-800">71%</div>
-            <div class="text-sm text-gray-500">Win Rate</div>
-          </div>
-          <div class="text-center">
-            <div class="w-24 h-24 flex items-center justify-center mx-auto">
-              <i class="fas fa-thumbs-down text-5xl text-red-500"></i>
-            </div>
-            <div class="mt-2 text-2xl font-bold text-gray-800">29%</div>
-            <div class="text-sm text-gray-500">Loss Rate</div>
-          </div>
-        </div>
-      </div>
+    @keyframes particleAnimation {
+        0% {
+            background-position: 0 0;
+        }
+        100% {
+            background-position: 50px 50px;
+        }
+    }
 
-      <!-- Performance Card 2 -->
-      <div class="bg-white rounded-xl shadow-md p-6">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Performance</h3>
-        <div class="flex justify-between items-center">
-          <span class="text-gray-600">Last 5 matches:</span>
-          <div class="flex space-x-2">
-            <span class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">W</span>
-            <span class="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs">L</span>
-            <span class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">W</span>
-            <span class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">W</span>
-            <span class="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs">L</span>
-          </div>
-        </div>
-        <div class="mt-4 space-y-3">
-          <div class="flex justify-between items-center">
-            <span class="text-gray-600">Win streak (best):</span>
-            <span class="font-semibold">7 matches</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-gray-600">Current streak:</span>
-            <span class="font-semibold text-green-600">Win - 1 match</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-gray-600">Monthly win rate:</span>
-            <span class="font-semibold">75% (9/12)</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+    /* Add subtle animations when page loads */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 
-<!-- Quick Actions Section -->
-<section class="py-10 bg-white">
-  <div class="container mx-auto px-4 md:px-6 text-center">
-    <h2 class="text-2xl font-bold text-gray-800 mb-8">
-      <i class="fas fa-bolt text-blue-600 mr-2"></i> Quick Actions
-    </h2>
+    section {
+        animation: fadeInUp 0.6s ease-out forwards;
+        animation-delay: calc(var(--section-index, 0) * 0.2s);
+    }
 
-    <div class="flex flex-wrap justify-center gap-4">
-      <%= link_to "#", class: "bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium transition duration-300 flex items-center" do %>
-        <i class="fas fa-gamepad mr-2"></i> Log a New Match
-      <% end %>
+    /* Add animation and transition classes */
+    .hover-lift {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
 
-      <%= link_to "#", class: "bg-purple-600 hover:bg-purple-700 text-white py-3 px-6 rounded-lg font-medium transition duration-300 flex items-center" do %>
-        <i class="fas fa-trophy mr-2"></i> View Leaderboard
-      <% end %>
+    .hover-lift:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+</style>
 
-      <%= link_to "#", class: "bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-medium transition duration-300 flex items-center" do %>
-        <i class="fas fa-users mr-2"></i> Find Opponents
-      <% end %>
+<!-- Add JavaScript for staggered animations -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add section indices for staggered animations
+        const sections = document.querySelectorAll('section');
+        sections.forEach((section, index) => {
+            section.style.setProperty('--section-index', index);
+        });
 
-      <%= link_to "#", class: "bg-gray-600 hover:bg-gray-700 text-white py-3 px-6 rounded-lg font-medium transition duration-300 flex items-center" do %>
-        <i class="fas fa-info-circle mr-2"></i> How Elo Works
-      <% end %>
-    </div>
-  </div>
-</section>
+        // Add intersection observer for elements to animate when they come into view
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-in');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.1
+        });
+
+        const animatedElements = document.querySelectorAll('.animate-on-scroll');
+        animatedElements.forEach(el => {
+            observer.observe(el);
+        });
+    });
+</script>

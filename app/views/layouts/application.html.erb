@@ -10,10 +10,37 @@
   <!-- Font Awesome CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
+      /* Modern Color Variables */
+      :root {
+          --primary: #4f46e5;
+          --primary-dark: #4338ca;
+          --primary-light: #c7d2fe;
+          --secondary: #8b5cf6;
+          --accent: #6366f1;
+          --text-white: #f8fafc;
+          --text-light: #cbd5e1;
+          --text-dark: #1e293b;
+          --bg-light: #f1f5f9;
+          --surface: #ffffff;
+          --error: #ef4444;
+          --success: #10b981;
+      }
+
+      /* Base styles */
+      body {
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+
+      /* Smooth scrolling */
+      html {
+          scroll-behavior: smooth;
+      }
+
       /* Custom hover underline animation for nav links */
       .nav-link {
           position: relative;
       }
+
       .nav-link::after {
           content: '';
           position: absolute;
@@ -22,8 +49,9 @@
           background-color: white;
           left: 0;
           bottom: -4px;
-          transition: width 0.3s;
+          transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
+
       .nav-link:hover::after {
           width: 100%;
       }
@@ -37,97 +65,425 @@
       .animate-float {
           animation: float 3s ease-in-out infinite;
       }
+
+      /* Page transitions */
+      .page-transition {
+          animation: fadeIn 0.4s ease-out;
+      }
+
+      @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+      }
+
+      /* Card hover effect */
+      .hover-scale {
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .hover-scale:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
+
+      /* Mobile bottom nav */
+      .mobile-bottom-nav {
+          box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05);
+          backdrop-filter: blur(10px);
+          background-color: rgba(255, 255, 255, 0.9);
+      }
+
+      /* New match button pulse animation */
+      @keyframes pulse {
+          0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7); }
+          70% { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+      }
+
+      .pulse-animation {
+          animation: pulse 2s infinite;
+      }
+
+      /* Notification badge */
+      .notification-badge {
+          position: absolute;
+          top: -5px;
+          right: -5px;
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          background-color: var(--error);
+          color: white;
+          font-size: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+      }
+
+      /* Ripple effect for buttons */
+      .ripple {
+          position: relative;
+          overflow: hidden;
+      }
+
+      .ripple:after {
+          content: "";
+          display: block;
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          top: 0;
+          left: 0;
+          pointer-events: none;
+          background-image: radial-gradient(circle, #fff 10%, transparent 10.01%);
+          background-repeat: no-repeat;
+          background-position: 50%;
+          transform: scale(10, 10);
+          opacity: 0;
+          transition: transform .5s, opacity 1s;
+      }
+
+      .ripple:active:after {
+          transform: scale(0, 0);
+          opacity: .3;
+          transition: 0s;
+      }
   </style>
 </head>
 
 <body class="min-h-screen flex flex-col bg-gray-50 text-gray-800">
 
 <!-- Navbar -->
-<nav class="bg-blue-700 shadow-lg fixed top-0 w-full z-50">
+<nav class="bg-gradient-to-r from-indigo-600 to-violet-600 shadow-lg fixed top-0 w-full z-50">
   <div class="container mx-auto flex justify-between items-center py-3 px-4 lg:px-6">
 
     <!-- Logo -->
-    <%= link_to root_path, class: "text-2xl font-bold text-white hover:text-blue-100 transition duration-300 flex items-center" do %>
-      <span class="bg-white text-blue-700 px-1 rounded mr-1">R</span>ankedBJJ
+    <%= link_to root_path, class: "text-2xl font-bold text-white flex items-center transform transition hover:scale-105 duration-300" do %>
+      <span class="bg-white text-indigo-600 px-2 py-1 rounded mr-1 shadow-sm">R</span>ankedBJJ
     <% end %>
 
     <!-- Desktop Navigation -->
     <div class="hidden md:flex space-x-8 items-center">
-      <%= link_to "Leaderboard", gyms_path, class: "text-white hover:text-blue-200 font-medium transition duration-300 nav-link" %>
-      <%= link_to "About", "#", class: "text-white hover:text-blue-200 font-medium transition duration-300 nav-link" %>
+      <%= link_to "Leaderboard", gyms_path, class: "text-white hover:text-indigo-100 font-medium transition duration-300 nav-link" %>
+      <%= link_to "About", "#", class: "text-white hover:text-indigo-100 font-medium transition duration-300 nav-link" %>
 
       <% if user_signed_in? %>
-        <%= link_to "My Gyms", gyms_path, class: "text-white hover:text-blue-200 font-medium transition duration-300 nav-link" %>
-        <%= link_to "Logout", destroy_user_session_path, method: :delete, data: { turbo_method: :delete }, class: "text-white bg-red-600 font-medium py-1.5 px-4 rounded-md hover:bg-red-700 transition duration-300 ml-2" %>
-      <% else %>
-        <%= link_to "Sign In", new_user_session_path,
-                    class: "bg-white text-blue-700 font-medium py-1.5 px-4 rounded-md hover:bg-blue-50 transition duration-300 ml-2" %>
-      <% end %>
+        <%= link_to "My Gyms", gyms_path, class: "text-white hover:text-indigo-100 font-medium transition duration-300 nav-link" %>
 
+        <!-- Desktop New Match Button -->
+        <%= link_to new_match_path, class: "group relative inline-flex items-center justify-center mx-2 px-4 py-2 bg-white text-indigo-600 font-semibold rounded-full hover:bg-indigo-50 shadow-md transition duration-300 hover:shadow-lg" do %>
+          <i class="fas fa-plus mr-2 group-hover:rotate-90 transition-transform duration-300"></i> New Match
+        <% end %>
+
+        <%= link_to destroy_user_session_path, method: :delete, data: { turbo_method: :delete }, class: "text-white bg-red-500 font-medium py-1.5 px-4 rounded-full hover:bg-red-600 transition duration-300 ripple" do %>
+          <i class="fas fa-sign-out-alt mr-1"></i> Logout
+        <% end %>
+      <% else %>
+        <%= link_to new_user_session_path, class: "bg-white text-indigo-600 font-medium py-1.5 px-4 rounded-full hover:bg-indigo-50 shadow-md transition duration-300 ripple" do %>
+          <i class="fas fa-sign-in-alt mr-1"></i> Sign In
+        <% end %>
+      <% end %>
     </div>
 
     <!-- Mobile Menu Button -->
-    <button id="mobile-menu-button" class="md:hidden text-white hover:bg-blue-800 p-2 rounded-md transition duration-300">
+    <button id="mobile-menu-button" class="md:hidden text-white hover:bg-indigo-700 p-2 rounded-md transition duration-300 ripple">
       <i class="fas fa-bars"></i>
     </button>
   </div>
 
   <!-- Mobile Navigation -->
-  <div id="mobile-menu" class="hidden md:hidden bg-blue-700 border-t border-blue-600 shadow-inner">
-    <%= link_to "Leaderboard", gyms_path, class: "block py-2 px-6 text-white hover:bg-blue-800 transition duration-300" %>
-    <%= link_to "About", "#", class: "block py-2 px-6 text-white hover:bg-blue-800 transition duration-300" %>
+  <div id="mobile-menu" class="hidden md:hidden bg-indigo-600 border-t border-indigo-500 shadow-inner">
+    <%= link_to "Leaderboard", gyms_path, class: "block py-3 px-6 text-white hover:bg-indigo-700 transition duration-300" %>
+    <%= link_to "About", "#", class: "block py-3 px-6 text-white hover:bg-indigo-700 transition duration-300" %>
     <% if user_signed_in? %>
-      <%= link_to "My Gyms", gyms_path, class: "block py-2 px-6 text-white hover:bg-blue-800 transition duration-300" %>
+      <%= link_to "My Gyms", gyms_path, class: "block py-3 px-6 text-white hover:bg-indigo-700 transition duration-300" %>
       <div class="px-6 py-3">
-        <%= link_to "Logout", destroy_user_session_path, method: :delete, class: "block w-full text-center bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition duration-300" %>
+        <%= link_to "Logout", destroy_user_session_path, method: :delete, class: "block w-full text-center bg-red-500 text-white py-2 px-4 rounded-full hover:bg-red-600 transition duration-300 font-medium" %>
       </div>
     <% else %>
       <div class="px-6 py-3">
-        <%= link_to "Sign In", new_user_session_path, class: "block w-full text-center bg-white text-blue-700 py-2 px-4 rounded-md hover:bg-blue-50 transition duration-300 font-medium" %>
+        <%= link_to "Sign In", new_user_session_path, class: "block w-full text-center bg-white text-indigo-600 py-2 px-4 rounded-full hover:bg-indigo-50 transition duration-300 font-medium" %>
       </div>
     <% end %>
   </div>
 </nav>
 
 <!-- Main Content -->
-<main class="flex-grow pt-14">
+<main class="flex-grow pt-16 pb-20 md:pb-0 page-transition">
   <%= yield %>
 </main>
 
+<!-- Mobile Bottom Navigation -->
+<% if user_signed_in? %>
+  <div class="md:hidden fixed bottom-0 w-full z-50 mobile-bottom-nav">
+    <div class="flex justify-around items-center py-2 px-4">
+      <!-- Home -->
+      <%= link_to root_path, class: "flex flex-col items-center p-2 text-gray-700 hover:text-indigo-600 transition duration-300" do %>
+        <i class="fas fa-home text-xl"></i>
+        <span class="text-xs mt-1">Home</span>
+      <% end %>
+
+      <!-- Gyms -->
+      <%= link_to gyms_path, class: "flex flex-col items-center p-2 text-gray-700 hover:text-indigo-600 transition duration-300" do %>
+        <i class="fas fa-dumbbell text-xl"></i>
+        <span class="text-xs mt-1">Gyms</span>
+      <% end %>
+
+      <!-- New Match Button (Center, Larger) -->
+      <%= link_to new_match_path, class: "flex flex-col items-center transform -translate-y-5" do %>
+        <div class="w-14 h-14 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-lg pulse-animation">
+          <i class="fas fa-plus text-xl"></i>
+        </div>
+        <span class="text-xs mt-1 text-indigo-600 font-medium">New Match</span>
+      <% end %>
+
+      <!-- Profile -->
+      <%= link_to user_path(current_user), class: "flex flex-col items-center p-2 text-gray-700 hover:text-indigo-600 transition duration-300" do %>
+        <i class="fas fa-user text-xl"></i>
+        <span class="text-xs mt-1">Profile</span>
+      <% end %>
+
+      <!-- Leaderboard -->
+      <%= link_to "#", class: "flex flex-col items-center p-2 text-gray-700 hover:text-indigo-600 transition duration-300" do %>
+        <i class="fas fa-trophy text-xl"></i>
+        <span class="text-xs mt-1">Rankings</span>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
 <!-- Footer -->
-<footer class="bg-blue-800 text-white py-8">
+<footer class="bg-gradient-to-r from-indigo-900 to-violet-900 text-white py-8">
   <div class="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center">
     <div class="mb-6 md:mb-0 text-center md:text-left">
       <h3 class="text-xl font-bold flex items-center justify-center md:justify-start">
-        <span class="bg-white text-blue-700 px-1 rounded mr-1">R</span>ankedBJJ
+        <span class="bg-white text-indigo-600 px-2 py-1 rounded mr-1 shadow-sm">R</span>ankedBJJ
       </h3>
-      <p class="text-sm text-blue-200 mt-1">Track your journey to black belt.</p>
+      <p class="text-sm text-indigo-200 mt-1">Track your journey to black belt.</p>
     </div>
 
-    <div class="flex space-x-8">
-      <%= link_to "#", class: "text-blue-200 hover:text-white transition duration-300 flex items-center" do %>
-        <i class="fab fa-instagram mr-2"></i> Instagram
+    <div class="flex flex-wrap justify-center space-x-6">
+      <%= link_to "#", class: "text-indigo-200 hover:text-white transition duration-300 flex items-center hover-scale transform hover:-translate-y-1" do %>
+        <i class="fab fa-instagram text-xl"></i>
+        <span class="ml-2 hidden md:inline">Instagram</span>
       <% end %>
-      <%= link_to "#", class: "text-blue-200 hover:text-white transition duration-300 flex items-center" do %>
-        <i class="fab fa-twitter mr-2"></i> Twitter
+      <%= link_to "#", class: "text-indigo-200 hover:text-white transition duration-300 flex items-center hover-scale transform hover:-translate-y-1" do %>
+        <i class="fab fa-twitter text-xl"></i>
+        <span class="ml-2 hidden md:inline">Twitter</span>
       <% end %>
-      <%= link_to "#", class: "text-blue-200 hover:text-white transition duration-300 flex items-center" do %>
-        <i class="fas fa-envelope mr-2"></i> Contact
+      <%= link_to "#", class: "text-indigo-200 hover:text-white transition duration-300 flex items-center hover-scale transform hover:-translate-y-1" do %>
+        <i class="fas fa-envelope text-xl"></i>
+        <span class="ml-2 hidden md:inline">Contact</span>
       <% end %>
     </div>
   </div>
 
-  <div class="mt-6 text-center text-sm text-blue-200">
+  <div class="mt-6 text-center text-sm text-indigo-200">
     &copy; <%= Time.current.year %> RankedBJJ. All rights reserved.
   </div>
 </footer>
 
 <!-- Mobile Menu Toggle -->
 <script>
-    document.getElementById("mobile-menu-button").addEventListener("click", function () {
-        document.getElementById("mobile-menu").classList.toggle("hidden");
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mobile menu toggle
+        document.getElementById("mobile-menu-button").addEventListener("click", function() {
+            const mobileMenu = document.getElementById("mobile-menu");
+            mobileMenu.classList.toggle("hidden");
+
+            // Add slide animation
+            if (!mobileMenu.classList.contains("hidden")) {
+                mobileMenu.style.maxHeight = "0";
+                mobileMenu.style.transition = "max-height 0.3s ease-out";
+                setTimeout(() => {
+                    mobileMenu.style.maxHeight = mobileMenu.scrollHeight + "px";
+                }, 10);
+            } else {
+                mobileMenu.style.maxHeight = "0";
+            }
+        });
+
+        // Add active state to current page in navigation
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('a[href="' + currentPath + '"]').forEach(link => {
+            link.classList.add('text-white', 'font-bold');
+
+            // For mobile bottom nav, highlight active icon
+            if (link.querySelector('i')) {
+                link.querySelector('i').classList.add('text-indigo-600');
+                link.querySelector('span').classList.add('font-semibold');
+            }
+        });
+
+        // Page transition effect
+        const mainContent = document.querySelector('main');
+        mainContent.classList.add('opacity-0');
+        setTimeout(() => {
+            mainContent.classList.remove('opacity-0');
+            mainContent.classList.add('transition-opacity', 'duration-300');
+        }, 10);
+
+        // Ripple effect for buttons
+        const buttons = document.querySelectorAll('.ripple');
+        buttons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                const x = e.clientX - e.target.getBoundingClientRect().left;
+                const y = e.clientY - e.target.getBoundingClientRect().top;
+
+                const ripple = document.createElement('span');
+                ripple.classList.add('ripple-effect');
+                ripple.style.left = `${x}px`;
+                ripple.style.top = `${y}px`;
+
+                this.appendChild(ripple);
+
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+            });
+        });
+
+        // Notification badge functionality (example)
+        function updateNotificationBadges() {
+            // Fetch notifications count from API or set statically for demo
+            const notificationCount = 2;
+
+            if (notificationCount > 0) {
+                document.querySelectorAll('.notification-badge').forEach(badge => {
+                    badge.textContent = notificationCount > 9 ? '9+' : notificationCount;
+                    badge.classList.remove('hidden');
+                });
+            }
+        }
+
+        // Call once on page load
+        updateNotificationBadges();
+
+        // Add scroll effects
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('nav');
+            if (window.scrollY > 10) {
+                navbar.classList.add('shadow-md');
+            } else {
+                navbar.classList.remove('shadow-md');
+            }
+        });
+
+        // Add bottom spacing on page content based on bottom nav height for mobile
+        function adjustBottomPadding() {
+            const bottomNav = document.querySelector('.mobile-bottom-nav');
+            const mainContent = document.querySelector('main');
+
+            if (bottomNav && window.innerWidth < 768) {
+                const navHeight = bottomNav.offsetHeight;
+                mainContent.style.paddingBottom = (navHeight + 20) + 'px';
+            } else {
+                mainContent.style.paddingBottom = '0';
+            }
+        }
+
+        // Run on load and resize
+        adjustBottomPadding();
+        window.addEventListener('resize', adjustBottomPadding);
     });
 </script>
 
+<!-- Add preconnect for performance -->
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+
+<!-- Additional styles for animations -->
+<style>
+    /* Fancy loading animation */
+    .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(79, 70, 229, 0.1);
+        border-left-color: #4f46e5;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* Badge with pulse */
+    .badge-pulse {
+        animation: badgePulse 2s infinite;
+    }
+
+    @keyframes badgePulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+
+    /* Ripple effect */
+    .ripple-effect {
+        position: absolute;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, 0.4);
+        width: 100px;
+        height: 100px;
+        margin-top: -50px;
+        margin-left: -50px;
+        animation: ripple 0.6s linear;
+        opacity: 0;
+    }
+
+    @keyframes ripple {
+        0% {
+            transform: scale(0);
+            opacity: 0.5;
+        }
+        100% {
+            transform: scale(4);
+            opacity: 0;
+        }
+    }
+
+    /* Page transitions */
+    .slide-in {
+        animation: slideIn 0.3s forwards;
+    }
+
+    @keyframes slideIn {
+        from { transform: translateX(20px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* Bottom sheet animation */
+    .bottom-sheet {
+        transform: translateY(100%);
+        transition: transform 0.3s ease-out;
+    }
+
+    .bottom-sheet.show {
+        transform: translateY(0);
+    }
+
+    /* Navbar glass effect on scroll */
+    .glass-effect {
+        backdrop-filter: blur(10px);
+        background-color: rgba(79, 70, 229, 0.9);
+        transition: all 0.3s ease;
+    }
+</style>
+
+<!-- Dark mode toggle script (optional feature) -->
+<script>
+    // Check user preference
+    if (localStorage.getItem('darkMode') === 'true' ||
+        (localStorage.getItem('darkMode') === null &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark-mode');
+    }
+
+    function toggleDarkMode() {
+        document.documentElement.classList.toggle('dark-mode');
+        localStorage.setItem('darkMode', document.documentElement.classList.contains('dark-mode'));
+    }
+</script>
 </body>
 </html>

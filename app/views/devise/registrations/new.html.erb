@@ -11,13 +11,37 @@
       <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { class: "space-y-6" }) do |f| %>
         <%= render "devise/shared/error_messages", resource: resource %>
 
+        <!-- First Name Field -->
+        <div class="group">
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i class="fas fa-user text-blue-600"></i>
+            </div>
+            <%= f.text_field :first_name, autofocus: true,
+                             class: "w-full pl-10 pr-3 py-3 rounded-lg border-2 border-gray-200 outline-none focus:border-blue-600 transition-colors duration-300",
+                             placeholder: "First Name" %>
+          </div>
+        </div>
+
+        <!-- Last Name Field -->
+        <div class="group">
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i class="fas fa-user text-blue-600"></i>
+            </div>
+            <%= f.text_field :last_name,
+                             class: "w-full pl-10 pr-3 py-3 rounded-lg border-2 border-gray-200 outline-none focus:border-blue-600 transition-colors duration-300",
+                             placeholder: "Last Name" %>
+          </div>
+        </div>
+
         <!-- Email Field -->
         <div class="group">
           <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <i class="fas fa-envelope text-blue-600"></i>
             </div>
-            <%= f.email_field :email, autofocus: true, autocomplete: "email",
+            <%= f.email_field :email, autocomplete: "email",
                               class: "w-full pl-10 pr-3 py-3 rounded-lg border-2 border-gray-200 outline-none focus:border-blue-600 transition-colors duration-300",
                               placeholder: "Your email address" %>
           </div>
