@@ -1,0 +1,343 @@
+<!-- Player Profile Header -->
+<section class="bg-gradient-to-r from-blue-700 to-blue-800 text-white py-10 px-4 md:px-6">
+  <div class="container mx-auto">
+    <div class="flex flex-col md:flex-row items-center md:items-start">
+      <!-- Player Avatar -->
+      <div class="w-32 h-32 rounded-full bg-white flex items-center justify-center mb-6 md:mb-0 md:mr-8 shadow-lg border-4 border-white overflow-hidden">
+        <i class="fas fa-user text-5xl text-blue-700"></i>
+      </div>
+
+      <!-- Player Info -->
+      <div class="text-center md:text-left flex-grow">
+        <h1 class="text-3xl md:text-4xl font-bold mb-2">John Smith</h1>
+        <div class="flex flex-wrap justify-center md:justify-start items-center mb-4">
+          <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold mr-3 mb-2">
+            <i class="fas fa-certificate mr-1"></i> Blue Belt
+          </span>
+          <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold mr-3 mb-2">
+            <i class="fas fa-medal mr-1"></i> Rank: #2
+          </span>
+          <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold mr-3 mb-2">
+            <i class="fas fa-chart-line mr-1"></i> Elo: 1856
+          </span>
+        </div>
+        <p class="text-blue-100 max-w-xl">
+          Member since June 2023 • NYC BJJ Academy • 45 matches
+        </p>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="mt-6 md:mt-0 flex flex-col md:flex-row md:items-start space-y-3 md:space-y-0 md:space-x-3">
+        <%= link_to new_match_path, class: "bg-white text-blue-700 hover:bg-blue-50 py-2 px-4 rounded-lg font-medium transition duration-300" do %>
+          <i class="fas fa-gamepad mr-2"></i> Log a Match
+        <% end %>
+
+        <%= link_to "#", class: "bg-transparent text-white border border-white hover:bg-blue-600 py-2 px-4 rounded-lg font-medium transition duration-300" do %>
+          <i class="fas fa-edit mr-2"></i> Edit Profile
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Wave Divider -->
+  <div class="w-full mt-10">
+    <div class="relative h-20 overflow-hidden">
+      <div class="absolute bottom-0 w-full">
+        <i class="fas fa-water text-gray-50 text-8xl w-full" style="display: block;"></i>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Stats Cards Section -->
+<section class="py-10 bg-gray-50">
+  <div class="container mx-auto px-4 md:px-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Win/Loss Record -->
+      <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-bold text-gray-800">Win/Loss Record</h3>
+          <i class="fas fa-trophy text-blue-600 text-2xl"></i>
+        </div>
+        <div class="flex justify-between items-center mb-4">
+          <div class="text-center">
+            <div class="text-3xl font-bold text-green-600">32</div>
+            <div class="text-sm text-gray-500">Wins</div>
+          </div>
+          <div class="h-16 w-0.5 bg-gray-200"></div>
+          <div class="text-center">
+            <div class="text-3xl font-bold text-red-600">13</div>
+            <div class="text-sm text-gray-500">Losses</div>
+          </div>
+          <div class="h-16 w-0.5 bg-gray-200"></div>
+          <div class="text-center">
+            <div class="text-3xl font-bold text-blue-600">71%</div>
+            <div class="text-sm text-gray-500">Win Rate</div>
+          </div>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-3">
+          <div class="bg-blue-600 h-3 rounded-full" style="width: 71%"></div>
+        </div>
+      </div>
+
+      <!-- Elo History -->
+      <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-bold text-gray-800">Elo History</h3>
+          <i class="fas fa-chart-line text-blue-600 text-2xl"></i>
+        </div>
+        <div class="flex flex-col space-y-4">
+          <div class="flex justify-between items-center">
+            <span class="text-gray-600">Starting Elo:</span>
+            <span class="font-semibold">1500</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-gray-600">Current Elo:</span>
+            <span class="font-semibold">1856</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-gray-600">Highest Elo:</span>
+            <span class="font-semibold">1892</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-gray-600">Gain/Loss (30 days):</span>
+            <span class="font-semibold text-green-600">+42</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gym Rankings -->
+      <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-bold text-gray-800">Gym Rankings</h3>
+          <i class="fas fa-medal text-blue-600 text-2xl"></i>
+        </div>
+        <div class="space-y-4">
+          <div class="flex items-center p-2 bg-blue-50 rounded-lg">
+            <div class="bg-blue-700 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">2</div>
+            <div class="ml-3">
+              <div class="font-medium">NYC BJJ Academy</div>
+              <div class="text-sm text-gray-500">Rank #2 of 48 members</div>
+            </div>
+            <div class="ml-auto font-bold text-blue-700">1856</div>
+          </div>
+          <div class="flex items-center p-2 bg-gray-50 rounded-lg">
+            <div class="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">5</div>
+            <div class="ml-3">
+              <div class="font-medium">Ronin BJJ</div>
+              <div class="text-sm text-gray-500">Rank #5 of 32 members</div>
+            </div>
+            <div class="ml-auto font-bold text-blue-700">1780</div>
+          </div>
+          <div class="flex items-center p-2 bg-gray-50 rounded-lg">
+            <div class="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">1</div>
+            <div class="ml-3">
+              <div class="font-medium">Gracie NYC</div>
+              <div class="text-sm text-gray-500">Rank #1 of 15 members</div>
+            </div>
+            <div class="ml-auto font-bold text-blue-700">1820</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Recent Matches Section -->
+<section class="py-10 bg-white">
+  <div class="container mx-auto px-4 md:px-6">
+    <div class="flex justify-between items-center mb-8">
+      <h2 class="text-2xl font-bold text-gray-800">
+        <i class="fas fa-history text-blue-600 mr-2"></i> Recent Matches
+      </h2>
+      <%= link_to "#", class: "text-blue-600 hover:text-blue-800 font-medium flex items-center transition duration-300" do %>
+        View All Matches
+        <i class="fas fa-arrow-right ml-2"></i>
+      <% end %>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full bg-white rounded-lg shadow-md">
+        <thead>
+        <tr class="bg-gray-100 text-gray-600 uppercase text-sm">
+          <th class="py-3 px-4 text-left">Date</th>
+          <th class="py-3 px-4 text-left">Opponent</th>
+          <th class="py-3 px-4 text-left">Result</th>
+          <th class="py-3 px-4 text-left">Elo Change</th>
+          <th class="py-3 px-4 text-left">Gym</th>
+        </tr>
+        </thead>
+        <tbody class="text-gray-700">
+        <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-200">
+          <td class="py-4 px-4">Mar 1, 2025</td>
+          <td class="py-4 px-4">
+            <div class="flex items-center">
+              <div class="w-8 h-8 bg-blue-700 rounded-full flex items-center justify-center text-white">
+                <i class="fas fa-user text-xs"></i>
+              </div>
+              <span class="ml-2 font-medium">Alex Chen</span>
+            </div>
+          </td>
+          <td class="py-4 px-4">
+            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-lg text-xs font-semibold">WIN</span>
+          </td>
+          <td class="py-4 px-4 text-green-600 font-semibold">+12</td>
+          <td class="py-4 px-4">NYC BJJ Academy</td>
+        </tr>
+        <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-200">
+          <td class="py-4 px-4">Feb 24, 2025</td>
+          <td class="py-4 px-4">
+            <div class="flex items-center">
+              <div class="w-8 h-8 bg-blue-700 rounded-full flex items-center justify-center text-white">
+                <i class="fas fa-user text-xs"></i>
+              </div>
+              <span class="ml-2 font-medium">Sarah Lee</span>
+            </div>
+          </td>
+          <td class="py-4 px-4">
+            <span class="px-2 py-1 bg-red-100 text-red-800 rounded-lg text-xs font-semibold">LOSS</span>
+          </td>
+          <td class="py-4 px-4 text-red-600 font-semibold">-8</td>
+          <td class="py-4 px-4">NYC BJJ Academy</td>
+        </tr>
+        <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-200">
+          <td class="py-4 px-4">Feb 17, 2025</td>
+          <td class="py-4 px-4">
+            <div class="flex items-center">
+              <div class="w-8 h-8 bg-blue-700 rounded-full flex items-center justify-center text-white">
+                <i class="fas fa-user text-xs"></i>
+              </div>
+              <span class="ml-2 font-medium">Mike Johnson</span>
+            </div>
+          </td>
+          <td class="py-4 px-4">
+            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-lg text-xs font-semibold">WIN</span>
+          </td>
+          <td class="py-4 px-4 text-green-600 font-semibold">+15</td>
+          <td class="py-4 px-4">Ronin BJJ</td>
+        </tr>
+        <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-200">
+          <td class="py-4 px-4">Feb 10, 2025</td>
+          <td class="py-4 px-4">
+            <div class="flex items-center">
+              <div class="w-8 h-8 bg-blue-700 rounded-full flex items-center justify-center text-white">
+                <i class="fas fa-user text-xs"></i>
+              </div>
+              <span class="ml-2 font-medium">David Park</span>
+            </div>
+          </td>
+          <td class="py-4 px-4">
+            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-lg text-xs font-semibold">WIN</span>
+          </td>
+          <td class="py-4 px-4 text-green-600 font-semibold">+9</td>
+          <td class="py-4 px-4">Gracie NYC</td>
+        </tr>
+        <tr class="hover:bg-gray-50 transition duration-200">
+          <td class="py-4 px-4">Jan 29, 2025</td>
+          <td class="py-4 px-4">
+            <div class="flex items-center">
+              <div class="w-8 h-8 bg-blue-700 rounded-full flex items-center justify-center text-white">
+                <i class="fas fa-user text-xs"></i>
+              </div>
+              <span class="ml-2 font-medium">Carlos Rodriguez</span>
+            </div>
+          </td>
+          <td class="py-4 px-4">
+            <span class="px-2 py-1 bg-red-100 text-red-800 rounded-lg text-xs font-semibold">LOSS</span>
+          </td>
+          <td class="py-4 px-4 text-red-600 font-semibold">-11</td>
+          <td class="py-4 px-4">NYC BJJ Academy</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- Performance Stats Section -->
+<section class="py-10 bg-gray-50">
+  <div class="container mx-auto px-4 md:px-6">
+    <h2 class="text-2xl font-bold text-gray-800 mb-8">
+      <i class="fas fa-chart-pie text-blue-600 mr-2"></i> Performance Statistics
+    </h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <!-- Performance Card 1 -->
+      <div class="bg-white rounded-xl shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Match Outcomes</h3>
+        <div class="flex justify-around">
+          <div class="text-center">
+            <div class="w-24 h-24 flex items-center justify-center mx-auto">
+              <i class="fas fa-thumbs-up text-5xl text-green-500"></i>
+            </div>
+            <div class="mt-2 text-2xl font-bold text-gray-800">71%</div>
+            <div class="text-sm text-gray-500">Win Rate</div>
+          </div>
+          <div class="text-center">
+            <div class="w-24 h-24 flex items-center justify-center mx-auto">
+              <i class="fas fa-thumbs-down text-5xl text-red-500"></i>
+            </div>
+            <div class="mt-2 text-2xl font-bold text-gray-800">29%</div>
+            <div class="text-sm text-gray-500">Loss Rate</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Performance Card 2 -->
+      <div class="bg-white rounded-xl shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Performance</h3>
+        <div class="flex justify-between items-center">
+          <span class="text-gray-600">Last 5 matches:</span>
+          <div class="flex space-x-2">
+            <span class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">W</span>
+            <span class="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs">L</span>
+            <span class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">W</span>
+            <span class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">W</span>
+            <span class="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs">L</span>
+          </div>
+        </div>
+        <div class="mt-4 space-y-3">
+          <div class="flex justify-between items-center">
+            <span class="text-gray-600">Win streak (best):</span>
+            <span class="font-semibold">7 matches</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-gray-600">Current streak:</span>
+            <span class="font-semibold text-green-600">Win - 1 match</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-gray-600">Monthly win rate:</span>
+            <span class="font-semibold">75% (9/12)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Quick Actions Section -->
+<section class="py-10 bg-white">
+  <div class="container mx-auto px-4 md:px-6 text-center">
+    <h2 class="text-2xl font-bold text-gray-800 mb-8">
+      <i class="fas fa-bolt text-blue-600 mr-2"></i> Quick Actions
+    </h2>
+
+    <div class="flex flex-wrap justify-center gap-4">
+      <%= link_to "#", class: "bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium transition duration-300 flex items-center" do %>
+        <i class="fas fa-gamepad mr-2"></i> Log a New Match
+      <% end %>
+
+      <%= link_to "#", class: "bg-purple-600 hover:bg-purple-700 text-white py-3 px-6 rounded-lg font-medium transition duration-300 flex items-center" do %>
+        <i class="fas fa-trophy mr-2"></i> View Leaderboard
+      <% end %>
+
+      <%= link_to "#", class: "bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-medium transition duration-300 flex items-center" do %>
+        <i class="fas fa-users mr-2"></i> Find Opponents
+      <% end %>
+
+      <%= link_to "#", class: "bg-gray-600 hover:bg-gray-700 text-white py-3 px-6 rounded-lg font-medium transition duration-300 flex items-center" do %>
+        <i class="fas fa-info-circle mr-2"></i> How Elo Works
+      <% end %>
+    </div>
+  </div>
+</section>

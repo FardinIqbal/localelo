@@ -23,12 +23,12 @@ class MatchesController < ApplicationController
     end
 
     @match.opponent = opponent
-    @match.winner = (params[:match][:result] == "win") ? current_user : opponent
-    @match.match_time = Time.current # Set match_time to current time
+    @match.winner = (params[:match][:opponent_id].to_i == current_user.id) ? opponent : current_user
+    @match.match_time = Time.zone.now  # ✅ Correct Time Format
 
     if @match.save
       update_elo(@match)
-      redirect_to matches_path, notice: "Match logged successfully!"
+      redirect_to gym_path(@match.gym), notice: "Match logged successfully!"
     else
       flash.now[:alert] = "Error logging match. Please check the details."
       render :new, status: :unprocessable_entity
@@ -38,7 +38,7 @@ class MatchesController < ApplicationController
   private
 
   def match_params
-    params.require(:match).permit(:gym_id, :opponent_id, :submission, :result)
+    params.require(:match).permit(:gym_id, :opponent_id, :submission)
   end
 
   def update_elo(match)
