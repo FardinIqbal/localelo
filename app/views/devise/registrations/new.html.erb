@@ -1,136 +1,66 @@
-<section class="min-h-screen bg-gradient-to-br from-blue-700 to-blue-800 py-12 px-4">
-  <div class="max-w-md mx-auto">
-    <!-- Card Container -->
-    <div class="bg-white rounded-2xl shadow-2xl p-8 transform hover:scale-[1.02] transition-transform duration-300">
-      <!-- Header -->
-      <div class="text-center mb-8">
-        <h2 class="text-3xl font-bold text-gray-800 mb-3">Join RankedBJJ</h2>
-        <p class="text-gray-600">Start tracking your BJJ journey today</p>
+<section class="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4">
+  <div class="max-w-md w-full bg-white shadow-lg rounded-lg p-8">
+
+    <!-- Header -->
+    <div class="text-center mb-6">
+      <h2 class="text-2xl font-bold text-gray-800">Create Your LocalElo Account</h2>
+      <p class="text-gray-600 text-sm">Easily manage rankings and match history for your gym or club.</p>
+    </div>
+
+    <!-- Sign-Up Form -->
+    <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { class: "space-y-4" }) do |f| %>
+      <%= render "devise/shared/error_messages", resource: resource %>
+
+      <!-- Username (Required) -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Username</label>
+        <%= f.text_field :username, required: true, class: "w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-indigo-300" %>
       </div>
 
-      <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { class: "space-y-6" }) do |f| %>
-        <%= render "devise/shared/error_messages", resource: resource %>
+      <!-- First Name -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">First Name</label>
+        <%= f.text_field :first_name, required: true, class: "w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-indigo-300" %>
+      </div>
 
-        <!-- First Name Field -->
-        <div class="group">
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <i class="fas fa-user text-blue-600"></i>
-            </div>
-            <%= f.text_field :first_name, autofocus: true,
-                             class: "w-full pl-10 pr-3 py-3 rounded-lg border-2 border-gray-200 outline-none focus:border-blue-600 transition-colors duration-300",
-                             placeholder: "First Name" %>
-          </div>
-        </div>
+      <!-- Last Name -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Last Name</label>
+        <%= f.text_field :last_name, required: true, class: "w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-indigo-300" %>
+      </div>
 
-        <!-- Last Name Field -->
-        <div class="group">
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <i class="fas fa-user text-blue-600"></i>
-            </div>
-            <%= f.text_field :last_name,
-                             class: "w-full pl-10 pr-3 py-3 rounded-lg border-2 border-gray-200 outline-none focus:border-blue-600 transition-colors duration-300",
-                             placeholder: "Last Name" %>
-          </div>
-        </div>
+      <!-- Email -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Email</label>
+        <%= f.email_field :email, required: true, class: "w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-indigo-300" %>
+      </div>
 
-        <!-- Email Field -->
-        <div class="group">
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <i class="fas fa-envelope text-blue-600"></i>
-            </div>
-            <%= f.email_field :email, autocomplete: "email",
-                              class: "w-full pl-10 pr-3 py-3 rounded-lg border-2 border-gray-200 outline-none focus:border-blue-600 transition-colors duration-300",
-                              placeholder: "Your email address" %>
-          </div>
-        </div>
+      <!-- Password -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Password</label>
+        <%= f.password_field :password, required: true, class: "w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-indigo-300" %>
+      </div>
 
-        <!-- Password Field -->
-        <div class="group">
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <i class="fas fa-lock text-blue-600"></i>
-            </div>
-            <%= f.password_field :password, autocomplete: "new-password",
-                                 class: "w-full pl-10 pr-3 py-3 rounded-lg border-2 border-gray-200 outline-none focus:border-blue-600 transition-colors duration-300",
-                                 placeholder: "Create password" %>
-          </div>
-          <% if @minimum_password_length %>
-            <p class="mt-2 text-sm text-gray-500">
-              <i class="fas fa-info-circle"></i>
-              At least <%= @minimum_password_length %> characters
-            </p>
-          <% end %>
-        </div>
+      <!-- Password Confirmation -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Confirm Password</label>
+        <%= f.password_field :password_confirmation, required: true, class: "w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-indigo-300" %>
+      </div>
 
-        <!-- Password Confirmation Field -->
-        <div class="group">
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <i class="fas fa-lock text-blue-600"></i>
-            </div>
-            <%= f.password_field :password_confirmation, autocomplete: "new-password",
-                                 class: "w-full pl-10 pr-3 py-3 rounded-lg border-2 border-gray-200 outline-none focus:border-blue-600 transition-colors duration-300",
-                                 placeholder: "Confirm password" %>
-          </div>
-        </div>
-
-        <!-- Submit Button -->
-        <div class="mt-8">
-          <%= f.submit "Create Account",
-                       class: "w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-semibold text-lg hover:shadow-lg hover:shadow-blue-500/30 transform hover:-translate-y-1 transition-all duration-300" %>
-        </div>
+      <% if @minimum_password_length %>
+        <p class="text-xs text-gray-500">At least <%= @minimum_password_length %> characters required.</p>
       <% end %>
 
-      <!-- Divider -->
-      <div class="relative my-8">
-        <div class="absolute inset-0 flex items-center">
-          <div class="w-full border-t border-gray-200"></div>
-        </div>
-        <div class="relative flex justify-center text-sm">
-          <span class="px-2 bg-white text-gray-500">or continue with</span>
-        </div>
+      <!-- Submit Button -->
+      <div class="mt-4">
+        <%= f.submit "Create Account", class: "w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 transition" %>
       </div>
+    <% end %>
 
-      <!-- Social Sign-up Options -->
-      <div class="grid grid-cols-2 gap-4 mb-8">
-        <button class="flex items-center justify-center px-4 py-3 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-lg transition-all duration-300">
-          <i class="fab fa-google text-xl text-gray-600"></i>
-          <span class="ml-2">Google</span>
-        </button>
-        <button class="flex items-center justify-center px-4 py-3 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-lg transition-all duration-300">
-          <i class="fab fa-facebook text-xl text-blue-600"></i>
-          <span class="ml-2">Facebook</span>
-        </button>
-      </div>
-
-      <!-- Sign In Link -->
-      <p class="text-center text-gray-600">
-        Already have an account?
-        <%= link_to "Sign in", new_session_path(resource_name),
-                    class: "text-blue-600 font-semibold hover:text-blue-700 transition-colors duration-300" %>
-      </p>
-
-      <!-- Benefits -->
-      <div class="mt-8 bg-blue-50 rounded-lg p-4">
-        <h3 class="font-semibold text-gray-800 mb-2">What you'll get:</h3>
-        <ul class="space-y-2">
-          <li class="flex items-center text-gray-600">
-            <i class="fas fa-check-circle text-green-500 mr-2"></i>
-            Track your BJJ progress with Elo ratings
-          </li>
-          <li class="flex items-center text-gray-600">
-            <i class="fas fa-check-circle text-green-500 mr-2"></i>
-            Join your gym's competitive community
-          </li>
-          <li class="flex items-center text-gray-600">
-            <i class="fas fa-check-circle text-green-500 mr-2"></i>
-            Access detailed match history and analytics
-          </li>
-        </ul>
-      </div>
-    </div>
+    <!-- Sign In Link -->
+    <p class="text-center text-sm text-gray-600 mt-4">
+      Already have an account?
+      <%= link_to "Sign in", new_session_path(resource_name), class: "text-indigo-600 font-semibold hover:underline" %>
+    </p>
   </div>
 </section>

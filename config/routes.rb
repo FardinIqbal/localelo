@@ -1,31 +1,63 @@
 Rails.application.routes.draw do
-  devise_for :users
-
-  # Health check endpoint
+  devise_for :users, controllers: { sessions: 'devise/sessions' }
+  # Health check route
   get "up" => "rails/health#show", as: :rails_health_check
 
-  # Root path (Homepage)
+  # Home Page (Unauthenticated Users)
+  root "home#index"
+
+  # Authenticated Users Dashboard
   authenticated :user do
-    root to: "users#show", as: :authenticated_root  # Redirects logged-in users to their profile
+    root to: "users#dashboard", as: :authenticated_root
   end
-  root "home#index"  # Unauthenticated users go to the homepage
 
-  # User profile routes
+  # User Profile
   resources :users, only: [:show, :edit, :update]
-  get "profile", to: "users#show", as: "user_profile"  # `/profile` shows the current user's profile
+  get "profile", to: "users#show", as: "user_profile"
 
-  # Gym-related routes
-  resources :gyms, only: [:index, :show, :new, :create] do
-    get 'members', on: :member  # Adds /gyms/:id/members route
+  # Organizations
+  resources :organizations do
+    member do
+      get "members"
+      post "join"
+      post "approve_member"
+    end
+
+    resources :leaderboards, only: [:index, :show, :create] do
+      member do
+        get "rankings"
+      end
+    end
   end
 
   # Matches & Match History
-  resources :matches, only: [:index, :new, :create, :show]
+  resources :matches do
+    collection do
+      get "recent"
+      post "bulk_log"
+    end
+  end
 
   # API Routes
   namespace :api do
     namespace :v1 do
-      resources :matches, only: [:index, :create]
+      resources :organizations, only: [:index, :show, :create] do
+        get :members, on: :member
+        post :join, on: :member
+        post :approve_member, on: :member
+      end
+
+      resources :leaderboards, only: [:index, :show, :create] do
+        get :rankings, on: :member
+      end
+
+      resources :matches, only: [:index, :create, :show] do
+        collection do
+          get :recent
+          post :bulk_log
+        end
+      end
+
       resources :users, only: [:index, :show]
     end
   end

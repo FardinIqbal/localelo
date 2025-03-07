@@ -1,42 +1,26 @@
 class Match < ApplicationRecord
-  belongs_to :gym
+  # Associations
   belongs_to :user1, class_name: "User"
-  belongs_to :opponent, class_name: "User", foreign_key: "opponent_id"
-  belongs_to :winner, class_name: "User", foreign_key: "winner_id", optional: true
+  belongs_to :opponent, class_name: "User"
+  belongs_to :leaderboard
+  has_one :match_metadata, dependent: :destroy
+  has_many :linkflairs, dependent: :destroy
 
-  validates :match_time, presence: true
+  # Validations to ensure all necessary data is provided
+  validates :user1_id, presence: true
+  validates :opponent_id, presence: true
+  validates :leaderboard_id, presence: true
 
-  # Returns the opponent of a given user
-  def opponent_for(user)
-    return nil unless user
-    user1 == user ? opponent : user1
-  end
+  # Ensure winner_id is either one of the players or nil (for a draw)
+  validate :winner_must_be_valid
 
-  # Determines the loser of the match
-  def loser
-    return nil unless winner # Handles cases where no winner is set
-    user1 == winner ? opponent : user1
-  end
+  private
 
-  # Determines if the given user won the match
-  def won_by?(user)
-    winner == user
-  end
+  def winner_must_be_valid
+    return if winner_id.nil? # Allow matches without a winner (TBD or Draw)
 
-  # Determines if the given user lost the match
-  def lost_by?(user)
-    loser == user
-  end
-
-  # Calculates Elo change for the winner
-  def elo_change_for_winner
-    return 0 unless winner.present? && elo_change.present?
-    elo_change.abs # Winner gains Elo (always positive)
-  end
-
-  # Calculates Elo change for the loser
-  def elo_change_for_loser
-    return 0 unless loser.present? && elo_change.present?
-    -elo_change.abs # Loser loses Elo (always negative)
+    unless [user1_id, opponent_id].include?(winner_id)
+      errors.add(:winner_id, "must be either Player 1, Opponent, or left blank for a draw")
+    end
   end
 end

@@ -1,0 +1,26 @@
+<h1>Welcome, <%= current_user.first_name || current_user.email %></h1>
+
+<h2>Your Organizations</h2>
+<% if @organizations.any? %>
+  <ul>
+    <% @organizations.each do |org| %>
+      <li><%= link_to org.name, organization_path(org) %></li>
+    <% end %>
+  </ul>
+<% else %>
+  <p>You are not part of any organizations. <%= link_to "Join one", organizations_path %></p>
+<% end %>
+
+<h2>Recent Matches</h2>
+<% if @recent_matches.any? %>
+  <ul>
+    <% @recent_matches.each do |match| %>
+      <li>
+        <%= link_to "Match vs #{match.opponent_id == current_user.id ? User.find(match.user1_id).email : User.find(match.opponent_id).email}", match_path(match) %>
+        - <strong><%= match.winner_id == current_user.id ? "You Won" : "You Lost" %></strong>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <p>No recent matches logged.</p>
+<% end %>

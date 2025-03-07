@@ -1,112 +1,53 @@
-<section class="min-h-screen bg-gradient-to-br from-blue-700 to-blue-800 py-12 px-4">
-  <div class="max-w-md mx-auto">
-    <!-- Card Container -->
-    <div class="bg-white rounded-2xl shadow-2xl p-8 transform hover:scale-[1.02] transition-transform duration-300">
-      <!-- Header -->
-      <div class="text-center mb-8">
-        <h2 class="text-3xl font-bold text-gray-800 mb-3">Welcome Back!</h2>
-        <p class="text-gray-600">Sign in to continue your BJJ journey</p>
-      </div>
+<section class="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4">
+  <div class="max-w-md w-full bg-white shadow-lg rounded-lg p-8">
 
-      <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: "space-y-6" }) do |f| %>
-        <!-- Email Field -->
-        <div class="group">
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <i class="fas fa-envelope text-blue-600"></i>
-            </div>
-            <%= f.email_field :email, autofocus: true, autocomplete: "email",
-                              class: "w-full pl-10 pr-3 py-3 rounded-lg border-2 border-gray-200 outline-none focus:border-blue-600 transition-colors duration-300",
-                              placeholder: "Your email address" %>
-          </div>
-        </div>
-
-        <!-- Password Field -->
-        <div class="group">
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <i class="fas fa-lock text-blue-600"></i>
-            </div>
-            <%= f.password_field :password, autocomplete: "current-password",
-                                 class: "w-full pl-10 pr-3 py-3 rounded-lg border-2 border-gray-200 outline-none focus:border-blue-600 transition-colors duration-300",
-                                 placeholder: "Your password" %>
-          </div>
-        </div>
-
-        <!-- Remember Me & Forgot Password -->
-        <div class="flex items-center justify-between">
-          <% if devise_mapping.rememberable? %>
-            <div class="flex items-center">
-              <%= f.check_box :remember_me, class: "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" %>
-              <%= f.label :remember_me, class: "ml-2 text-sm text-gray-600" %>
-            </div>
-          <% end %>
-
-          <%- if devise_mapping.recoverable? %>
-            <%= link_to "Forgot password?", new_password_path(resource_name),
-                        class: "text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors duration-300" %>
-          <% end %>
-        </div>
-
-        <!-- Submit Button -->
-        <div class="mt-8">
-          <%= f.submit "Sign In",
-                       class: "w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-semibold text-lg hover:shadow-lg hover:shadow-blue-500/30 transform hover:-translate-y-1 transition-all duration-300" %>
-        </div>
-      <% end %>
-
-      <!-- Divider -->
-      <div class="relative my-8">
-        <div class="absolute inset-0 flex items-center">
-          <div class="w-full border-t border-gray-200"></div>
-        </div>
-        <div class="relative flex justify-center text-sm">
-          <span class="px-2 bg-white text-gray-500">or continue with</span>
-        </div>
-      </div>
-
-      <!-- Social Login Options -->
-      <div class="grid grid-cols-2 gap-4 mb-8">
-        <button class="flex items-center justify-center px-4 py-3 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-lg transition-all duration-300">
-          <i class="fab fa-google text-xl text-gray-600"></i>
-          <span class="ml-2">Google</span>
-        </button>
-        <button class="flex items-center justify-center px-4 py-3 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-lg transition-all duration-300">
-          <i class="fab fa-facebook text-xl text-blue-600"></i>
-          <span class="ml-2">Facebook</span>
-        </button>
-      </div>
-
-      <!-- Sign Up Link -->
-      <p class="text-center text-gray-600">
-        Don't have an account?
-        <%= link_to "Sign up", new_registration_path(resource_name),
-                    class: "text-blue-600 font-semibold hover:text-blue-700 transition-colors duration-300" %>
-      </p>
-
-      <!-- Quick Benefits -->
-      <div class="mt-8 bg-blue-50 rounded-lg p-4">
-        <div class="flex items-center space-x-4">
-          <div class="flex-1 text-center">
-            <i class="fas fa-chart-line text-blue-600 text-xl mb-2"></i>
-            <p class="text-sm text-gray-600">Track Progress</p>
-          </div>
-          <div class="flex-1 text-center">
-            <i class="fas fa-trophy text-blue-600 text-xl mb-2"></i>
-            <p class="text-sm text-gray-600">View Rankings</p>
-          </div>
-          <div class="flex-1 text-center">
-            <i class="fas fa-users text-blue-600 text-xl mb-2"></i>
-            <p class="text-sm text-gray-600">Join Community</p>
-          </div>
-        </div>
-      </div>
+    <!-- Header -->
+    <div class="text-center mb-6">
+      <h2 class="text-2xl font-bold text-gray-800">Sign In to LocalElo</h2>
+      <p class="text-gray-600 text-sm">Log in to manage your organization's rankings and match history.</p>
     </div>
 
-    <!-- Security Note -->
-    <div class="text-center mt-6 text-white text-sm">
-      <i class="fas fa-shield-alt mr-2"></i>
-      Secure, encrypted login protected by SSL
-    </div>
+    <!-- Sign-In Form -->
+    <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: "space-y-4" }) do |f| %>
+      <%= render "devise/shared/error_messages", resource: resource %>
+
+      <!-- Email -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Email</label>
+        <%= f.email_field :email, required: true, class: "w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-indigo-300" %>
+      </div>
+
+      <!-- Password -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Password</label>
+        <%= f.password_field :password, required: true, class: "w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-indigo-300" %>
+      </div>
+
+      <!-- Remember Me -->
+      <div class="flex items-center justify-between">
+        <% if devise_mapping.rememberable? %>
+          <div class="flex items-center">
+            <%= f.check_box :remember_me, class: "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded transition-all duration-300 hover:scale-110" %>
+            <%= f.label :remember_me, class: "ml-2 text-sm text-gray-600 hover:text-blue-600 transition-colors duration-300" %>
+          </div>
+        <% end %>
+
+        <%- if devise_mapping.recoverable? %>
+          <%= link_to "Forgot password?", new_password_path(resource_name),
+                      class: "text-sm text-blue-600 hover:text-blue-700 font-medium transition-all duration-300 hover:underline" %>
+        <% end %>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="mt-4">
+        <%= f.submit "Sign In", class: "w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 transition" %>
+      </div>
+    <% end %>
+
+    <!-- Sign Up Link -->
+    <p class="text-center text-sm text-gray-600 mt-4">
+      Don't have an account?
+      <%= link_to "Sign up", new_registration_path(resource_name), class: "text-indigo-600 font-semibold hover:underline" %>
+    </p>
   </div>
 </section>
