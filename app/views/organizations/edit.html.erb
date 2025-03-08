@@ -1,0 +1,39 @@
+<div>
+  <h1 class="font-bold text-4xl">Edit Organization</h1>
+  <p class="text-gray-600">Modify the details of <%= @organization.name %> below.</p>
+</div>
+
+<%= form_with(model: @organization, local: true, class: "space-y-4") do |form| %>
+  <div>
+    <%= form.label :name, "Organization Name", class: "block font-semibold" %>
+    <%= form.text_field :name, class: "border p-2 w-full rounded-md", required: true %>
+  </div>
+
+  <div>
+    <%= form.label :description, "Description", class: "block font-semibold" %>
+    <%= form.text_area :description, class: "border p-2 w-full rounded-md", rows: 3 %>
+  </div>
+
+  <div>
+    <%= form.label :location, "Location", class: "block font-semibold" %>
+    <%= form.text_field :location, class: "border p-2 w-full rounded-md" %>
+  </div>
+
+  <div>
+    <%= form.label :website, "Website", class: "block font-semibold" %>
+    <%= form.url_field :website, class: "border p-2 w-full rounded-md" %>
+  </div>
+
+  <div>
+    <%= form.label :visibility, "Visibility", class: "block font-semibold" %>
+    <%= form.select :visibility, Organization.visibilities.keys.map { |v| [v.humanize, v] }, {}, class: "border p-2 w-full rounded-md" %>
+  </div>
+
+  <div>
+    <%= form.submit "Update Organization", class: "bg-blue-500 text-white px-4 py-2 mt-4 rounded-md hover:bg-blue-600" %>
+  </div>
+<% end %>
+
+<div class="mt-4">
+  <%= link_to "Back to Organization", organization_path(@organization.slug), class: "text-blue-500" %>
+</div>
