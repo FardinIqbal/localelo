@@ -1,4 +1,41 @@
 <div>
-  <h1 class="font-bold text-4xl">Organizations#show</h1>
-  <p>Find me in app/views/organizations/show.html.erb</p>
+  <h1 class="font-bold text-4xl"><%= @organization.name %></h1>
+  <p class="text-gray-600">Location: <%= @organization.location.presence || "Not specified" %></p>
+  <p class="text-gray-600">Website: <%= link_to @organization.website, @organization.website, target: "_blank", rel: "noopener" if @organization.website.present? %></p>
+  <p class="text-gray-600">Description: <%= @organization.description.presence || "No description available" %></p>
+  <p class="text-gray-600">Visibility: <%= @organization.visibility.to_s.humanize %></p>
+
+  <% if @organization.admin?(current_user) %>
+    <div class="mt-4">
+      <%= link_to "Create Leaderboard", new_organization_leaderboard_path(@organization.slug), class: "bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600" %>
+    </div>
+  <% end %>
+
+  <!-- Leaderboards Section -->
+  <div class="mt-6">
+    <h2 class="text-2xl font-bold">Leaderboards</h2>
+
+    <% if @leaderboards.any? %>
+      <ul class="mt-4 space-y-2">
+        <% @leaderboards.each do |leaderboard| %>
+          <li class="border rounded-md p-2 flex justify-between items-center">
+            <div>
+              <h3 class="text-lg font-semibold"><%= link_to leaderboard.name, organization_leaderboard_path(@organization.slug, leaderboard) %></h3>
+              <p class="text-sm text-gray-600">Sport Type: <%= leaderboard.sport_type.name %></p>
+            </div>
+            <% if @organization.admin?(current_user) %>
+              <%= link_to "Edit", edit_organization_leaderboard_path(@organization.slug, leaderboard), class: "text-blue-500" %>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="text-gray-600">No leaderboards yet.</p>
+    <% end %>
+  </div>
+
+  <div class="mt-4">
+    <%= link_to "Edit Organization", edit_organization_path(@organization.slug), class: "bg-yellow-500 text-white px-4 py-2 rounded-md" %>
+    <%= link_to "Back to Organizations", organizations_path, class: "ml-2 text-blue-500" %>
+  </div>
 </div>

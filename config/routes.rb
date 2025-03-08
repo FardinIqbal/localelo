@@ -1,63 +1,98 @@
 Rails.application.routes.draw do
   devise_for :users, controllers: { sessions: 'devise/sessions' }
-  # Health check route
-  get "up" => "rails/health#show", as: :rails_health_check
 
-  # Home Page (Unauthenticated Users)
-  root "home#index"
+  # Home Page (for unauthenticated users)
+  unauthenticated do
+    root to: "home#index", as: :unauthenticated_root
+  end
 
   # Authenticated Users Dashboard
   authenticated :user do
-    root to: "users#dashboard", as: :authenticated_root
+    root to: "dashboard#show", as: :authenticated_root
   end
+
+  # Fallback root in case of issues
+  root to: "home#index"
 
   # User Profile
   resources :users, only: [:show, :edit, :update]
   get "profile", to: "users#show", as: "user_profile"
 
   # Organizations
-  resources :organizations do
+  resources :organizations, param: :slug do
+    collection do
+      get "my", to: "organizations#my_organizations", as: "my_organizations"
+    end
+
     member do
       get "members"
       post "join"
-      post "approve_member"
+      patch "approve_member"
+      delete "leave"
     end
 
-    resources :leaderboards, only: [:index, :show, :create] do
+    # Leaderboards (nested under organizations, using `slug` for organizations)
+    resources :leaderboards, only: [:new, :index, :show, :create, :edit, :update, :destroy], param: :id do
       member do
         get "rankings"
       end
     end
   end
 
-  # Matches & Match History
+  # Leaderboard Ratings
+  resources :leaderboard_ratings, only: [:index, :show, :update]
+
+  # Elo History
+  resources :elo_history, only: [:index, :show]
+
+  # Matches
   resources :matches do
     collection do
       get "recent"
       post "bulk_log"
     end
+    member do
+      patch "verify"
+    end
   end
+
+  # Linkflairs
+  resources :linkflairs, only: [:index, :show]
 
   # API Routes
   namespace :api do
     namespace :v1 do
-      resources :organizations, only: [:index, :show, :create] do
-        get :members, on: :member
-        post :join, on: :member
-        post :approve_member, on: :member
+      resources :organizations, only: [:index, :show, :create], param: :slug do
+        collection do
+          get "my", to: "organizations#my_organizations"
+        end
+
+        member do
+          get :members
+          post :join
+          patch :approve_member
+          delete :leave
+        end
+
+        resources :leaderboards, only: [:index, :show, :create], param: :id do
+          member do
+            get :rankings
+          end
+        end
       end
 
-      resources :leaderboards, only: [:index, :show, :create] do
-        get :rankings, on: :member
-      end
+      resources :leaderboard_ratings, only: [:index, :show, :update]
+      resources :elo_history, only: [:index, :show]
 
       resources :matches, only: [:index, :create, :show] do
         collection do
           get :recent
           post :bulk_log
         end
+        patch :verify, on: :member
       end
 
+      resources :linkflairs, only: [:index, :show]
       resources :users, only: [:index, :show]
     end
   end

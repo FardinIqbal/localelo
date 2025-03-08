@@ -1,4 +1,28 @@
 <div>
+  <!-- Main Heading for the Organizations Index Page -->
   <h1 class="font-bold text-4xl">Organizations#index</h1>
-  <p>Find me in app/views/organizations/index.html.erb</p>
+
+  <p class="text-gray-600 text-lg">Find me in <code class="bg-gray-100 p-1 rounded">app/views/organizations/index.html.erb</code></p>
+
+  <!-- Add a Section for List of Organizations -->
+  <div class="mt-6">
+    <!-- Loop through each organization in @organizations -->
+    <ul class="space-y-4">
+      <% @organizations.each do |organization| %>  <!-- Iterating over @organizations -->
+        <li class="flex justify-between items-center p-4 bg-white rounded-lg shadow-md">
+          <!-- Display the organization name -->
+          <span class="text-xl font-medium text-indigo-600"><%= organization.name %></span>
+
+          <!-- Button or Link to view more details or join the organization -->
+          <%= link_to "View Details", organization_path(organization.slug), class: "text-indigo-600 hover:text-indigo-800 transition" %>
+        </li>
+      <% end %>  <!-- End of the loop -->
+    </ul>
+  </div>
+
+  <!-- Add a Call to Action (CTA) for Users to Create a New Organization -->
+  <div class="mt-8">
+    <%= link_to "Create New Organization", new_organization_path, class: "px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition" %>
+  </div>
+
 </div>

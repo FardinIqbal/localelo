@@ -1,4 +1,18 @@
 <div>
-  <h1 class="font-bold text-4xl">Leaderboards#show</h1>
-  <p>Find me in app/views/leaderboards/show.html.erb</p>
+  <h1 class="font-bold text-4xl"><%= @leaderboard.name %></h1>
+  <p class="text-gray-600">Sport Type: <%= @leaderboard.sport_type.name %></p>
+
+  <% if @organization.admin?(current_user) %>
+    <div class="mt-4">
+      <%= link_to "Edit", edit_organization_leaderboard_path(@organization.slug, @leaderboard),
+                  class: "bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600" %>
+      <%= link_to "Delete", organization_leaderboard_path(@organization.slug, @leaderboard),
+                  method: :delete, data: { confirm: "Are you sure you want to delete this leaderboard?" },
+                  class: "bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 ml-2" %>
+    </div>
+  <% end %>
+
+  <div class="mt-4">
+    <%= link_to "Back to Organization", organization_path(@organization.slug), class: "text-blue-500" %>
+  </div>
 </div>

@@ -10,9 +10,17 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_03_07_133937) do
+ActiveRecord::Schema[7.1].define(version: 2025_03_08_182405) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "elo_history", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "leaderboard_id", null: false
+    t.integer "elo", null: false
+    t.datetime "recorded_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.index ["user_id", "leaderboard_id", "recorded_at"], name: "index_elo_history_on_user_and_leaderboard"
+  end
 
   create_table "leaderboard_ratings", force: :cascade do |t|
     t.bigint "user_id", null: false
@@ -22,6 +30,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_07_133937) do
     t.integer "losses", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["leaderboard_id", "rating"], name: "index_leaderboard_ratings_on_leaderboard_id_and_rating"
     t.index ["leaderboard_id"], name: "index_leaderboard_ratings_on_leaderboard_id"
     t.index ["user_id", "leaderboard_id"], name: "index_leaderboard_ratings_on_user_id_and_leaderboard_id", unique: true
     t.index ["user_id"], name: "index_leaderboard_ratings_on_user_id"
@@ -34,6 +43,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_07_133937) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "sport_type_id", null: false
+    t.text "description"
     t.index ["organization_id", "slug"], name: "index_leaderboards_on_organization_id_and_slug", unique: true
     t.index ["organization_id"], name: "index_leaderboards_on_organization_id"
     t.index ["sport_type_id"], name: "index_leaderboards_on_sport_type_id"
@@ -47,6 +57,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_07_133937) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "match_id", null: false
+    t.bigint "leaderboard_id", null: false
     t.index ["match_id"], name: "index_linkflairs_on_match_id"
     t.index ["sport_type_id", "category", "name"], name: "index_linkflairs_on_sport_type_id_and_category_and_name", unique: true
     t.index ["sport_type_id"], name: "index_linkflairs_on_sport_type_id"
@@ -72,6 +83,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_07_133937) do
     t.integer "elo_at_time", default: 1500, null: false
     t.bigint "leaderboard_id", null: false
     t.bigint "match_metadata_id"
+    t.boolean "is_draw", default: false, null: false
+    t.boolean "verified", default: false, null: false
     t.index ["leaderboard_id"], name: "index_matches_on_leaderboard_id"
     t.index ["match_metadata_id"], name: "index_matches_on_match_metadata_id"
     t.index ["opponent_id"], name: "index_matches_on_opponent_id"
@@ -94,6 +107,11 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_07_133937) do
     t.datetime "updated_at", null: false
     t.bigint "user_id"
     t.string "slug"
+    t.text "description"
+    t.string "location"
+    t.string "website"
+    t.integer "visibility"
+    t.bigint "created_by"
     t.index ["slug"], name: "index_organizations_on_slug", unique: true
     t.index ["user_id"], name: "index_organizations_on_user_id"
   end
@@ -122,6 +140,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_07_133937) do
     t.index ["username"], name: "index_users_on_username", unique: true
   end
 
+  add_foreign_key "elo_history", "leaderboards"
+  add_foreign_key "elo_history", "users"
   add_foreign_key "leaderboard_ratings", "leaderboards"
   add_foreign_key "leaderboard_ratings", "users"
   add_foreign_key "leaderboards", "organizations"
@@ -130,7 +150,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_07_133937) do
   add_foreign_key "linkflairs", "sport_types"
   add_foreign_key "match_metadata", "matches"
   add_foreign_key "matches", "leaderboards"
-  add_foreign_key "matches", "match_metadata", column: "match_metadata_id"
+  add_foreign_key "matches", "match_metadata", column: "match_metadata_id", on_delete: :cascade
   add_foreign_key "matches", "users", column: "opponent_id"
   add_foreign_key "matches", "users", column: "user1_id"
   add_foreign_key "matches", "users", column: "winner_id"

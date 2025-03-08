@@ -1,6 +1,5 @@
 class SportType < ApplicationRecord
   # Each sport type can have a structured metadata template
-  serialize :metadata_template, JSON
 
   # Associations
   has_many :leaderboards

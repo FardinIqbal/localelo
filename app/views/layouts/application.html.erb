@@ -23,17 +23,30 @@
     <!-- Logo -->
     <%= link_to "LocalElo", root_path, class: "text-2xl font-bold text-indigo-600 hover:text-indigo-800 transition" %>
 
-    <!-- Navigation Links -->
-    <div class="hidden md:flex space-x-6">
+    <!-- Navigation Links (Desktop) -->
+    <div class="hidden md:flex space-x-6 items-center">
       <% if user_signed_in? %>
-        <%= link_to "My Organizations", organizations_path, class: "text-gray-700 hover:text-indigo-600 transition" %>
-        <%= link_to "Leaderboards", organization_leaderboards_path(current_user.organizations.first), class: "text-gray-700 hover:text-indigo-600 transition" if current_user.organizations.any? %>
-        <%= link_to "Log Match", new_match_path, class: "text-gray-700 hover:text-indigo-600 transition" %>
-        <%= link_to "Profile", user_path(current_user), class: "text-gray-700 hover:text-indigo-600 transition" %>
-        <%= button_to 'Logout', destroy_user_session_path, method: :delete, class: "text-red-600 hover:text-red-800 transition" %>
+        <%= link_to "My Organizations", organizations_my_path, class: "text-gray-700 hover:text-indigo-600 transition" if defined?(organizations_my_path) %>
+        <%= link_to "Join Organizations", organizations_path, class: "text-gray-700 hover:text-indigo-600 transition" if defined?(organizations_path) %>
+        <% if current_user.organizations.exists? %>
+          <%= link_to "Leaderboards", leaderboards_path, class: "text-gray-700 hover:text-indigo-600 transition" if defined?(leaderboards_path) %>
+        <% end %>
+        <%= link_to "Log Match", new_match_path, class: "text-gray-700 hover:text-indigo-600 transition" if defined?(new_match_path) %>
+
+        <!-- Profile Dropdown -->
+        <div class="relative">
+          <button id="profile-menu-button" class="text-gray-700 hover:text-indigo-600 transition">
+            <%= current_user.username || "Profile" %> ▼
+          </button>
+          <div id="profile-menu" class="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg hidden">
+            <%= link_to "Profile", user_path(current_user), class: "block px-4 py-2 text-gray-700 hover:bg-gray-100" if defined?(user_path) %>
+            <%= button_to 'Logout', destroy_user_session_path, method: :delete, class: "block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100" if defined?(destroy_user_session_path) %>
+          </div>
+        </div>
       <% else %>
-        <%= link_to "Sign In", new_user_session_path, class: "text-gray-700 hover:text-indigo-600 transition" %>
-        <%= link_to "Sign Up", new_user_registration_path, class: "px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition" %>
+        <%= link_to "Join", organizations_path, class: "text-gray-700 hover:text-indigo-600 transition" if defined?(organizations_path) %>
+        <%= link_to "Sign In", new_user_session_path, class: "text-gray-700 hover:text-indigo-600 transition" if defined?(new_user_session_path) %>
+        <%= link_to "Sign Up", new_user_registration_path, class: "px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition" if defined?(new_user_registration_path) %>
       <% end %>
     </div>
 
@@ -45,31 +58,35 @@
 </nav>
 
 <!-- Mobile Navigation (Hidden by Default) -->
-<div id="mobile-menu" class="md:hidden hidden bg-white shadow-md">
-  <% if user_signed_in? %>
-    <%= link_to "My Organizations", organizations_path, class: "block px-6 py-3 text-gray-700 hover:bg-gray-100" %>
-    <%= link_to "Leaderboards", organization_leaderboards_path(current_user.organizations.first), class: "block px-6 py-3 text-gray-700 hover:bg-gray-100" if current_user.organizations.any? %>
-    <%= link_to "Log Match", new_match_path, class: "block px-6 py-3 text-gray-700 hover:bg-gray-100" %>
-    <%= link_to "Profile", user_path(current_user), class: "block px-6 py-3 text-gray-700 hover:bg-gray-100" %>
-    <%= button_to 'Logout', destroy_user_session_path, method: :delete, class: "text-red-600 hover:text-red-800 transition" %>
-  <% else %>
-    <%= link_to "Sign In", new_user_session_path, class: "block px-6 py-3 text-gray-700 hover:bg-gray-100" %>
-    <%= link_to "Sign Up", new_user_registration_path, class: "block px-6 py-3 bg-indigo-600 text-white hover:bg-indigo-700" %>
-  <% end %>
+<div id="mobile-menu" class="md:hidden fixed inset-0 bg-black bg-opacity-50 hidden">
+  <div class="bg-white shadow-md w-64 h-full p-4">
+    <button id="close-mobile-menu" class="text-gray-700 text-2xl">&times;</button>
+    <% if user_signed_in? %>
+      <%= link_to "My Organizations", organizations_my_path, class: "block px-6 py-3 text-gray-700 hover:bg-gray-100" if defined?(organizations_my_path) %>
+      <%= link_to "Join Organizations", organizations_path, class: "block px-6 py-3 text-gray-700 hover:bg-gray-100" if defined?(organizations_path) %>
+      <% if current_user.organizations.exists? %>
+        <%= link_to "Leaderboards", leaderboards_path, class: "block px-6 py-3 text-gray-700 hover:bg-gray-100" if defined?(leaderboards_path) %>
+      <% end %>
+      <%= link_to "Log Match", new_match_path, class: "block px-6 py-3 text-gray-700 hover:bg-gray-100" if defined?(new_match_path) %>
+      <%= link_to "Profile", user_path(current_user), class: "block px-6 py-3 text-gray-700 hover:bg-gray-100" if defined?(user_path) %>
+      <%= button_to 'Logout', destroy_user_session_path, method: :delete, class: "block w-full text-left px-6 py-3 text-red-600 hover:bg-gray-100" if defined?(destroy_user_session_path) %>
+    <% else %>
+      <%= link_to "Join", organizations_path, class: "block px-6 py-3 text-gray-700 hover:bg-gray-100" if defined?(organizations_path) %>
+      <%= link_to "Sign In", new_user_session_path, class: "block px-6 py-3 text-gray-700 hover:bg-gray-100" if defined?(new_user_session_path) %>
+      <%= link_to "Sign Up", new_user_registration_path, class: "block px-6 py-3 bg-indigo-600 text-white hover:bg-indigo-700" if defined?(new_user_registration_path) %>
+    <% end %>
+  </div>
 </div>
 
 <!-- Flash Messages -->
-<% if flash[:notice] %>
-  <div class="bg-green-100 text-green-700 px-6 py-3 rounded-lg mx-6 mt-4">
-    <p><%= flash[:notice] %></p>
-  </div>
-<% end %>
-
-<% if flash[:alert] %>
-  <div class="bg-red-100 text-red-700 px-6 py-3 rounded-lg mx-6 mt-4">
-    <p><%= flash[:alert] %></p>
-  </div>
-<% end %>
+<div class="container mx-auto px-6">
+  <% flash.each do |type, message| %>
+    <div class="alert-<%= type %> bg-green-100 text-green-700 px-6 py-3 rounded-lg mt-4 relative" role="alert">
+      <p><%= message %></p>
+      <button class="absolute top-1 right-1 text-gray-500 hover:text-gray-700" onclick="this.parentElement.classList.add('hidden');">✖</button>
+    </div>
+  <% end %>
+</div>
 
 <!-- Main Content -->
 <main class="container mx-auto px-6 flex-grow py-12">
@@ -80,18 +97,36 @@
 <footer class="bg-gray-900 text-white py-6 mt-auto">
   <div class="container mx-auto text-center text-sm">
     &copy; <%= Time.current.year %> LocalElo. All rights reserved.
+    <div class="mt-2">
+      <%= link_to "Privacy Policy", "#", class: "underline" %> |
+      <%= link_to "Terms of Service", "#", class: "underline" %> |
+      <%= link_to "Contact", "#", class: "underline" %>
+    </div>
   </div>
 </footer>
 
-<!-- Mobile Menu Toggle Script -->
+<!-- JavaScript -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const mobileMenuButton = document.getElementById("mobile-menu-button");
         const mobileMenu = document.getElementById("mobile-menu");
+        const closeMobileMenu = document.getElementById("close-mobile-menu");
 
         mobileMenuButton.addEventListener("click", function() {
             mobileMenu.classList.toggle("hidden");
         });
+
+        closeMobileMenu.addEventListener("click", function() {
+            mobileMenu.classList.add("hidden");
+        });
+
+        document.getElementById("profile-menu-button").addEventListener("click", function() {
+            document.getElementById("profile-menu").classList.toggle("hidden");
+        });
+
+        setTimeout(() => {
+            document.querySelectorAll(".alert-notice, .alert-alert").forEach(alert => alert.classList.add("hidden"));
+        }, 5000);
     });
 </script>
 

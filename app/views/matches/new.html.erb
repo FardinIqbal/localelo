@@ -1,35 +1,43 @@
-<h1>Log a Match</h1>
+<h1 class="font-bold text-4xl">Log a Match</h1>
 
-<%= form_with(model: @match, local: true) do |f| %>
+<%= form_with(model: @match, local: true, class: "space-y-4") do |f| %>
 
   <!-- Select Leaderboard -->
   <div>
-    <%= f.label :leaderboard_id, "Select Leaderboard" %>
-    <%= f.collection_select :leaderboard_id, @leaderboards, :id, :name, prompt: "Choose leaderboard" %>
+    <%= f.label :leaderboard_id, "Select Leaderboard", class: "block font-semibold" %>
+    <%= f.collection_select :leaderboard_id, @leaderboards, :id, :name, { prompt: "Choose leaderboard" }, class: "border p-2 w-full rounded-md" %>
   </div>
 
   <!-- Select Opponent -->
   <div>
-    <%= f.label :opponent_id, "Select Opponent" %>
-    <%= f.collection_select :opponent_id, @users, :id, :email, prompt: "Choose opponent" %>
+    <%= f.label :opponent_id, "Select Opponent", class: "block font-semibold" %>
+    <%= f.collection_select :opponent_id, @users, :id, :username, { prompt: "Choose opponent" }, class: "border p-2 w-full rounded-md" %>
   </div>
 
   <!-- Select Winner -->
   <div>
-    <%= f.label :winner_id, "Who won?" %>
-    <%= f.radio_button :winner_id, current_user.id %> <%= current_user.username %>
-    <%= f.radio_button :winner_id, nil %> Draw
-    <%= f.radio_button :winner_id, nil, checked: true %> TBD
+    <%= f.label :winner_id, "Who won?", class: "block font-semibold" %>
+    <div class="flex items-center space-x-4">
+      <label class="flex items-center">
+        <%= f.radio_button :winner_id, current_user.id, class: "mr-2" %> <%= current_user.username %>
+      </label>
+      <label class="flex items-center">
+        <%= f.radio_button :winner_id, nil, class: "mr-2" %> Draw
+      </label>
+      <label class="flex items-center">
+        <%= f.radio_button :winner_id, nil, checked: true, class: "mr-2" %> TBD
+      </label>
+    </div>
   </div>
 
   <!-- Dynamic Metadata Fields (Based on Sport Type) -->
-  <div id="metadata-fields">
-    <h3>Additional Match Details (Optional)</h3>
-    <div id="metadata-container"></div>
+  <div id="metadata-fields" class="mt-4">
+    <h3 class="font-semibold">Additional Match Details (Optional)</h3>
+    <div id="metadata-container" class="space-y-2"></div>
   </div>
 
   <div>
-    <%= f.submit "Log Match" %>
+    <%= f.submit "Log Match", class: "bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600" %>
   </div>
 <% end %>
 
@@ -45,18 +53,23 @@
                 .then(data => {
                     metadataContainer.innerHTML = ""; // Clear existing fields
 
-                    // Check if metadata is available for the selected sport type
                     if (data.sport_type && data.sport_type.metadata_template) {
                         Object.keys(data.sport_type.metadata_template).forEach(field => {
+                            const fieldWrapper = document.createElement("div");
+                            fieldWrapper.classList.add("space-y-1");
+
                             const label = document.createElement("label");
                             label.textContent = field.replace(/_/g, " ").toUpperCase();
+                            label.classList.add("block", "font-semibold");
 
                             const input = document.createElement("input");
                             input.type = "text";
                             input.name = `match[metadata][${field}]`;
+                            input.classList.add("border", "p-2", "w-full", "rounded-md");
 
-                            metadataContainer.appendChild(label);
-                            metadataContainer.appendChild(input);
+                            fieldWrapper.appendChild(label);
+                            fieldWrapper.appendChild(input);
+                            metadataContainer.appendChild(fieldWrapper);
                         });
                     }
                 });
