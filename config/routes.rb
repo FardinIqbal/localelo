@@ -11,33 +11,29 @@ Rails.application.routes.draw do
     root to: "dashboard#show", as: :authenticated_root
   end
 
-  # Fallback root in case of issues
-  root to: "home#index"
-
   # User Profile
   resources :users, only: [:show, :edit, :update]
   get "profile", to: "users#show", as: "user_profile"
 
   # Organizations
-  resources :organizations, param: :slug do
-    collection do
-      get "my", to: "organizations#my_organizations", as: "my_organizations"
-    end
-
+  resources :organizations do
     member do
-      get "members"
-      post "join"
-      patch "approve_member"
-      delete "leave"
+      get :members
+      post :join
+      patch :approve_member
+      delete :leave
     end
 
-    # Leaderboards (nested under organizations, using `slug` for organizations)
-    resources :leaderboards, only: [:new, :index, :show, :create, :edit, :update, :destroy], param: :id do
+    # Nested leaderboards within organizations
+    resources :leaderboards, except: [:destroy] do
       member do
-        get "rankings"
+        get :rankings
       end
     end
   end
+
+  # Organization Memberships
+  resources :organization_memberships, only: [:index, :create, :destroy]
 
   # Leaderboard Ratings
   resources :leaderboard_ratings, only: [:index, :show, :update]
@@ -46,13 +42,13 @@ Rails.application.routes.draw do
   resources :elo_history, only: [:index, :show]
 
   # Matches
-  resources :matches do
+  resources :matches, except: [:destroy] do
     collection do
-      get "recent"
-      post "bulk_log"
+      get :recent
+      post :bulk_log
     end
     member do
-      patch "verify"
+      patch :verify
     end
   end
 
@@ -62,11 +58,7 @@ Rails.application.routes.draw do
   # API Routes
   namespace :api do
     namespace :v1 do
-      resources :organizations, only: [:index, :show, :create], param: :slug do
-        collection do
-          get "my", to: "organizations#my_organizations"
-        end
-
+      resources :organizations, only: [:index, :show, :create] do
         member do
           get :members
           post :join
@@ -74,13 +66,14 @@ Rails.application.routes.draw do
           delete :leave
         end
 
-        resources :leaderboards, only: [:index, :show, :create], param: :id do
+        resources :leaderboards, only: [:index, :show, :create] do
           member do
             get :rankings
           end
         end
       end
 
+      resources :organization_memberships, only: [:index, :create, :destroy]
       resources :leaderboard_ratings, only: [:index, :show, :update]
       resources :elo_history, only: [:index, :show]
 
@@ -89,7 +82,9 @@ Rails.application.routes.draw do
           get :recent
           post :bulk_log
         end
-        patch :verify, on: :member
+        member do
+          patch :verify
+        end
       end
 
       resources :linkflairs, only: [:index, :show]

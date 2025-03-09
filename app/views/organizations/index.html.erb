@@ -1,28 +1,62 @@
 <div>
-  <!-- Main Heading for the Organizations Index Page -->
-  <h1 class="font-bold text-4xl">Organizations#index</h1>
+  <!-- Page Header -->
+  <h1 class="font-bold text-4xl">Find an Organization</h1>
+  <p class="text-gray-600 text-lg">
+    Browse organizations and request to join private ones or instantly join public ones.
+  </p>
 
-  <p class="text-gray-600 text-lg">Find me in <code class="bg-gray-100 p-1 rounded">app/views/organizations/index.html.erb</code></p>
+  <!-- Search Input -->
+  <div class="mt-4">
+    <input type="text" id="search" placeholder="Search organizations..."
+           class="border p-2 w-full rounded-md focus:ring focus:ring-indigo-300 transition"
+           onkeyup="filterOrganizations()">
+  </div>
 
-  <!-- Add a Section for List of Organizations -->
+  <!-- Organizations List -->
   <div class="mt-6">
-    <!-- Loop through each organization in @organizations -->
-    <ul class="space-y-4">
-      <% @organizations.each do |organization| %>  <!-- Iterating over @organizations -->
-        <li class="flex justify-between items-center p-4 bg-white rounded-lg shadow-md">
-          <!-- Display the organization name -->
-          <span class="text-xl font-medium text-indigo-600"><%= organization.name %></span>
+    <ul id="organizations-list" class="space-y-4">
+      <% @organizations.each do |organization| %>
+        <% unless organization.organization_memberships.exists?(user: current_user) %>
+          <li class="flex justify-between items-center p-4 bg-white rounded-lg shadow-md transition hover:shadow-lg organization-item">
+            <div>
+              <!-- Organization Name & Details -->
+              <h2 class="text-xl font-medium text-indigo-600"><%= organization.name %></h2>
+              <p class="text-gray-600 text-sm">Location: <%= organization.location.presence || "Not specified" %></p>
+              <p class="text-gray-600 text-sm">Members: <%= organization.organization_memberships.count %></p>
+              <p class="text-gray-600 text-sm">Visibility: <%= organization.visibility.humanize %></p>
+            </div>
 
-          <!-- Button or Link to view more details or join the organization -->
-          <%= link_to "View Details", organization_path(organization.slug), class: "text-indigo-600 hover:text-indigo-800 transition" %>
-        </li>
-      <% end %>  <!-- End of the loop -->
+            <!-- Join Button -->
+            <% if organization.visibility == "open" %>
+              <%= button_to "Join", join_organization_path(organization),
+                            method: :post,
+                            class: "bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition shadow-md" %>
+            <% else %>
+              <%= button_to "Request to Join", join_organization_path(organization),
+                            method: :post,
+                            class: "bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 transition shadow-md" %>
+            <% end %>
+          </li>
+        <% end %>
+      <% end %>
     </ul>
   </div>
 
-  <!-- Add a Call to Action (CTA) for Users to Create a New Organization -->
+  <!-- Create Organization Button -->
   <div class="mt-8">
-    <%= link_to "Create New Organization", new_organization_path, class: "px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition" %>
+    <%= link_to "Create New Organization", new_organization_path,
+                class: "px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition" %>
   </div>
-
 </div>
+
+<script>
+    function filterOrganizations() {
+        let query = document.getElementById('search').value.toLowerCase().trim();
+        let organizations = document.querySelectorAll('.organization-item');
+
+        organizations.forEach(org => {
+            let name = org.querySelector('h2').innerText.toLowerCase();
+            org.style.display = name.includes(query) ? "flex" : "none";
+        });
+    }
+</script>

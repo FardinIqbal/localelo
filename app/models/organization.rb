@@ -4,6 +4,8 @@ class Organization < ApplicationRecord
   has_many :users, through: :organization_memberships
   has_many :leaderboards, dependent: :destroy
 
+  enum visibility: { open: 0, restricted: 1 }  # Only two options
+
   # Check if a user is the owner
   def owner?(user)
     user_id == user.id

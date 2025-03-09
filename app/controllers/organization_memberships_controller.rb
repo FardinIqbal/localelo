@@ -1,48 +1,52 @@
 class OrganizationMembershipsController < ApplicationController
-  # Ensure only authenticated users can interact with organization memberships
   before_action :authenticate_user!
+  before_action :set_organization, only: [:create]
 
   # POST /organization_memberships
-  # This action is used to send a join request for an organization
+  # Sends a join request for an organization
   def create
-    @organization = Organization.find(params[:organization_id])
-
-    # Check if the user is already a member
-    if @organization.users.include?(current_user)
+    if @organization.organization_memberships.exists?(user_id: current_user.id)
       flash[:alert] = "You are already a member of this organization."
-      redirect_to organization_path(@organization) and return
-    end
-
-    # Create a new membership request with a pending status
-    @membership = Membership.create(user: current_user, organization: @organization, status: :pending)
-
-    if @membership.save
-      flash[:notice] = "Join request sent to the organization owner for approval."
-      redirect_to organization_path(@organization)
     else
-      flash[:alert] = "Failed to send join request."
-      redirect_to organization_path(@organization)
+      @membership = @organization.organization_memberships.new(user: current_user, approved: false)
+
+      if @membership.save
+        flash[:notice] = "Join request sent for approval."
+      else
+        flash[:alert] = "Failed to send join request."
+      end
     end
+    redirect_to @organization
   end
 
   # DELETE /organization_memberships/:id
-  # This action is used to leave an organization
+  # Allows a user to leave an organization
   def destroy
-    @membership = Membership.find(params[:id])
+    membership = current_user.organization_memberships.find_by(id: params[:id])
 
-    # Ensure the current user is the one who is leaving the organization
-    if @membership.user == current_user
-      @membership.destroy
+    if membership
+      membership.destroy
       flash[:notice] = "You have successfully left the organization."
     else
-      flash[:alert] = "You can only leave organizations you are a member of."
+      flash[:alert] = "You are not a member of this organization."
     end
+
     redirect_to organizations_path
   end
 
   # GET /organization_memberships
-  # This action displays all the organizations the current user is a member of
+  # Shows all organizations the current user is a member of
   def index
-    @memberships = current_user.memberships.includes(:organization)
+    @memberships = current_user.organization_memberships.includes(:organization)
+  end
+
+  private
+
+  # Finds organization for create action
+  def set_organization
+    @organization = Organization.find_by!(id: params[:organization_id])
+  rescue ActiveRecord::RecordNotFound
+    flash[:alert] = "Organization not found."
+    redirect_to organizations_path
   end
 end

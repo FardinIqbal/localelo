@@ -1,28 +1,69 @@
 <h1 class="font-bold text-4xl">Welcome, <%= current_user.first_name || current_user.email %></h1>
 
+<!-- User's Organizations -->
 <h2 class="text-2xl font-semibold mt-4">Your Organizations</h2>
 <% if @organizations.any? %>
   <ul class="list-disc ml-6">
     <% @organizations.each do |org| %>
-      <li>
-        <%= link_to org.name, organization_path(org.slug), class: "text-blue-500 hover:underline" %>
+      <li class="flex justify-between items-center py-2">
+        <%= link_to org.name, organization_path(org.id), class: "text-blue-500 hover:underline" %>
+
+        <% unless org.user_id == current_user.id %>
+          <%= button_to "Leave", leave_organization_path(org.id),
+                        method: :delete,
+                        class: "text-red-500 hover:underline",
+                        data: { confirm: "Are you sure you want to leave #{org.name}?" } %>
+        <% else %>
+          <span class="text-gray-500 text-sm">(Owner)</span>
+        <% end %>
       </li>
     <% end %>
   </ul>
 <% else %>
-  <p class="text-gray-600">You are not part of any organizations. <%= link_to "Join one", organizations_path, class: "text-blue-500 hover:underline" %></p>
+  <p class="text-gray-600">
+    You are not part of any organizations.
+    <%= link_to "Join one", organizations_path, class: "text-blue-500 hover:underline" %>
+  </p>
 <% end %>
 
+<!-- CTA: Create Organization -->
+<div class="mt-4">
+  <%= link_to "Create Organization", new_organization_path,
+              class: "px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition" %>
+</div>
+
+<!-- Recent Matches -->
 <h2 class="text-2xl font-semibold mt-6">Recent Matches</h2>
 <% if @recent_matches.any? %>
   <ul class="list-disc ml-6">
     <% @recent_matches.each do |match| %>
-      <li>
-        <%= link_to "Match vs #{match.opponent_id == current_user.id ? match.user1.username : match.opponent.username}", match_path(match), class: "text-blue-500 hover:underline" %>
-        - <strong><%= match.winner_id == current_user.id ? "You Won" : (match.winner_id.nil? ? "Draw" : "You Lost") %></strong>
+      <li class="py-2">
+        <% opponent = (match.user1_id == current_user.id ? match.opponent : match.user1) %>
+
+        <%= link_to "Match vs #{opponent.username}", match_path(match.id),
+                    class: "text-blue-500 hover:underline" %>
+        - <strong>
+        <% if match.winner_id == current_user.id %>
+          You Won 🎉
+        <% elsif match.winner_id.nil? %>
+          Draw
+        <% else %>
+          You Lost ❌
+        <% end %>
+      </strong>
+
+        <% if match.submission_used.present? %>
+          <span class="text-gray-600 text-sm">(Submission: <%= match.submission_used %>)</span>
+        <% end %>
       </li>
     <% end %>
   </ul>
 <% else %>
   <p class="text-gray-600">No recent matches logged.</p>
 <% end %>
+
+<!-- CTA: Log a Match -->
+<div class="mt-4">
+  <%= link_to "Log Match", new_match_path,
+              class: "px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition" %>
+</div>

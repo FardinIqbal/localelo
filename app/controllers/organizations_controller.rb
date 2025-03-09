@@ -1,71 +1,54 @@
 class OrganizationsController < ApplicationController
   before_action :authenticate_user!
-
-  # Load organization for specific actions
-  before_action :set_organization, only: [:show, :edit, :update, :destroy, :members, :approve_member, :leave]
-  before_action :authorize_owner!, only: [:edit, :update, :destroy, :approve_member]
+  before_action :set_organization, only: %i[show edit update destroy members approve_member leave join]
+  before_action :authorize_owner!, only: %i[edit update destroy approve_member]
 
   # GET /organizations
-  # Shows all organizations (for users to browse & join)
+  # Shows only organizations the user is NOT a part of
   def index
-    @organizations = Organization.all
+    @organizations = Organization.left_joins(:organization_memberships)
+                                 .where.not(organization_memberships: { user_id: current_user.id })
   end
 
-  # GET /organizations/my
-  # Shows only the organizations the current user is a member of
-  def my_organizations
-    @organizations = Organization.joins(:organization_memberships)
-                                 .where(organization_memberships: { user_id: current_user.id })
-  end
-
-  # GET /organizations/:slug
-  # Show details of a specific organization
+  # GET /organizations/:id
   def show
-    Rails.logger.info "Slug received: #{params[:slug]}"
-    @leaderboards = @organization.leaderboards.order(created_at: :desc) # Load leaderboards for display
+    @leaderboards = @organization.leaderboards.order(created_at: :desc)
   end
-
 
   # GET /organizations/new
-  # Render form to create a new organization
   def new
     @organization = Organization.new
   end
 
   # POST /organizations
-  # Create a new organization and make the creator a member
   def create
-    @organization = Organization.new(organization_params)
-    @organization.user_id = current_user.id
-    @organization.created_by = current_user.id
+    @organization = current_user.organizations.build(organization_params)
 
     if @organization.save
-      @organization.organization_memberships.create(user: current_user)
+      @organization.organization_memberships.create(user: current_user, approved: true)
       flash[:notice] = "Organization successfully created."
       redirect_to @organization
     else
-      flash[:alert] = "Failed to create organization: " + @organization.errors.full_messages.to_sentence
+      flash[:alert] = "Failed to create organization: #{@organization.errors.full_messages.to_sentence}"
       render :new, status: :unprocessable_entity
     end
   end
 
-  # GET /organizations/:slug/edit
-  def edit
-  end
+  # GET /organizations/:id/edit
+  def edit; end
 
-  # PATCH/PUT /organizations/:slug
+  # PATCH/PUT /organizations/:id
   def update
     if @organization.update(organization_params)
       flash[:notice] = "Organization successfully updated."
       redirect_to @organization
     else
-      flash[:alert] = "Failed to update organization: " + @organization.errors.full_messages.to_sentence
+      flash[:alert] = "Failed to update organization: #{@organization.errors.full_messages.to_sentence}"
       render :edit, status: :unprocessable_entity
     end
   end
 
-  # DELETE /organizations/:slug
-  # Destroy an organization if the owner chooses to delete it
+  # DELETE /organizations/:id
   def destroy
     if @organization.destroy
       flash[:notice] = "Organization successfully deleted."
@@ -76,28 +59,36 @@ class OrganizationsController < ApplicationController
     end
   end
 
-  # GET /organizations/:slug/members
-  # Show all members of the organization
+  # GET /organizations/:id/members
   def members
     @members = @organization.users
   end
 
-  # POST /organizations/:slug/join
-  # Request to join an organization
+  # POST /organizations/:id/join
+  # Handles joining an organization (instantly for public, request for private)
   def join
-    if @organization.organization_memberships.exists?(user_id: current_user.id)
-      flash[:alert] = "You are already a member."
+    unless @organization.organization_memberships.exists?(user_id: current_user.id)
+      membership = @organization.organization_memberships.create(
+        user: current_user, approved: @organization.visibility == "open"
+      )
+
+      if membership.persisted?
+        flash[:notice] = @organization.visibility == "open" ? "You have joined the organization." : "Join request sent."
+      else
+        flash[:alert] = "Failed to join the organization."
+      end
     else
-      @organization.organization_memberships.create(user: current_user, approved: false)
-      flash[:notice] = "Join request sent. An admin must approve your request."
+      flash[:alert] = "You are already a member."
     end
-    redirect_to @organization
+
+    redirect_to organization_path(@organization)
   end
 
-  # PATCH /organizations/:slug/approve_member?user_id=ID
-  # Approve a user’s membership request (Only Owners/Admins)
+  # PATCH /organizations/:id/approve_member?user_id=ID
+  # Approves a user’s request to join
   def approve_member
     membership = @organization.organization_memberships.find_by(user_id: params[:user_id], approved: false)
+
     if membership
       membership.update(approved: true)
       flash[:notice] = "User approved successfully."
@@ -107,8 +98,8 @@ class OrganizationsController < ApplicationController
     redirect_to members_organization_path(@organization)
   end
 
-  # DELETE /organizations/:slug/leave
-  # Allow users to leave an organization
+  # DELETE /organizations/:id/leave
+  # Allows a user to leave an organization
   def leave
     membership = @organization.organization_memberships.find_by(user_id: current_user.id)
 
@@ -124,26 +115,22 @@ class OrganizationsController < ApplicationController
       flash[:alert] = "You are not a member of this organization."
     end
 
-    redirect_to my_organizations_path
+    redirect_to organizations_path
   end
 
   private
 
-  # Strong parameters
   def organization_params
     params.require(:organization).permit(:name, :description, :location, :website, :visibility)
   end
 
-  # Finds organization before actions
   def set_organization
-    @organization = Organization.find_by(slug: params[:slug])
-    unless @organization
-      flash[:alert] = "Organization not found."
-      redirect_to organizations_path
-    end
+    @organization = Organization.find_by!(id: params[:id])
+  rescue ActiveRecord::RecordNotFound
+    flash[:alert] = "Organization not found."
+    redirect_to organizations_path
   end
 
-  # Ensure only owners can edit/update/delete
   def authorize_owner!
     unless @organization.user_id == current_user.id
       flash[:alert] = "You are not authorized to modify this organization."
@@ -151,7 +138,7 @@ class OrganizationsController < ApplicationController
     end
   end
 
-  # Auto-delete organizations if no members remain
+  # Deletes organization if no members are left
   def check_and_destroy_organization
     if @organization.organization_memberships.count.zero?
       @organization.destroy

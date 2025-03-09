@@ -7,11 +7,11 @@
 
   <% if @organization.admin?(current_user) %>
     <div class="mt-4">
-      <%= link_to "Create Leaderboard", new_organization_leaderboard_path(@organization.slug), class: "bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600" %>
+      <%= link_to "Create Leaderboard", new_organization_leaderboard_path(@organization.id), class: "bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600" %>
     </div>
   <% end %>
 
-  <!-- Leaderboards Section -->
+  <!-- Leaderboards Se        ction -->
   <div class="mt-6">
     <h2 class="text-2xl font-bold">Leaderboards</h2>
 
@@ -20,11 +20,11 @@
         <% @leaderboards.each do |leaderboard| %>
           <li class="border rounded-md p-2 flex justify-between items-center">
             <div>
-              <h3 class="text-lg font-semibold"><%= link_to leaderboard.name, organization_leaderboard_path(@organization.slug, leaderboard) %></h3>
+              <h3 class="text-lg font-semibold"><%= link_to leaderboard.name, organization_leaderboard_path(@organization.id, leaderboard) %></h3>
               <p class="text-sm text-gray-600">Sport Type: <%= leaderboard.sport_type.name %></p>
             </div>
             <% if @organization.admin?(current_user) %>
-              <%= link_to "Edit", edit_organization_leaderboard_path(@organization.slug, leaderboard), class: "text-blue-500" %>
+              <%= link_to "Edit", edit_organization_leaderboard_path(@organization.id, leaderboard), class: "text-blue-500" %>
             <% end %>
           </li>
         <% end %>
@@ -35,7 +35,7 @@
   </div>
 
   <div class="mt-4">
-    <%= link_to "Edit Organization", edit_organization_path(@organization.slug), class: "bg-yellow-500 text-white px-4 py-2 rounded-md" %>
+    <%= link_to "Edit Organization", edit_organization_path(@organization.id), class: "bg-yellow-500 text-white px-4 py-2 rounded-md" %>
     <%= link_to "Back to Organizations", organizations_path, class: "ml-2 text-blue-500" %>
   </div>
 </div>
