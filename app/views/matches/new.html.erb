@@ -5,13 +5,13 @@
   <!-- Select Leaderboard -->
   <div>
     <%= f.label :leaderboard_id, "Select Leaderboard", class: "block font-semibold" %>
-    <%= f.collection_select :leaderboard_id, @leaderboards, :id, :name, { prompt: "Choose leaderboard" }, class: "border p-2 w-full rounded-md" %>
+    <%= f.collection_select :leaderboard_id, (@leaderboards || []), :id, :name, { prompt: "Choose leaderboard" }, class: "border p-2 w-full rounded-md" %>
   </div>
 
   <!-- Select Opponent -->
   <div>
     <%= f.label :opponent_id, "Select Opponent", class: "block font-semibold" %>
-    <%= f.collection_select :opponent_id, @users, :id, :username, { prompt: "Choose opponent" }, class: "border p-2 w-full rounded-md" %>
+    <%= f.collection_select :opponent_id, (@users || []), :id, :username, { prompt: "Choose opponent" }, class: "border p-2 w-full rounded-md" %>
   </div>
 
   <!-- Select Winner -->
@@ -39,6 +39,7 @@
   <div>
     <%= f.submit "Log Match", class: "bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600" %>
   </div>
+
 <% end %>
 
 <!-- JavaScript to dynamically load sport-specific metadata fields -->
@@ -47,32 +48,64 @@
         const leaderboardSelect = document.getElementById("match_leaderboard_id");
         const metadataContainer = document.getElementById("metadata-container");
 
-        leaderboardSelect.addEventListener("change", function() {
-            fetch(`/api/v1/leaderboards/${this.value}.json`)
-                .then(response => response.json())
-                .then(data => {
-                    metadataContainer.innerHTML = ""; // Clear existing fields
+        // Load leaderboard data into a JS object
+        const leaderboards = <%= @leaderboards.map { |lb| { id: lb.id, organization_id: lb.organization_id } }.to_json.html_safe %>;
 
-                    if (data.sport_type && data.sport_type.metadata_template) {
-                        Object.keys(data.sport_type.metadata_template).forEach(field => {
-                            const fieldWrapper = document.createElement("div");
-                            fieldWrapper.classList.add("space-y-1");
+        function getOrganizationId(leaderboardId) {
+            const leaderboard = leaderboards.find(lb => lb.id == leaderboardId);
+            return leaderboard ? leaderboard.organization_id : null;
+        }
 
-                            const label = document.createElement("label");
-                            label.textContent = field.replace(/_/g, " ").toUpperCase();
-                            label.classList.add("block", "font-semibold");
+        if (leaderboardSelect) {
+            leaderboardSelect.addEventListener("change", function() {
+                const leaderboardId = this.value;
+                const organizationId = getOrganizationId(leaderboardId);
 
-                            const input = document.createElement("input");
-                            input.type = "text";
-                            input.name = `match[metadata][${field}]`;
-                            input.classList.add("border", "p-2", "w-full", "rounded-md");
+                if (!leaderboardId || !organizationId) {
+                    metadataContainer.innerHTML = "<p class='text-gray-500'>No leaderboard selected.</p>";
+                    return;
+                }
 
-                            fieldWrapper.appendChild(label);
-                            fieldWrapper.appendChild(input);
-                            metadataContainer.appendChild(fieldWrapper);
-                        });
-                    }
-                });
-        });
+                fetch(`/api/v1/organizations/${organizationId}/leaderboards/${leaderboardId}.json`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log("API Response:", data); // Debugging output
+
+                        metadataContainer.innerHTML = ""; // Clear existing fields
+
+                        if (data.sport_type && data.sport_type.metadata_template) {
+                            Object.entries(data.sport_type.metadata_template).forEach(([field, config]) => {
+                                const fieldWrapper = document.createElement("div");
+                                fieldWrapper.classList.add("space-y-1");
+
+                                const label = document.createElement("label");
+                                label.textContent = config.label || field.replace(/_/g, " ").toUpperCase();
+                                label.classList.add("block", "font-semibold");
+
+                                const input = document.createElement("input");
+                                input.type = config.type === "string" ? "text" : "text";
+                                input.name = `match[metadata][${field}]`;
+                                input.required = config.required || false;
+                                input.classList.add("border", "p-2", "w-full", "rounded-md");
+
+                                fieldWrapper.appendChild(label);
+                                fieldWrapper.appendChild(input);
+                                metadataContainer.appendChild(fieldWrapper);
+                            });
+                        } else {
+                            metadataContainer.innerHTML = `<p class="text-gray-500">No additional metadata required.</p>`;
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error loading metadata:", error);
+                        metadataContainer.innerHTML = `<p class="text-red-500">Error loading metadata. Please try again.</p>`;
+                    });
+            });
+        }
     });
 </script>
