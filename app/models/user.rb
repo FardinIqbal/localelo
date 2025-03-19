@@ -3,6 +3,9 @@ class User < ApplicationRecord
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
 
+  # Add Active Storage for avatar
+  has_one_attached :avatar
+
   # == Associations ==
   has_many :organization_memberships, dependent: :destroy
   has_many :organizations, through: :organization_memberships
@@ -21,6 +24,11 @@ class User < ApplicationRecord
   validates :last_name, presence: true
 
   # == Instance Methods ==
+
+  # Returns all matches the user has participated in
+  def matches
+    Match.where('user1_id = ? OR opponent_id = ?', id, id)
+  end
 
   # Returns full name of the user (or just username if no name exists)
   def full_name
@@ -55,6 +63,14 @@ class User < ApplicationRecord
   # Calculates the user's overall win/loss ratio
   def win_loss_ratio
     total_matches.positive? ? (total_wins.to_f / total_matches).round(2) : 0
+  end
+
+  # Returns win percentage
+  def win_percentage
+    total = total_matches
+    return 0 if total.zero?
+
+    (total_wins.to_f / total * 100).round(1)
   end
 
   # Returns win/loss ratio for a specific leaderboard

@@ -1,47 +1,68 @@
 class UsersController < ApplicationController
-  # Ensure the user is authenticated before accessing the profile show, edit, and update actions
-  before_action :authenticate_user!, only: [:show, :edit, :update, :destroy]
+  before_action :authenticate_user!
+  before_action :set_user, only: [:show, :edit, :update, :destroy]
+  before_action :authorize_user!, only: [:edit, :update, :destroy]
 
-  # Show user profile
-  # This will show the user's personal information, and can be extended to show additional data like match history or stats.
+  # GET /users/:id
   def show
-    @user = current_user
-    # Additional logic for showing match history, statistics, etc., can be added here if needed
+    @matches = @user.matches.includes(:user1, :opponent, :leaderboard).recent.limit(5)
+    @stats = UserStatsService.new(@user).calculate
   end
 
-  # Edit user profile (for instance, updating username, password, etc.)
+  # GET /users/:id/edit
   def edit
-    @user = current_user
-    # The edit form will prepopulate with the current user's data
   end
 
-  # Update user profile
+  # PATCH/PUT /users/:id
   def update
-    @user = current_user
-
-    # Ensure the user provides a valid input for profile updates (e.g., password, email, etc.)
-    if @user.update(user_params)
-      flash[:notice] = "Your profile has been updated successfully."
-      redirect_to user_path(@user)
-    else
-      flash.now[:alert] = "There was an error updating your profile. Please try again."
-      render :edit # This will re-render the edit form with error messages
+    respond_to do |format|
+      if @user.update(user_params)
+        format.html { redirect_to user_path(@user), notice: "Profile updated successfully." }
+        format.json { render :show, status: :ok, location: @user }
+      else
+        format.html do
+          flash.now[:alert] = "There was an error updating your profile."
+          render :edit, status: :unprocessable_entity
+        end
+        format.json { render json: @user.errors, status: :unprocessable_entity }
+      end
     end
   end
 
-  # Destroy account (log out and delete the user)
+  # DELETE /users/:id
   def destroy
-    # Optionally, confirm the user's intention before destroying the account (could add a confirmation view)
-    current_user.destroy
-    flash[:notice] = "Your account has been deleted successfully."
-    redirect_to root_path
+    @user.destroy
+    respond_to do |format|
+      format.html { redirect_to root_path, notice: "Your account has been deleted." }
+      format.json { head :no_content }
+    end
   end
 
   private
 
-  # Strong parameters for user input
-  # We only permit the attributes that the user is allowed to update (password, email, etc.)
+  def set_user
+    @user = User.find(params[:id])
+  rescue ActiveRecord::RecordNotFound
+    flash[:alert] = "User not found."
+    redirect_to root_path
+  end
+
+  def authorize_user!
+    unless current_user == @user
+      flash[:alert] = "You are not authorized to perform this action."
+      redirect_to root_path
+    end
+  end
+
   def user_params
-    params.require(:user).permit(:first_name, :last_name, :email, :password, :password_confirmation, :current_password, :username)
+    params.require(:user).permit(
+      :first_name,
+      :last_name,
+      :email,
+      :username,
+      :password,
+      :password_confirmation,
+      :current_password
+    )
   end
 end

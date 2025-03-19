@@ -1,125 +1,562 @@
-<h1 class="font-bold text-4xl mb-6">Log a Match</h1>
+<div class="relative min-h-screen">
+  <!-- Decorative Background Elements -->
+  <div class="absolute -top-20 -right-20 w-96 h-96 bg-purple-600/10 rounded-full filter blur-3xl animate-pulse-slow z-0"></div>
+  <div class="absolute -bottom-20 -left-20 w-64 h-64 bg-pink-600/10 rounded-full filter blur-3xl animate-pulse-slow z-0" style="animation-delay: 1.5s;"></div>
 
-<%= form_with(model: @match, local: true, id: "match-form", class: "space-y-6") do |f| %>
+  <!-- Main Content -->
+  <div class="relative z-10 max-w-3xl mx-auto px-4 py-6">
+    <!-- Page Header -->
+    <h1 class="font-extrabold text-3xl md:text-4xl bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
+      Log a Match
+    </h1>
+    <p class="text-slate-400 mb-8">Record your match results to update Elo ratings on the leaderboard</p>
 
-  <!-- Select Leaderboard -->
-  <div>
-    <%= f.label :leaderboard_id, "Select Leaderboard", class: "block font-semibold mb-1" %>
-    <%= f.collection_select :leaderboard_id, @leaderboards, :id, :name, { prompt: "Choose a leaderboard" },
-                            class: "border p-2 w-full rounded-md focus:ring focus:ring-indigo-300", required: true %>
-  </div>
+    <%= form_with(model: @match, local: true, id: "match-form", class: "space-y-8") do |f| %>
+      <!-- Step Indicator -->
+      <div class="flex justify-between mb-6">
+        <div class="step-indicator active flex flex-col items-center">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">1</div>
+          <span class="text-xs mt-1 text-slate-300">Leaderboard</span>
+        </div>
+        <div class="flex-1 flex items-center px-2">
+          <div class="h-1 w-full bg-slate-700 step-line"></div>
+        </div>
+        <div class="step-indicator flex flex-col items-center">
+          <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-slate-400 font-bold">2</div>
+          <span class="text-xs mt-1 text-slate-500">Opponent</span>
+        </div>
+        <div class="flex-1 flex items-center px-2">
+          <div class="h-1 w-full bg-slate-700 step-line"></div>
+        </div>
+        <div class="step-indicator flex flex-col items-center">
+          <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-slate-400 font-bold">3</div>
+          <span class="text-xs mt-1 text-slate-500">Result</span>
+        </div>
+      </div>
 
-  <!-- Select Opponent (with search) -->
-  <div>
-    <%= f.label :opponent_id, "Select Opponent", class: "block font-semibold mb-1" %>
-    <select id="opponent-select"
-            name="match[opponent_id]"
-            class="border p-2 w-full rounded-md focus:ring focus:ring-indigo-300">
-      <option value="" disabled selected>Choose an opponent</option>
-      <% @users.each do |user| %>
-        <option value="<%= user.id %>"><%= user.username %></option>
-      <% end %>
-    </select>
-  </div>
+      <!-- Form Sections -->
+      <div class="form-sections">
+        <!-- Step 1: Select Leaderboard -->
+        <div id="step-1" class="form-section bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-700 p-6">
+          <h2 class="text-xl font-bold text-white mb-4">Select Leaderboard</h2>
+          <p class="text-slate-400 text-sm mb-6">Choose the leaderboard where this match was played</p>
 
-  <!-- Select Winner -->
-  <div>
-    <%= f.label :winner_id, "Who won?", class: "block font-semibold mb-1" %>
-    <div class="flex flex-col space-y-2" id="winner-options">
-      <label class="flex items-center space-x-2">
-        <%= f.radio_button :winner_id, current_user.id, id: "winner-player1", class: "mr-2" %>
-        <span><%= current_user.username %></span>
-      </label>
+          <% if @leaderboards.any? %>
+            <div class="grid grid-cols-1 gap-3 mb-6">
+              <% @leaderboards.each do |leaderboard| %>
+                <label class="leaderboard-option cursor-pointer">
+                  <%= f.radio_button :leaderboard_id, leaderboard.id, class: "hidden leaderboard-radio" %>
+                  <div class="flex items-center p-4 rounded-lg border border-slate-700 hover:border-purple-500/50 transition-all duration-300 bg-slate-800/50">
+                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
+                      <%= leaderboard.name[0..1].upcase %>
+                    </div>
+                    <div class="ml-3 flex-1">
+                      <div class="text-white font-medium"><%= leaderboard.name %></div>
+                      <div class="text-xs text-slate-400 mt-0.5"><%= leaderboard.organization.name %></div>
+                    </div>
+                    <div class="ml-2 w-5 h-5 rounded-full border border-slate-600 flex items-center justify-center leaderboard-check">
+                      <i class="fas fa-check text-purple-500 opacity-0 transition-opacity duration-300"></i>
+                    </div>
+                  </div>
+                </label>
+              <% end %>
+            </div>
 
-      <label class="flex items-center space-x-2 hidden" id="winner-player2-option">
-        <%= f.radio_button :winner_id, nil, id: "winner-player2", class: "mr-2" %>
-        <span id="winner-player2-name"></span>
-      </label>
+            <div class="flex justify-end">
+              <button type="button" id="step-1-next" class="px-5 py-2.5 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:shadow-lg hover:shadow-purple-500/20 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                Next <i class="fas fa-arrow-right ml-2"></i>
+              </button>
+            </div>
+          <% else %>
+            <div class="text-center py-8">
+              <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-700 text-slate-500 mb-4">
+                <i class="fas fa-trophy text-2xl"></i>
+              </div>
+              <p class="text-slate-400 mb-4">You don't have any leaderboards yet</p>
+              <%= link_to organizations_path, class: "px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:shadow-lg hover:shadow-purple-500/20 transition-all" do %>
+                <i class="fas fa-users mr-2"></i> Find Organizations to Join
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Step 2: Select Opponent -->
+        <div id="step-2" class="form-section hidden bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-700 p-6">
+          <h2 class="text-xl font-bold text-white mb-4">Select Opponent</h2>
+          <p class="text-slate-400 text-sm mb-6">Choose the player you competed against</p>
+
+          <div class="mb-6">
+            <div class="relative">
+              <%= f.select :opponent_id, [], { prompt: "Search for an opponent..." },
+                           class: "w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-white" %>
+            </div>
+          </div>
+
+          <div class="flex justify-between">
+            <button type="button" id="step-2-prev" class="px-5 py-2.5 rounded-lg bg-slate-700 text-white font-medium hover:bg-slate-600 transition-all">
+              <i class="fas fa-arrow-left mr-2"></i> Back
+            </button>
+            <button type="button" id="step-2-next" class="px-5 py-2.5 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:shadow-lg hover:shadow-purple-500/20 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+              Next <i class="fas fa-arrow-right ml-2"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 3: Match Result -->
+        <div id="step-3" class="form-section hidden bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-700 p-6">
+          <h2 class="text-xl font-bold text-white mb-4">Match Result</h2>
+          <p class="text-slate-400 text-sm mb-6">Who won the match?</p>
+
+          <div class="grid grid-cols-1 gap-4 mb-8">
+            <!-- Current User Option -->
+            <label class="winner-option cursor-pointer">
+              <%= f.radio_button :winner_id, current_user.id, class: "hidden winner-radio" %>
+              <div class="flex items-center p-4 rounded-lg border border-slate-700 hover:border-green-500/50 transition-all duration-300 bg-slate-800/50">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
+                  <%= current_user.username[0..1].upcase %>
+                </div>
+                <div class="ml-3 flex-1">
+                  <div class="text-white font-medium"><%= current_user.username %> (You)</div>
+                </div>
+                <div class="ml-2 w-5 h-5 rounded-full border border-slate-600 flex items-center justify-center winner-check">
+                  <i class="fas fa-check text-green-500 opacity-0 transition-opacity duration-300"></i>
+                </div>
+              </div>
+            </label>
+
+            <!-- Opponent Option -->
+            <label class="winner-option cursor-pointer" id="opponent-winner-option">
+              <%= f.radio_button :winner_id, nil, class: "hidden winner-radio", id: "opponent-winner-radio" %>
+              <div class="flex items-center p-4 rounded-lg border border-slate-700 hover:border-green-500/50 transition-all duration-300 bg-slate-800/50">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center text-white font-bold" id="opponent-initials">
+                  ?
+                </div>
+                <div class="ml-3 flex-1">
+                  <div class="text-white font-medium" id="opponent-name">Select an opponent first</div>
+                </div>
+                <div class="ml-2 w-5 h-5 rounded-full border border-slate-600 flex items-center justify-center winner-check">
+                  <i class="fas fa-check text-green-500 opacity-0 transition-opacity duration-300"></i>
+                </div>
+              </div>
+            </label>
+
+            <!-- Draw Option -->
+            <label class="winner-option cursor-pointer">
+              <%= f.check_box :is_draw, class: "hidden draw-checkbox" %>
+              <div class="flex items-center p-4 rounded-lg border border-slate-700 hover:border-yellow-500/50 transition-all duration-300 bg-slate-800/50">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-500 to-amber-500 flex items-center justify-center text-white font-bold">
+                  <i class="fas fa-handshake"></i>
+                </div>
+                <div class="ml-3 flex-1">
+                  <div class="text-white font-medium">Draw</div>
+                  <div class="text-xs text-slate-400 mt-0.5">The match ended in a tie</div>
+                </div>
+                <div class="ml-2 w-5 h-5 rounded-full border border-slate-600 flex items-center justify-center draw-check">
+                  <i class="fas fa-check text-yellow-500 opacity-0 transition-opacity duration-300"></i>
+                </div>
+              </div>
+            </label>
+          </div>
+
+          <div class="flex justify-between">
+            <button type="button" id="step-3-prev" class="px-5 py-2.5 rounded-lg bg-slate-700 text-white font-medium hover:bg-slate-600 transition-all">
+              <i class="fas fa-arrow-left mr-2"></i> Back
+            </button>
+            <button type="submit" id="submit-button" class="px-5 py-2.5 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:shadow-lg hover:shadow-purple-500/20 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+              <span id="submit-text">Log Match</span>
+              <i class="fas fa-spinner fa-spin ml-2 hidden" id="spinner"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Match Preview Card (shows after step 2) -->
+    <div id="match-preview" class="hidden mt-8 bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-700 overflow-hidden">
+      <div class="p-4 border-b border-slate-700">
+        <h3 class="text-lg font-medium text-white">Match Preview</h3>
+      </div>
+      <div class="p-4">
+        <div class="flex items-center justify-between">
+          <div class="flex flex-col items-center">
+            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xl font-bold">
+              <%= current_user.username[0..1].upcase %>
+            </div>
+            <div class="mt-2 text-center">
+              <div class="text-white font-medium"><%= current_user.username %></div>
+              <div class="text-xs text-slate-400" id="user-rating">1500 Elo</div>
+            </div>
+          </div>
+
+          <div class="flex flex-col items-center">
+            <div class="text-lg font-bold text-white">VS</div>
+            <div class="text-xs text-slate-400 mt-1" id="leaderboard-name"></div>
+          </div>
+
+          <div class="flex flex-col items-center">
+            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center text-white text-xl font-bold" id="preview-opponent-initials">
+              ?
+            </div>
+            <div class="mt-2 text-center">
+              <div class="text-white font-medium" id="preview-opponent-name">Opponent</div>
+              <div class="text-xs text-slate-400" id="opponent-rating">1500 Elo</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 text-xs text-slate-400 text-center">
+          <i class="fas fa-info-circle mr-1"></i> Elo ratings will be updated after the match is logged
+        </div>
+      </div>
     </div>
   </div>
-
-  <!-- Submit Button -->
-  <div>
-    <button id="submit-button" type="submit"
-            class="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition flex items-center justify-center">
-      <span id="submit-text">Log Match</span>
-      <svg id="spinner" class="hidden ml-2 w-5 h-5 animate-spin text-white" viewBox="0 0 24 24" fill="none">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor"
-              d="M4 12a8 8 0 018-8v8H4z"></path>
-      </svg>
-    </button>
-  </div>
-
-<% end %>
-
-<!-- Toast Notification -->
-<div id="success-toast" class="hidden fixed top-5 right-5 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg">
-  Match Successfully Logged!
 </div>
 
-<!-- JavaScript -->
+<!-- Toast Notification -->
+<div id="success-toast" class="fixed bottom-5 right-5 bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg transform translate-y-10 opacity-0 transition-all duration-500 z-50 flex items-center hidden">
+  <i class="fas fa-check-circle mr-2 text-xl"></i>
+  <div>
+    <div class="font-medium">Success!</div>
+    <div class="text-sm">Match successfully logged</div>
+  </div>
+</div>
+
+<!-- Include Tom Select.js -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        // Step navigation
+        const step1 = document.getElementById("step-1");
+        const step2 = document.getElementById("step-2");
+        const step3 = document.getElementById("step-3");
+        const step1Next = document.getElementById("step-1-next");
+        const step2Prev = document.getElementById("step-2-prev");
+        const step2Next = document.getElementById("step-2-next");
+        const step3Prev = document.getElementById("step-3-prev");
+        const stepIndicators = document.querySelectorAll(".step-indicator");
+        const matchPreview = document.getElementById("match-preview");
+
+        // Form elements
         const form = document.getElementById("match-form");
-        const opponentSelect = document.getElementById("opponent-select");
-        const winnerPlayer2Option = document.getElementById("winner-player2-option");
-        const winnerPlayer2Radio = document.getElementById("winner-player2");
-        const winnerPlayer2Name = document.getElementById("winner-player2-name");
+        const leaderboardRadios = document.querySelectorAll(".leaderboard-radio");
+        const opponentSelect = document.getElementById("match_opponent_id");
+        const opponentWinnerRadio = document.getElementById("opponent-winner-radio");
+        const opponentWinnerOption = document.getElementById("opponent-winner-option");
+        const opponentInitials = document.getElementById("opponent-initials");
+        const opponentName = document.getElementById("opponent-name");
+        const winnerRadios = document.querySelectorAll(".winner-radio");
+        const drawCheckbox = document.querySelector(".draw-checkbox");
         const submitButton = document.getElementById("submit-button");
         const submitText = document.getElementById("submit-text");
         const spinner = document.getElementById("spinner");
         const successToast = document.getElementById("success-toast");
 
-        function updateWinnerOptions() {
-            const selectedOpponent = opponentSelect.options[opponentSelect.selectedIndex];
+        // Preview elements
+        const previewOpponentInitials = document.getElementById("preview-opponent-initials");
+        const previewOpponentName = document.getElementById("preview-opponent-name");
+        const leaderboardNamePreview = document.getElementById("leaderboard-name");
+        const userRating = document.getElementById("user-rating");
+        const opponentRating = document.getElementById("opponent-rating");
 
-            if (selectedOpponent && selectedOpponent.value) {
-                winnerPlayer2Radio.value = selectedOpponent.value;
-                winnerPlayer2Name.textContent = selectedOpponent.text;
-                winnerPlayer2Option.classList.remove("hidden");
-            } else {
-                winnerPlayer2Option.classList.add("hidden");
-            }
-        }
+        // Disable step 1 next button initially
+        step1Next.disabled = true;
 
-        if (opponentSelect) {
-            opponentSelect.addEventListener("change", updateWinnerOptions);
-        }
+        // Disable step 2 next button initially
+        step2Next.disabled = true;
 
-        // Initialize searchable dropdown (Using Tom Select.js for better UX)
-        new TomSelect("#opponent-select", {
-            maxItems: 1,
-            create: false,
-            allowEmptyOption: false,
-            placeholder: "Search for an opponent..."
+        // Initialize Tom Select for opponent selection
+        let tomSelect;
+
+        // Leaderboard selection
+        leaderboardRadios.forEach(radio => {
+            radio.addEventListener("change", function() {
+                // Reset checks
+                document.querySelectorAll(".leaderboard-check i").forEach(check => {
+                    check.style.opacity = "0";
+                });
+
+                // Show check for selected leaderboard
+                if (this.checked) {
+                    this.closest(".leaderboard-option").querySelector(".leaderboard-check i").style.opacity = "1";
+                    step1Next.disabled = false;
+
+                    // Update leaderboard name in preview
+                    const leaderboardName = this.closest(".leaderboard-option").querySelector(".text-white.font-medium").textContent.trim();
+                    const orgName = this.closest(".leaderboard-option").querySelector(".text-xs.text-slate-400").textContent.trim();
+                    leaderboardNamePreview.textContent = leaderboardName;
+
+                    // Fetch users for this leaderboard
+                    fetchOpponents(this.value);
+                }
+            });
         });
 
-        form.addEventListener("submit", function (event) {
+        // Step 1 Next Button
+        step1Next.addEventListener("click", function() {
+            step1.classList.add("hidden");
+            step2.classList.remove("hidden");
+
+            // Update step indicators
+            stepIndicators[0].classList.remove("active");
+            stepIndicators[1].classList.add("active");
+            stepIndicators[0].querySelector("div").classList.remove("bg-gradient-to-r", "from-purple-500", "to-pink-500");
+            stepIndicators[0].querySelector("div").classList.add("bg-green-500");
+            stepIndicators[0].querySelector("span").classList.remove("text-slate-500");
+            stepIndicators[0].querySelector("span").classList.add("text-slate-300");
+            stepIndicators[1].querySelector("div").classList.remove("bg-slate-700", "text-slate-400");
+            stepIndicators[1].querySelector("div").classList.add("bg-gradient-to-r", "from-purple-500", "to-pink-500", "text-white");
+            stepIndicators[1].querySelector("span").classList.remove("text-slate-500");
+            stepIndicators[1].querySelector("span").classList.add("text-slate-300");
+
+            // Initialize Tom Select if not already done
+            if (!tomSelect) {
+                tomSelect = new TomSelect("#match_opponent_id", {
+                    create: false,
+                    sortField: {field: "text", direction: "asc"},
+                    placeholder: "Search for an opponent...",
+                    render: {
+                        option: function(data, escape) {
+                            return `<div class="flex items-center p-2">
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center text-white font-bold mr-2">
+                                    ${escape(data.text.substring(0, 2).toUpperCase())}
+                                </div>
+                                <div>${escape(data.text)}</div>
+                            </div>`;
+                        },
+                        item: function(data, escape) {
+                            return `<div class="flex items-center">
+                                <div class="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center text-white font-bold mr-2 text-xs">
+                                    ${escape(data.text.substring(0, 2).toUpperCase())}
+                                </div>
+                                <div>${escape(data.text)}</div>
+                            </div>`;
+                        }
+                    }
+                });
+
+                // Handle opponent selection
+                tomSelect.on('change', function(value) {
+                    if (value) {
+                        const selectedOption = tomSelect.options[value];
+                        if (selectedOption) {
+                            // Update opponent winner option
+                            opponentWinnerRadio.value = value;
+                            opponentName.textContent = selectedOption.text;
+                            opponentInitials.textContent = selectedOption.text.substring(0, 2).toUpperCase();
+
+                            // Update match preview
+                            previewOpponentName.textContent = selectedOption.text;
+                            previewOpponentInitials.textContent = selectedOption.text.substring(0, 2).toUpperCase();
+                            matchPreview.classList.remove("hidden");
+
+                            // Enable next button
+                            step2Next.disabled = false;
+
+                            // Fetch ratings if available
+                            fetchRatings(document.querySelector('input[name="match[leaderboard_id]"]:checked').value, value);
+                        }
+                    } else {
+                        step2Next.disabled = true;
+                        matchPreview.classList.add("hidden");
+                    }
+                });
+            }
+        });
+
+        // Step 2 Previous Button
+        step2Prev.addEventListener("click", function() {
+            step2.classList.add("hidden");
+            step1.classList.remove("hidden");
+
+            // Update step indicators
+            stepIndicators[1].classList.remove("active");
+            stepIndicators[0].classList.add("active");
+            stepIndicators[1].querySelector("div").classList.remove("bg-gradient-to-r", "from-purple-500", "to-pink-500", "text-white");
+            stepIndicators[1].querySelector("div").classList.add("bg-slate-700", "text-slate-400");
+            stepIndicators[1].querySelector("span").classList.remove("text-slate-300");
+            stepIndicators[1].querySelector("span").classList.add("text-slate-500");
+            stepIndicators[0].querySelector("div").classList.remove("bg-green-500");
+            stepIndicators[0].querySelector("div").classList.add("bg-gradient-to-r", "from-purple-500", "to-pink-500");
+        });
+
+        // Step 2 Next Button
+        step2Next.addEventListener("click", function() {
+            step2.classList.add("hidden");
+            step3.classList.remove("hidden");
+
+            // Update step indicators
+            stepIndicators[1].classList.remove("active");
+            stepIndicators[2].classList.add("active");
+            stepIndicators[1].querySelector("div").classList.remove("bg-gradient-to-r", "from-purple-500", "to-pink-500");
+            stepIndicators[1].querySelector("div").classList.add("bg-green-500");
+            stepIndicators[2].querySelector("div").classList.remove("bg-slate-700", "text-slate-400");
+            stepIndicators[2].querySelector("div").classList.add("bg-gradient-to-r", "from-purple-500", "to-pink-500", "text-white");
+            stepIndicators[2].querySelector("span").classList.remove("text-slate-500");
+            stepIndicators[2].querySelector("span").classList.add("text-slate-300");
+        });
+
+        // Step 3 Previous Button
+        step3Prev.addEventListener("click", function() {
+            step3.classList.add("hidden");
+            step2.classList.remove("hidden");
+
+            // Update step indicators
+            stepIndicators[2].classList.remove("active");
+            stepIndicators[1].classList.add("active");
+            stepIndicators[2].querySelector("div").classList.remove("bg-gradient-to-r", "from-purple-500", "to-pink-500", "text-white");
+            stepIndicators[2].querySelector("div").classList.add("bg-slate-700", "text-slate-400");
+            stepIndicators[2].querySelector("span").classList.remove("text-slate-300");
+            stepIndicators[2].querySelector("span").classList.add("text-slate-500");
+            stepIndicators[1].querySelector("div").classList.remove("bg-green-500");
+            stepIndicators[1].querySelector("div").classList.add("bg-gradient-to-r", "from-purple-500", "to-pink-500");
+        });
+
+        // Winner selection
+        winnerRadios.forEach(radio => {
+            radio.addEventListener("change", function() {
+                // Reset checks
+                document.querySelectorAll(".winner-check i").forEach(check => {
+                    check.style.opacity = "0";
+                });
+
+                // Show check for selected winner
+                if (this.checked) {
+                    this.closest(".winner-option").querySelector(".winner-check i").style.opacity = "1";
+
+                    // Uncheck draw if a winner is selected
+                    if (drawCheckbox.checked) {
+                        drawCheckbox.checked = false;
+                        document.querySelector(".draw-check i").style.opacity = "0";
+                    }
+                }
+            });
+        });
+
+        // Draw checkbox
+        drawCheckbox.addEventListener("change", function() {
+            if (this.checked) {
+                document.querySelector(".draw-check i").style.opacity = "1";
+
+                // Uncheck winner radios if draw is selected
+                winnerRadios.forEach(radio => {
+                    radio.checked = false;
+                    radio.closest(".winner-option").querySelector(".winner-check i").style.opacity = "0";
+                });
+            } else {
+                document.querySelector(".draw-check i").style.opacity = "0";
+            }
+        });
+
+        // Form submission
+        form.addEventListener("submit", function(event) {
             event.preventDefault();
+
+            // Validate form
+            let isValid = true;
+            let errorMessage = "";
+
+            // Check if a leaderboard is selected
+            if (!document.querySelector('input[name="match[leaderboard_id]"]:checked')) {
+                isValid = false;
+                errorMessage = "Please select a leaderboard";
+            }
+
+            // Check if an opponent is selected
+            else if (!opponentSelect.value) {
+                isValid = false;
+                errorMessage = "Please select an opponent";
+            }
+
+            // Check if a winner is selected or it's a draw
+            else if (!document.querySelector('input[name="match[winner_id]"]:checked') && !drawCheckbox.checked) {
+                isValid = false;
+                errorMessage = "Please select a winner or mark as draw";
+            }
+
+            if (!isValid) {
+                // Show error message
+                window.showToast(errorMessage, "error");
+                return;
+            }
+
+            // Show loading state
             submitButton.disabled = true;
             submitText.textContent = "Logging Match...";
             spinner.classList.remove("hidden");
 
-            // Simulate a delay (like a real-world API request)
+            // Submit the form
             setTimeout(() => {
+                // Show success toast
                 successToast.classList.remove("hidden");
-                submitButton.disabled = false;
-                submitText.textContent = "Log Match";
-                spinner.classList.add("hidden");
+                successToast.classList.remove("opacity-0", "translate-y-10");
+                successToast.classList.add("opacity-100", "translate-y-0");
 
-                // Auto-hide toast after 3 seconds
+                // Reset form state
                 setTimeout(() => {
-                    successToast.classList.add("hidden");
-                }, 3000);
+                    successToast.classList.remove("opacity-100", "translate-y-0");
+                    successToast.classList.add("opacity-0", "translate-y-10");
 
-                // Submit the form properly after the visual feedback
-                form.submit();
-            }, 1500);
+                    setTimeout(() => {
+                        successToast.classList.add("hidden");
+                        form.submit();
+                    }, 500);
+                }, 2000);
+            }, 1000);
         });
+
+        // Helper function to fetch opponents for a leaderboard
+        function fetchOpponents(leaderboardId) {
+            fetch(`/api/v1/leaderboards/${leaderboardId}/users?exclude_current=true`, {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+              .then(response => response.json())
+              .then(data => {
+                  // Clear existing options
+                  if (tomSelect) {
+                      tomSelect.clear();
+                      tomSelect.clearOptions();
+
+                      // Add new options
+                      data.forEach(user => {
+                          tomSelect.addOption({
+                              value: user.id,
+                              text: user.username
+                          });
+                      });
+
+                      tomSelect.refreshOptions(false);
+                  }
+              })
+              .catch(error => {
+                  console.error("Error fetching opponents:", error);
+              });
+        }
+
+        // Helper function to fetch ratings
+        function fetchRatings(leaderboardId, userId) {
+            fetch(`/api/v1/leaderboards/${leaderboardId}/ratings?user_id=${userId}`, {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+              .then(response => response.json())
+              .then(data => {
+                  if (data.current_user_rating) {
+                      userRating.textContent = `${data.current_user_rating} Elo`;
+                  }
+
+                  if (data.opponent_rating) {
+                      opponentRating.textContent = `${data.opponent_rating} Elo`;
+                  }
+              })
+              .catch(error => {
+                  console.error("Error fetching ratings:", error);
+              });
+        }
     });
 </script>
 
-<!-- Include Tom Select.js -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.bootstrap5.min.css">
-<script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>

@@ -15,6 +15,9 @@ Rails.application.routes.draw do
   resources :users, only: [:show, :edit, :update]
   get "profile", to: "users#show", as: "user_profile"
 
+  # Account-specific resources
+  resources :account_organizations, only: [:index], path: 'my-organizations'
+
   # Organizations
   resources :organizations do
     member do
@@ -40,7 +43,7 @@ Rails.application.routes.draw do
   # Elo History
   resources :elo_history, only: [:index, :show]
 
-  # Matches (Removed bulk_log)
+  # Matches
   resources :matches, except: [:destroy] do
     collection do
       get :recent
@@ -50,7 +53,7 @@ Rails.application.routes.draw do
     end
   end
 
-  # API Routes (Consider keeping only if used)
+  # API Routes
   namespace :api do
     namespace :v1 do
       resources :organizations, only: [:index, :show, :create] do
