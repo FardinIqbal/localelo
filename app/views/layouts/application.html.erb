@@ -43,7 +43,6 @@
 </style>
 
 <!-- Desktop Navigation Bar -->
-<!-- Desktop Navigation Bar -->
 <nav class="bg-slate-900/90 backdrop-blur-xl border-b border-white/10 sticky top-0 z-30 transition-all duration-300">
   <div class="container mx-auto px-4 py-3 flex justify-between items-center">
     <!-- Logo -->
@@ -432,7 +431,6 @@
 
 <% if user_signed_in? %>
   <!-- Mobile Bottom Navigation -->
-  <!-- Mobile Bottom Navigation -->
   <div
     class="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900/80 backdrop-blur-xl z-40 shadow-lg h-16 rounded-t-2xl transition-transform duration-300 border-t border-white/10"
     id="bottom-nav"
@@ -503,70 +501,31 @@
         const closeMenuButton = document.getElementById('close-mobile-menu');
         const mobileNavLinks = document.querySelectorAll('.mobile-nav-item, #mobile-menu-container a, #mobile-menu-container button');
 
-        // Open mobile menu with smooth transition
+        // Open mobile menu
         function openMobileMenu() {
             mobileMenu.classList.remove('hidden');
-            mobileMenu.style.opacity = '0';
-            mobileMenu.style.transform = 'translateY(-10px)';
-
-            // Trigger reflow
-            mobileMenu.offsetHeight;
-
-            // Show menu with animation
-            mobileMenu.style.opacity = '1';
-            mobileMenu.style.transform = 'translateY(0)';
-
-            // Toggle icon between bars and X
-            const icon = mobileMenuButton.querySelector('i');
-            if (icon.classList.contains('fa-bars')) {
-                icon.classList.remove('fa-bars');
-                icon.classList.add('fa-times');
-            }
+            setTimeout(() => {
+                mobileMenuContainer.classList.remove('-translate-x-full');
+            }, 10);
         }
 
-        // Close mobile menu with smooth transition
+        // Close mobile menu
         function closeMobileMenu() {
-            mobileMenu.style.opacity = '0';
-            mobileMenu.style.transform = 'translateY(-10px)';
-
-            // Reset the icon to bars
-            const icon = mobileMenuButton.querySelector('i');
-            if (icon.classList.contains('fa-times')) {
-                icon.classList.remove('fa-times');
-                icon.classList.add('fa-bars');
-            }
-
-            // Hide after transition completes
+            mobileMenuContainer.classList.add('-translate-x-full');
             setTimeout(() => {
                 mobileMenu.classList.add('hidden');
             }, 300);
         }
 
         // Toggle the mobile menu on hamburger click
-        mobileMenuButton?.addEventListener('click', function(e) {
-            e.stopPropagation(); // Prevent this click from immediately closing the menu
-            if (mobileMenu.classList.contains('hidden')) {
-                openMobileMenu();
-            } else {
-                closeMobileMenu();
-            }
-        });
-
+        mobileMenuButton?.addEventListener('click', openMobileMenu);
         closeMenuButton?.addEventListener('click', closeMobileMenu);
 
         // Close menu when clicking outside container
-        document.addEventListener('click', function(e) {
-            if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
-                // Check if the click was outside the menu
-                if (!mobileMenu.contains(e.target) && e.target !== mobileMenuButton) {
-                    closeMobileMenu();
-                }
-            }
-        });
-
-        // Prevent clicks inside the menu from closing it
         mobileMenu?.addEventListener('click', function(e) {
-            e.stopPropagation();
+            if (e.target === mobileMenu) {
+                closeMobileMenu();
+            }
         });
 
         // Add this new code: Close menu when clicking any link inside the menu
@@ -824,15 +783,6 @@
                 }, 500);
             });
         };
-
-        // Add CSS for mobile menu transitions
-        const style = document.createElement('style');
-        style.textContent = `
-        #mobile-menu {
-            transition: opacity 0.3s ease, transform 0.3s ease;
-        }
-    `;
-        document.head.appendChild(style);
     });
 
 </script>

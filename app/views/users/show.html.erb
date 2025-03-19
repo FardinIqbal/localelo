@@ -291,8 +291,8 @@
   <span class="px-2 py-1 text-xs font-medium rounded-md bg-slate-700 text-slate-300">
     Rank #<%= rating.leaderboard.leaderboard_ratings.where('rating > ?', rating.rating).count + 1 %>
   </span>
-                  <% if rating.leaderboard.organization.user_id == current_user.id || current_user.admin? %>
-                    <%= link_to leaderboard_path(rating.leaderboard), class: "ml-auto text-xs text-purple-400 hover:text-pink-400 transition-colors" do %>
+                  <% if rating.leaderboard.organization.user_id == current_user.id || rating.leaderboard.organization.organization_memberships.find_by(user: current_user)&.admin? %>
+                    <%= link_to organization_leaderboard_path(rating.leaderboard.organization, rating.leaderboard), class: "ml-auto text-xs text-purple-400 hover:text-pink-400 transition-colors" do %>
                       <i class="fas fa-arrow-right ml-1"></i> View Leaderboard
                     <% end %>
                   <% end %>

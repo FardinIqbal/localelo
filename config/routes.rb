@@ -16,7 +16,7 @@ Rails.application.routes.draw do
   get "profile", to: "users#show", as: "user_profile"
 
   # Account-specific resources
-  resources :account_organizations, only: [:index], path: 'my-organizations'
+  get "/account/my-organizations", to: "account_organizations#index", as: :account_organizations
 
   # Organizations
   resources :organizations do

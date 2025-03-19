@@ -17,6 +17,26 @@ class User < ApplicationRecord
   has_many :matches_as_opponent, class_name: "Match", foreign_key: "opponent_id", dependent: :destroy
   has_many :matches_won, class_name: "Match", foreign_key: "winner_id", dependent: :nullify
 
+  # Define a method to get all matches for a user
+  def matches
+    Match.where("user1_id = ? OR opponent_id = ?", id, id)
+  end
+
+  # Define a scope for recent matches
+  def recent_matches(limit = 5)
+    matches.order(created_at: :desc).limit(limit)
+  end
+
+  # Define a method to get win rate
+  def win_rate
+    total = matches.where(verified: true).count
+    return 0 if total == 0
+
+    wins = matches_won.where(verified: true).count
+    (wins.to_f / total * 100).round(2)
+  end
+
+
   # == Validations ==
   validates :email, presence: true, uniqueness: true
   validates :username, presence: true, uniqueness: true

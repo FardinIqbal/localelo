@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_03_19_070505) do
+ActiveRecord::Schema[7.1].define(version: 2025_03_19_212202) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -96,7 +96,9 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_19_070505) do
     t.boolean "is_draw", default: false, null: false
     t.boolean "verified", default: false, null: false
     t.index ["leaderboard_id"], name: "index_matches_on_leaderboard_id"
+    t.index ["match_time"], name: "index_matches_on_match_time"
     t.index ["opponent_id"], name: "index_matches_on_opponent_id"
+    t.index ["user1_id", "opponent_id", "leaderboard_id"], name: "index_matches_on_user1_id_and_opponent_id_and_leaderboard_id"
     t.index ["user1_id"], name: "index_matches_on_user1_id"
     t.index ["winner_id"], name: "index_matches_on_winner_id"
   end
@@ -122,7 +124,9 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_19_070505) do
     t.string "website"
     t.integer "visibility", default: 0
     t.bigint "created_by"
+    t.index ["name"], name: "index_organizations_on_name"
     t.index ["user_id"], name: "index_organizations_on_user_id"
+    t.index ["visibility"], name: "index_organizations_on_visibility"
   end
 
   create_table "users", force: :cascade do |t|
