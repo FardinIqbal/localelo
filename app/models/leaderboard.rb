@@ -1,18 +1,27 @@
 class Leaderboard < ApplicationRecord
-  before_validation :generate_slug, on: :create  # Auto-generate slug before saving
-
   belongs_to :organization
-  belongs_to :sport_type
   has_many :leaderboard_ratings, dependent: :destroy
+  has_many :users, through: :leaderboard_ratings
   has_many :matches, dependent: :destroy
 
   validates :name, presence: true
-  validates :slug, presence: true, uniqueness: { scope: :organization_id }
-  validates :sport_type_id, presence: true  # Ensure sport type is required
+
+  after_create :add_organization_members_to_leaderboard
 
   private
 
-  def generate_slug
-    self.slug ||= name.parameterize if name.present?
+  # Automatically add all organization members to the leaderboard when created
+  def add_organization_members_to_leaderboard
+    Rails.logger.info "=== DEBUG: Adding Organization Members to Leaderboard #{id} ==="
+
+    organization.users.find_each do |user|
+      LeaderboardRating.create!(
+        user_id: user.id,
+        leaderboard_id: id,
+        rating: 1500, # Default Elo rating
+        wins: 0,
+        losses: 0
+      )
+    end
   end
 end

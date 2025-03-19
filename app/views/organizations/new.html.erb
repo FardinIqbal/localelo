@@ -4,32 +4,51 @@
 </div>
 
 <%= form_with(model: @organization, local: true, class: "space-y-4") do |form| %>
+
+  <% if @organization.errors.any? %>
+    <div class="bg-red-100 text-red-700 p-3 rounded-md">
+      <p><strong>Errors prevented this organization from being created:</strong></p>
+      <ul class="list-disc list-inside">
+        <% @organization.errors.full_messages.each do |error| %>
+          <li><%= error %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <!-- Organization Name -->
   <div>
     <%= form.label :name, "Organization Name", class: "block font-semibold" %>
-    <%= form.text_field :name, class: "border p-2 w-full rounded-md", required: true %>
+    <%= form.text_field :name, class: "border p-2 w-full rounded-md", required: true, placeholder: "Enter organization name" %>
   </div>
 
+  <!-- Description -->
   <div>
     <%= form.label :description, "Description", class: "block font-semibold" %>
-    <%= form.text_area :description, class: "border p-2 w-full rounded-md", rows: 3 %>
+    <%= form.text_area :description, class: "border p-2 w-full rounded-md", rows: 3, placeholder: "Provide a brief description of your organization" %>
   </div>
 
+  <!-- Location -->
   <div>
     <%= form.label :location, "Location", class: "block font-semibold" %>
-    <%= form.text_field :location, class: "border p-2 w-full rounded-md" %>
+    <%= form.text_field :location, class: "border p-2 w-full rounded-md", placeholder: "City, State, or Country" %>
   </div>
 
+  <!-- Website -->
   <div>
     <%= form.label :website, "Website", class: "block font-semibold" %>
-    <%= form.url_field :website, class: "border p-2 w-full rounded-md" %>
+    <%= form.url_field :website, class: "border p-2 w-full rounded-md", placeholder: "https://example.com" %>
   </div>
 
+  <!-- Visibility -->
   <div>
     <%= form.label :visibility, "Visibility", class: "block font-semibold" %>
     <%= form.select :visibility, Organization.visibilities.keys.map { |v| [v.humanize, v] }, { prompt: "Select Visibility" }, class: "border p-2 w-full rounded-md" %>
   </div>
 
+  <!-- Submit Button -->
   <div>
     <%= form.submit "Create Organization", class: "bg-blue-500 text-white px-4 py-2 mt-4 rounded-md hover:bg-blue-600" %>
   </div>
+
 <% end %>

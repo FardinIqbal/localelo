@@ -3,124 +3,997 @@
 <head>
   <title>LocalElo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <!-- Security Meta Tags -->
+  <meta name="description" content="LocalElo - The simple & powerful ranking system for gyms and sports clubs">
   <%= csrf_meta_tags %>
   <%= csp_meta_tag %>
 
   <!-- Tailwind CSS -->
   <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
 
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+    />
+
+  <!-- FontAwesome Icons -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
   <!-- Import JavaScript Dependencies -->
   <%= javascript_importmap_tags %>
+
+  <!-- Minimal Custom CSS (no @apply) -->
+  <style>
+      :root {
+          /* Dark mode aesthetic with deep purples, indigos, and pink accents */
+          --primary: #6366f1; /* Indigo-500 */
+          --primary-light: #818cf8; /* Indigo-400 */
+          --primary-dark: #4f46e5; /* Indigo-600 */
+          --accent: #ec4899; /* Pink-500 */
+          --accent-light: #f472b6; /* Pink-400 */
+          --accent-dark: #db2777; /* Pink-600 */
+          --success: #10b981;
+          --warning: #f59e0b;
+          --error: #ef4444;
+          --bg-dark: #0f172a; /* Slate-900 */
+          --bg-darker: #020617; /* Slate-950 */
+          --text-light: #f8fafc; /* Slate-50 */
+          --text-muted: #94a3b8; /* Slate-400 */
+          --surface-dark: #1e293b; /* Slate-800 */
+          --surface-darker: #0f172a; /* Slate-900 */
+          --border-dark: #334155; /* Slate-700 */
+          --transition-speed: 0.3s;
+          --ease: cubic-bezier(0.4, 0, 0.2, 1);
+          --radius-sm: 0.375rem;
+          --radius-md: 0.5rem;
+          --radius-lg: 0.75rem;
+          --radius-xl: 1rem;
+      }
+
+      /* Smooth fade-in for main content */
+      @keyframes fadeIn {
+          from {
+              opacity: 0;
+              transform: translateY(10px);
+          }
+          to {
+              opacity: 1;
+              transform: translateY(0);
+          }
+      }
+      .page-transition {
+          animation: fadeIn 0.5s var(--ease);
+      }
+
+      /* Flash message animations */
+      @keyframes slideIn {
+          from {
+              transform: translateY(-20px);
+              opacity: 0;
+          }
+          to {
+              transform: translateY(0);
+              opacity: 1;
+          }
+      }
+      @keyframes fadeOutFlash {
+          from {
+              opacity: 1;
+          }
+          to {
+              opacity: 0;
+          }
+      }
+      .flash-message {
+          animation: slideIn 0.5s var(--ease), fadeOutFlash 0.5s var(--ease) 5s forwards;
+      }
+
+      /* Ripple effect */
+      .ripple {
+          position: absolute;
+          border-radius: 50%;
+          background-color: rgba(255, 255, 255, 0.3);
+          transform: scale(0);
+          animation: ripple 0.6s linear;
+          pointer-events: none;
+      }
+      @keyframes ripple {
+          to {
+              transform: scale(4);
+              opacity: 0;
+          }
+      }
+
+      /* Toast animations */
+      @keyframes toast-in {
+          from {
+              transform: translateY(20px);
+              opacity: 0;
+          }
+          to {
+              transform: translateY(0);
+              opacity: 1;
+          }
+      }
+      @keyframes toast-out {
+          from {
+              transform: translateY(0);
+              opacity: 1;
+          }
+          to {
+              transform: translateY(-20px);
+              opacity: 0;
+          }
+      }
+
+      /* Skeleton loading effect with purple glow */
+      @keyframes shimmer {
+          0% {
+              transform: translateX(-100%);
+          }
+          100% {
+              transform: translateX(100%);
+          }
+      }
+      .skeleton-loader {
+          background-color: var(--surface-dark);
+          border-radius: 4px;
+          position: relative;
+          overflow: hidden;
+      }
+      .skeleton-loader div {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(
+                  90deg,
+                  transparent,
+                  rgba(129, 140, 248, 0.2),
+                  transparent
+          );
+          animation: shimmer 1.5s infinite;
+      }
+
+      /* Hide bottom nav on scroll */
+      .hidden-nav {
+          transform: translateY(100%) !important;
+      }
+
+      /* The dropdown fade/slide effect with updated colors */
+      .dropdown-menu {
+          opacity: 0;
+          visibility: hidden;
+          transform: translateY(-10px);
+          transition: all 0.3s var(--ease);
+          z-index: 50;
+      }
+      .dropdown-trigger:hover .dropdown-menu,
+      .dropdown-trigger:focus-within .dropdown-menu {
+          opacity: 1;
+          visibility: visible;
+          transform: translateY(0);
+      }
+
+      /* Floating animation for decorative elements */
+      @keyframes float {
+          0%,
+          100% {
+              transform: translateY(0);
+          }
+          50% {
+              transform: translateY(-10px);
+          }
+      }
+      .animate-float {
+          animation: float 3s ease-in-out infinite;
+      }
+
+      /* Slow pulse animation */
+      @keyframes pulse-slow {
+          0%,
+          100% {
+              opacity: 1;
+          }
+          50% {
+              opacity: 0.7;
+          }
+      }
+      .animate-pulse-slow {
+          animation: pulse-slow 4s ease-in-out infinite;
+      }
+
+      /* Marquee animation for partner logos */
+      @keyframes marquee {
+          0% {
+              transform: translateX(0);
+          }
+          100% {
+              transform: translateX(-100%);
+          }
+      }
+      .animate-marquee {
+          animation: marquee 25s linear infinite;
+      }
+  </style>
 </head>
-
-<body class="bg-gray-50 text-gray-900 flex flex-col min-h-screen">
-
-<!-- Navigation Bar -->
-<nav class="bg-white shadow-md">
-  <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+<body
+  class="min-h-screen flex flex-col"
+  style="font-family: 'Inter', sans-serif; background: linear-gradient(135deg, var(--bg-darker) 0%, var(--bg-dark) 50%, var(--bg-darker) 100%); color: var(--text-light); transition: background-color var(--transition-speed) var(--ease);"
+>
+<!-- Desktop Navigation Bar -->
+<nav
+  class="bg-slate-900/90 backdrop-blur-xl border-b border-white/10 sticky top-0 z-30 transition-all duration-300"
+>
+  <div class="container mx-auto px-4 py-3 flex justify-between items-center">
     <!-- Logo -->
-    <%= link_to "LocalElo", user_signed_in? ? authenticated_root_path : unauthenticated_root_path,
-                class: "text-2xl font-bold text-indigo-600 hover:text-indigo-800 transition" %>
+    <%= link_to(
+          user_signed_in? ? authenticated_root_path : unauthenticated_root_path,
+          class: 'text-2xl font-bold tracking-tight flex items-center cursor-pointer'
+        ) do %>
+          <span
+            class="flex items-center"
+            style="
+            background: linear-gradient(90deg, var(--accent) 0%, var(--primary) 100%);
+              -webkit-background-clip: text;
+              -webkit-text-fill-color: transparent;
+              transition: all var(--transition-speed) var(--ease);
+            "
+          >
+            <i class="fas fa-chart-line mr-2"></i>
+            LocalElo
+          </span>
+    <% end %>
 
-    <!-- Navigation Links (Desktop) -->
-    <div class="hidden md:flex space-x-6 items-center">
+    <!-- Desktop Navigation Links -->
+    <div class="hidden md:flex items-center space-x-2">
       <% if user_signed_in? %>
-        <%= link_to "Browse", organizations_path, class: "nav-link" %>
-        <%= link_to "Log Match", new_match_path, class: "nav-link" %>
+        <%= link_to(
+              organizations_path,
+              class:
+                "px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 relative text-gray-400 hover:text-[var(--primary)]
+                nav-link #{'font-medium text-[var(--primary)]' if current_page?(organizations_path)}"
+            ) do %>
+          <i class="fas fa-users mr-1.5"></i>
+          Gyms
+        <% end %>
+
+        <%= link_to(
+              matches_path,
+              class:
+                "px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 relative text-gray-400 hover:text-[var(--primary)]
+                nav-link #{'font-medium text-[var(--primary)]' if current_page?(matches_path)}"
+            ) do %>
+          <i class="fas fa-trophy mr-1.5"></i>
+          Matches
+        <% end %>
+
+        <%= link_to(
+              new_match_path,
+              class:
+                "inline-flex items-center justify-center font-medium rounded-md transition-all duration-300 h-10 px-4
+                text-white bg-gradient-to-r from-purple-600 to-pink-500
+                hover:bg-gradient-to-r hover:from-purple-500 hover:to-pink-400
+                shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40
+                transform hover:-translate-y-1 relative overflow-hidden"
+            ) do %>
+          <i class="fas fa-plus mr-1.5"></i>
+          Log Match
+        <% end %>
 
         <!-- Profile Dropdown -->
-        <div class="relative group">
-          <button class="nav-link flex items-center">
-            <%= current_user.username || "Profile" %>
-            <span class="ml-2">&#9662;</span>
+        <div class="relative dropdown-trigger ml-2">
+          <button
+            class="px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 relative text-gray-400 hover:text-[var(--primary)] flex items-center"
+          >
+            <div
+              class="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center mr-2 border border-white/10"
+            >
+              <i class="fas fa-user text-white/70"></i>
+            </div>
+            <span><%= current_user.username || 'Profile' %></span>
+            <i class="fas fa-chevron-down ml-1.5 text-xs"></i>
           </button>
-          <div class="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg hidden group-hover:block">
-            <%= link_to "Profile", user_path(current_user), class: "dropdown-item" %>
-            <%= button_to 'Logout', destroy_user_session_path, method: :delete, class: "dropdown-item text-red-600" %>
+          <div
+            class="dropdown-menu absolute right-0 mt-2 w-48 bg-slate-800/90 backdrop-blur-xl rounded-lg shadow-lg overflow-hidden border border-white/10"
+          >
+            <%= link_to(
+                  user_path(current_user),
+                  class:
+                    "block px-4 py-2 text-sm w-full text-left transition-colors duration-300 text-white hover:bg-slate-700/50 hover:text-[var(--accent)]"
+                ) do %>
+              <i class="fas fa-user mr-2"></i>
+              My Profile
+            <% end %>
+            <%= link_to(
+                  '#',
+                  class:
+                    "block px-4 py-2 text-sm w-full text-left transition-colors duration-300 text-white hover:bg-slate-700/50 hover:text-[var(--accent)]"
+                ) do %>
+              <i class="fas fa-cog mr-2"></i>
+              Settings
+            <% end %>
+            <div class="my-1 border-t border-white/5"></div>
+            <%= button_to(
+                  destroy_user_session_path,
+                  method: :delete,
+                  class:
+                    "block px-4 py-2 text-sm w-full text-left transition-colors duration-300 text-red-400 hover:bg-slate-700/50 hover:text-red-300"
+                ) do %>
+              <i class="fas fa-sign-out-alt mr-2"></i>
+              Logout
+            <% end %>
           </div>
         </div>
       <% else %>
-        <%= link_to "Join", organizations_path, class: "nav-link" %>
-        <%= link_to "Sign In", new_user_session_path, class: "nav-link" %>
-        <%= link_to "Sign Up", new_user_registration_path, class: "btn-primary" %>
+        <%= link_to(
+              organizations_path,
+              class:
+                "px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 relative text-gray-400 hover:text-[var(--primary)]"
+            ) do %>
+          <i class="fas fa-search mr-1.5"></i>
+          Explore
+        <% end %>
+        <%= link_to(
+              new_user_session_path,
+              class:
+                "px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 relative text-gray-400 hover:text-[var(--primary)]"
+            ) do %>
+          <i class="fas fa-sign-in-alt mr-1.5"></i>
+          Sign In
+        <% end %>
+        <%= link_to(
+              new_user_registration_path,
+              class:
+                "inline-flex items-center justify-center font-medium rounded-md transition-all duration-300 h-10 px-4
+                text-white bg-gradient-to-r from-indigo-600 to-purple-600
+                hover:bg-gradient-to-r hover:from-indigo-500 hover:to-purple-500
+                shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40
+                transform hover:-translate-y-1"
+            ) do %>
+          <i class="fas fa-user-plus mr-1.5"></i>
+          Sign Up
+        <% end %>
       <% end %>
     </div>
 
     <!-- Mobile Menu Button -->
-    <button id="mobile-menu-button" class="md:hidden text-gray-700 focus:outline-none">
-      <i class="fas fa-bars text-2xl"></i>
+    <button
+      id="mobile-menu-button"
+      class="md:hidden flex items-center justify-center w-10 h-10 rounded-full bg-slate-800 text-white border border-white/10"
+    >
+      <i class="fas fa-bars"></i>
     </button>
   </div>
 </nav>
 
-<!-- Mobile Navigation -->
-<div id="mobile-menu" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50">
-  <div class="bg-white w-64 h-full shadow-lg p-6 flex flex-col">
-    <button id="close-mobile-menu" class="text-gray-700 text-2xl mb-4">&times;</button>
+<!-- Mobile Side Navigation -->
+<div
+  id="mobile-menu"
+  class="fixed inset-0 z-50 transition-all duration-300 bg-black bg-opacity-50 backdrop-blur-sm hidden"
+>
+  <div
+    class="h-full w-72 bg-slate-800/90 backdrop-blur-xl p-6 shadow-lg rounded-r-[var(--radius-lg)] border-l border-white/10 transform -translate-x-full transition-transform duration-300"
+    id="mobile-menu-container"
+  >
+    <div class="flex justify-between items-center mb-6">
+      <div
+        class="text-xl font-bold tracking-tight flex items-center cursor-pointer"
+        style="
+        background: linear-gradient(90deg, var(--accent) 0%, var(--primary) 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          transition: all var(--transition-speed) var(--ease);
+        "
+      >
+        <i class="fas fa-chart-line mr-2"></i>
+        LocalElo
+      </div>
+      <button
+        id="close-mobile-menu"
+        class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-700 text-white border border-white/10"
+      >
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
 
     <% if user_signed_in? %>
-      <%= link_to "Browse", organizations_path, class: "mobile-nav-item" %>
-      <%= link_to "Log Match", new_match_path, class: "mobile-nav-item" %>
-      <%= link_to "Profile", user_path(current_user), class: "mobile-nav-item" %>
-      <%= button_to 'Logout', destroy_user_session_path, method: :delete, class: "mobile-nav-item text-red-600" %>
+      <div class="flex items-center mb-6 pb-4 border-b border-white/5">
+        <div
+          class="bg-slate-700 rounded-full w-12 h-12 flex items-center justify-center border border-white/10"
+        >
+          <i class="fas fa-user text-white/70 text-xl"></i>
+        </div>
+        <div class="ml-3">
+          <div class="font-medium text-white"><%= current_user.username || 'User' %></div>
+          <div class="text-sm text-white/60">View Profile</div>
+        </div>
+      </div>
+
+      <%= link_to(
+            organizations_path,
+            class:
+              "mobile-nav-item block py-3 px-4 text-white rounded-md transition-all duration-300 hover:bg-slate-700/50 hover:text-[var(--accent)] mb-1
+               #{'bg-slate-700/50 text-[var(--accent)]' if current_page?(organizations_path)}"
+          ) do %>
+        <i class="fas fa-users mr-3 w-6 text-center"></i>
+        My Gyms
+      <% end %>
+
+      <%= link_to(
+            matches_path,
+            class:
+              "mobile-nav-item block py-3 px-4 text-white rounded-md transition-all duration-300 hover:bg-slate-700/50 hover:text-[var(--accent)] mb-1
+               #{'bg-slate-700/50 text-[var(--accent)]' if current_page?(matches_path)}"
+          ) do %>
+        <i class="fas fa-trophy mr-3 w-6 text-center"></i>
+        My Matches
+      <% end %>
+
+      <%= link_to(
+            new_match_path,
+            class:
+              "block py-3 px-4 text-white rounded-md transition-all duration-300 hover:bg-slate-700/50 hover:text-[var(--accent)] mb-1"
+          ) do %>
+        <i class="fas fa-plus mr-3 w-6 text-center"></i>
+        Log Match
+      <% end %>
+
+      <div class="border-t border-white/5 my-4"></div>
+
+      <%= link_to(
+            '#',
+            class:
+              "block py-3 px-4 text-white rounded-md transition-all duration-300 hover:bg-slate-700/50 hover:text-[var(--accent)] mb-1"
+          ) do %>
+        <i class="fas fa-cog mr-3 w-6 text-center"></i>
+        Settings
+      <% end %>
+
+      <%= button_to(
+            destroy_user_session_path,
+            method: :delete,
+            class:
+              "block py-3 px-4 text-red-400 rounded-md transition-all duration-300 hover:bg-slate-700/50 hover:text-red-300 mb-1 w-full text-left"
+          ) do %>
+        <i class="fas fa-sign-out-alt mr-3 w-6 text-center"></i>
+        Logout
+      <% end %>
     <% else %>
-      <%= link_to "Join", organizations_path, class: "mobile-nav-item" %>
-      <%= link_to "Sign In", new_user_session_path, class: "mobile-nav-item" %>
-      <%= link_to "Sign Up", new_user_registration_path, class: "mobile-nav-item btn-primary" %>
+      <%= link_to(
+            organizations_path,
+            class:
+              "mobile-nav-item block py-3 px-4 text-white rounded-md transition-all duration-300 hover:bg-slate-700/50 hover:text-[var(--accent)] mb-1"
+          ) do %>
+        <i class="fas fa-search mr-3 w-6 text-center"></i>
+        Explore
+      <% end %>
+
+      <%= link_to(
+            new_user_session_path,
+            class:
+              "mobile-nav-item block py-3 px-4 text-white rounded-md transition-all duration-300 hover:bg-slate-700/50 hover:text-[var(--accent)] mb-1"
+          ) do %>
+        <i class="fas fa-sign-in-alt mr-3 w-6 text-center"></i>
+        Sign In
+      <% end %>
+
+      <%= link_to(
+            new_user_registration_path,
+            class:
+              "mobile-nav-item block py-3 px-4 font-medium text-[var(--accent)] rounded-md transition-all duration-300 hover:bg-slate-700/50 mb-1"
+          ) do %>
+        <i class="fas fa-user-plus mr-3 w-6 text-center"></i>
+        Sign Up
+      <% end %>
     <% end %>
   </div>
 </div>
 
 <!-- Flash Messages -->
-<div class="container mx-auto px-6">
-  <% flash.each do |type, message| %>
-    <div class="flash-message flash-<%= type %>" role="alert">
-      <p><%= message %></p>
-      <button class="close-flash">&times;</button>
-    </div>
-  <% end %>
+<div class="container mx-auto px-4 pt-4">
+  <div id="flash-container">
+    <% flash.each do |type, message| %>
+      <%# Notice/Alert/Success styling classes below %>
+      <% flash_class =
+           case type
+           when "notice" then "bg-indigo-900/50 text-indigo-300 border-l-4 border-indigo-500"
+           when "alert"  then "bg-red-900/50 text-red-300 border-l-4 border-red-500"
+           when "success" then "bg-green-900/50 text-green-300 border-l-4 border-green-500"
+           else
+             "bg-slate-800/50 text-slate-300 border-l-4 border-slate-500"
+           end
+      %>
+      <div
+        class="flash-message rounded-xl p-4 mb-4 flex justify-between items-center shadow-lg max-w-2xl mx-auto backdrop-blur-md <%= flash_class %>"
+        role="alert"
+      >
+        <div class="flex items-center">
+          <% if type == "notice" %>
+            <i class="fas fa-info-circle mr-3 text-indigo-400"></i>
+          <% elsif type == "alert" %>
+            <i class="fas fa-exclamation-circle mr-3 text-red-400"></i>
+          <% elsif type == "success" %>
+            <i class="fas fa-check-circle mr-3 text-green-400"></i>
+          <% end %>
+          <p><%= message %></p>
+        </div>
+        <button class="close-flash text-lg hover:text-white transition-colors">&times;</button>
+      </div>
+    <% end %>
+  </div>
 </div>
 
-<!-- Main Content -->
-<main class="container mx-auto px-6 flex-grow py-12">
+<!-- Main Content (with bottom padding on mobile if user is signed in) -->
+<main
+  class="container mx-auto px-4 flex-grow py-8 md:py-12 page-transition <%= 'pb-16' if user_signed_in? %>"
+>
   <%= yield %>
 </main>
 
-<!-- Footer -->
-<footer class="bg-gray-900 text-white py-6 mt-auto text-center text-sm">
-  &copy; <%= Time.current.year %> LocalElo. All rights reserved.
-  <div class="mt-2">
-    <%= link_to "Privacy Policy", "#", class: "underline" %> |
-    <%= link_to "Terms of Service", "#", class: "underline" %> |
-    <%= link_to "Contact", "#", class: "underline" %>
+<!-- Footer (sticks to bottom when content is short, thanks to flex layout) -->
+<footer
+  class="bg-gradient-to-r from-slate-900 to-indigo-900 text-white py-6 border-t border-white/10"
+>
+  <div class="container mx-auto px-4">
+    <div class="flex flex-col md:flex-row justify-between items-center">
+      <div class="mb-4 md:mb-0">
+        <div
+          class="text-xl font-bold tracking-tight flex items-center cursor-pointer mb-2"
+          style="
+          background: linear-gradient(90deg, var(--accent) 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            transition: all var(--transition-speed) var(--ease);
+          "
+        >
+          <i class="fas fa-chart-line mr-2"></i>
+          LocalElo
+        </div>
+        <p class="text-white/60 text-sm">
+          The simple & powerful ranking system for gyms and sports clubs
+        </p>
+      </div>
+      <div
+        class="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-6"
+      >
+        <%= link_to(
+              "Privacy Policy",
+              "#",
+              class: "text-white/60 hover:text-white transition-colors duration-300"
+            ) %>
+        <%= link_to(
+              "Terms of Service",
+              "#",
+              class: "text-white/60 hover:text-white transition-colors duration-300"
+            ) %>
+        <%= link_to(
+              "Contact",
+              "#",
+              class: "text-white/60 hover:text-white transition-colors duration-300"
+            ) %>
+      </div>
+    </div>
+    <div class="mt-6 text-center md:text-left text-sm text-white/60">
+      &copy; <%= Time.current.year %> LocalElo. All rights reserved.
+    </div>
   </div>
 </footer>
+
+<% if user_signed_in? %>
+  <!-- Mobile Bottom Navigation -->
+  <div
+    class="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900/80 backdrop-blur-xl z-40 shadow-lg h-16 rounded-t-2xl transition-transform duration-300 border-t border-white/10"
+    id="bottom-nav"
+  >
+    <div class="flex justify-around items-center h-full">
+      <%= link_to(
+            authenticated_root_path,
+            class:
+              "mobile-nav-button flex flex-col items-center justify-center text-white/60 w-1/5 hover:text-[var(--accent)]
+               #{'text-[var(--accent)]' if current_page?(authenticated_root_path)}"
+          ) do %>
+        <i class="fas fa-home text-lg mb-1"></i>
+        <span class="text-xs font-medium">Home</span>
+      <% end %>
+
+      <%= link_to(
+            organizations_path,
+            class:
+              "mobile-nav-button flex flex-col items-center justify-center text-white/60 w-1/5 hover:text-[var(--accent)]
+               #{'text-[var(--accent)]' if current_page?(organizations_path)}"
+          ) do %>
+        <i class="fas fa-users text-lg mb-1"></i>
+        <span class="text-xs font-medium">Gyms</span>
+      <% end %>
+
+      <%= link_to(
+            new_match_path,
+            class:
+              "log-match-button flex items-center justify-center rounded-full shadow-lg text-white w-14 h-14 mt-[-28px]
+               bg-gradient-to-r from-purple-600 to-pink-500
+               hover:from-purple-500 hover:to-pink-400
+               shadow-purple-500/20 hover:shadow-purple-500/40
+               transform hover:scale-105 pulse-glow"
+          ) do %>
+        <i class="fas fa-plus"></i>
+      <% end %>
+
+      <%= link_to(
+            matches_path,
+            class:
+              "mobile-nav-button flex flex-col items-center justify-center text-white/60 w-1/5 hover:text-[var(--accent)]
+               #{'text-[var(--accent)]' if current_page?(matches_path)}"
+          ) do %>
+        <i class="fas fa-trophy text-lg mb-1"></i>
+        <span class="text-xs font-medium">Matches</span>
+      <% end %>
+
+      <%= link_to(
+            user_path(current_user),
+            class:
+              "mobile-nav-button flex flex-col items-center justify-center text-white/60 w-1/5 hover:text-[var(--accent)]
+               #{'text-[var(--accent)]' if current_page?(user_path(current_user))}"
+          ) do %>
+        <i class="fas fa-user text-lg mb-1"></i>
+        <span class="text-xs font-medium">Profile</span>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<!-- Toast Container -->
+<div
+  class="toast-container fixed z-50 flex flex-col items-center pointer-events-none bottom-20 left-0 right-0"
+  id="toast-container"
+></div>
 
 <!-- JavaScript -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Mobile menu toggle
-        document.getElementById("mobile-menu-button").addEventListener("click", () => {
-            document.getElementById("mobile-menu").classList.toggle("hidden");
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileMenuContainer = document.getElementById('mobile-menu-container');
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const closeMenuButton = document.getElementById('close-mobile-menu');
+
+        // Open mobile menu
+        function openMobileMenu() {
+            mobileMenu.classList.remove('hidden');
+            setTimeout(() => {
+                mobileMenuContainer.classList.remove('-translate-x-full');
+            }, 10);
+        }
+
+        // Close mobile menu
+        function closeMobileMenu() {
+            mobileMenuContainer.classList.add('-translate-x-full');
+            setTimeout(() => {
+                mobileMenu.classList.add('hidden');
+            }, 300);
+        }
+
+        // Toggle the mobile menu on hamburger click
+        mobileMenuButton?.addEventListener('click', openMobileMenu);
+        closeMenuButton?.addEventListener('click', closeMobileMenu);
+
+        // Close menu when clicking outside container
+        mobileMenu?.addEventListener('click', function(e) {
+            if (e.target === mobileMenu) {
+                closeMobileMenu();
+            }
         });
 
-        document.getElementById("close-mobile-menu").addEventListener("click", () => {
-            document.getElementById("mobile-menu").classList.add("hidden");
+        // Flash messages auto-dismiss and manual close
+        const flashMessages = document.querySelectorAll('.flash-message');
+        flashMessages.forEach(message => {
+            setTimeout(() => {
+                message.style.opacity = '0';
+                setTimeout(() => {
+                    message.remove();
+                }, 500);
+            }, 5000);
+
+            const closeButton = message.querySelector('.close-flash');
+            if (closeButton) {
+                closeButton.addEventListener('click', () => {
+                    message.style.opacity = '0';
+                    setTimeout(() => {
+                        message.remove();
+                    }, 500);
+                });
+            }
         });
 
-        // Flash message auto-dismiss
-        document.querySelectorAll(".flash-message").forEach(alert => {
-            setTimeout(() => alert.classList.add("hidden"), 5000);
+        // Hide bottom nav on scroll
+        const bottomNav = document.getElementById('bottom-nav');
+        if (bottomNav) {
+            let lastScrollTop = 0;
+            const scrollThreshold = 20;
+
+            window.addEventListener(
+                'scroll',
+                () => {
+                    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                    if (Math.abs(lastScrollTop - scrollTop) <= scrollThreshold) return;
+
+                    if (scrollTop > lastScrollTop && scrollTop > 100) {
+                        bottomNav.classList.add('hidden-nav');
+                    } else {
+                        bottomNav.classList.remove('hidden-nav');
+                    }
+
+                    lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+                },
+                { passive: true }
+            );
+        }
+
+        // Ripple effect
+        function createRipple(event) {
+            const button = event.currentTarget;
+            const circle = document.createElement('span');
+            const diameter = Math.max(button.clientWidth, button.clientHeight);
+            const radius = diameter / 2;
+            const rect = button.getBoundingClientRect();
+
+            circle.style.width = circle.style.height = `${diameter}px`;
+            circle.style.left = `${event.clientX - rect.left - radius}px`;
+            circle.style.top = `${event.clientY - rect.top - radius}px`;
+            circle.classList.add('ripple');
+
+            const existingRipple = button.querySelector('.ripple');
+            if (existingRipple) {
+                existingRipple.remove();
+            }
+
+            button.appendChild(circle);
+        }
+
+        const rippleButtons = document.querySelectorAll(
+            '.btn, .btn-primary, .btn-accent, .log-match-button'
+        );
+        rippleButtons.forEach(button => {
+            button.addEventListener('click', createRipple);
         });
 
-        // Flash message manual close
-        document.querySelectorAll(".close-flash").forEach(btn => {
-            btn.addEventListener("click", (e) => e.target.parentElement.classList.add("hidden"));
+        // Toast notification system
+        window.showToast = function(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast flex items-center mb-3 pointer-events-auto bg-slate-800/90 backdrop-blur-md rounded-lg shadow-md p-4 max-w-sm w-full border-l-4 animate-[toast-in_0.5s_ease] border-white/10`;
+            toast.style.animation =
+                'toast-in 0.5s var(--ease), toast-out 0.5s var(--ease) 3s forwards';
+
+            let iconClass = 'fa-info-circle text-indigo-400';
+            let borderColor = 'border-indigo-500';
+            if (type === 'success') {
+                iconClass = 'fa-check-circle text-green-400';
+                borderColor = 'border-green-500';
+            } else if (type === 'error') {
+                iconClass = 'fa-exclamation-circle text-red-400';
+                borderColor = 'border-red-500';
+            } else if (type === 'warning') {
+                iconClass = 'fa-exclamation-triangle text-yellow-400';
+                borderColor = 'border-yellow-500';
+            }
+
+            toast.classList.add(borderColor);
+            toast.innerHTML = `
+            <i class="fas ${iconClass} mr-3"></i>
+            <span class="flex-1 text-white">${message}</span>
+            <button class="ml-2 text-white/60 hover:text-white transition-colors duration-300">
+              <i class="fas fa-times"></i>
+            </button>
+          `;
+
+            container.appendChild(toast);
+
+            const closeBtn = toast.querySelector('button');
+            closeBtn.addEventListener('click', () => {
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            });
+        };
+
+        // Navbar shadow on scroll
+        const navbar = document.querySelector('nav');
+        function handleNavbarScroll() {
+            if (window.scrollY > 10) {
+                navbar.classList.add('shadow-lg', 'shadow-purple-500/5');
+            } else {
+                navbar.classList.remove('shadow-lg', 'shadow-purple-500/5');
+            }
+        }
+        window.addEventListener('scroll', handleNavbarScroll, { passive: true });
+
+        // Link highlighting
+        function setActiveLinks() {
+            const currentPath = window.location.pathname;
+
+            // Desktop nav links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                const href = link.getAttribute('href');
+                if (href === currentPath) {
+                    link.classList.add('font-medium', 'text-[var(--accent)]');
+                } else {
+                    link.classList.remove('font-medium', 'text-[var(--accent)]');
+                }
+            });
+
+            // Mobile nav items
+            document.querySelectorAll('.mobile-nav-item').forEach(link => {
+                const href = link.getAttribute('href');
+                if (href === currentPath) {
+                    link.classList.add('bg-slate-700/50', 'text-[var(--accent)]');
+                } else {
+                    link.classList.remove('bg-slate-700/50', 'text-[var(--accent)]');
+                }
+            });
+
+            // Bottom nav
+            document.querySelectorAll('.mobile-nav-button').forEach(btn => {
+                const href = btn.getAttribute('href');
+                if (href === currentPath) {
+                    btn.classList.add('text-[var(--accent)]');
+                } else {
+                    btn.classList.remove('text-[var(--accent)]');
+                }
+            });
+        }
+        setActiveLinks();
+
+        // Tooltips
+        function initTooltips() {
+            document.querySelectorAll('[data-tooltip]').forEach(el => {
+                el.addEventListener('mouseenter', () => {
+                    const tooltipText = el.getAttribute('data-tooltip');
+                    const tooltip = document.createElement('div');
+                    tooltip.className =
+                        'absolute bg-slate-800 text-white text-xs rounded-md py-1 px-2 z-50 backdrop-blur-md border border-white/10 shadow-lg shadow-purple-500/10';
+                    tooltip.style.bottom = 'calc(100% + 5px)';
+                    tooltip.style.left = '50%';
+                    tooltip.style.transform = 'translateX(-50%)';
+                    tooltip.textContent = tooltipText;
+
+                    const arrow = document.createElement('div');
+                    arrow.className = 'absolute w-0 h-0';
+                    arrow.style.borderLeft = '5px solid transparent';
+                    arrow.style.borderRight = '5px solid transparent';
+                    arrow.style.borderTop = '5px solid #1e293b';
+                    arrow.style.bottom = '-5px';
+                    arrow.style.left = '50%';
+                    arrow.style.transform = 'translateX(-50%)';
+                    tooltip.appendChild(arrow);
+
+                    el.style.position = 'relative';
+                    el.appendChild(tooltip);
+                });
+                el.addEventListener('mouseleave', () => {
+                    const tooltip = el.querySelector('.bg-slate-800');
+                    if (tooltip) tooltip.remove();
+                });
+            });
+        }
+        initTooltips();
+
+        // Enhanced form effect
+        document.querySelectorAll('input, textarea, select').forEach(field => {
+            field.addEventListener('focus', () => {
+                if (field.parentElement) {
+                    field.parentElement.classList.add('focused');
+                }
+            });
+            field.addEventListener('blur', () => {
+                if (field.parentElement) {
+                    field.parentElement.classList.remove('focused');
+                }
+                if (field.value) {
+                    field.classList.add('filled');
+                } else {
+                    field.classList.remove('filled');
+                }
+            });
         });
+
+        // Simple data-table clickable sort icons
+        function initializeDataTables() {
+            const tables = document.querySelectorAll('.data-table');
+            tables.forEach(table => {
+                const headers = table.querySelectorAll('th');
+                headers.forEach(header => {
+                    if (header.getAttribute('data-sortable') !== 'false') {
+                        header.classList.add('cursor-pointer', 'select-none');
+                        const iconSpan = document.createElement('span');
+                        iconSpan.innerHTML = ' <i class="fas fa-sort text-white/40 ml-1"></i>';
+                        header.appendChild(iconSpan);
+
+                        header.addEventListener('click', () => {
+                            const currentSort = header.getAttribute('data-sort') || 'none';
+                            headers.forEach(h => {
+                                h.setAttribute('data-sort', 'none');
+                                const icon = h.querySelector('i');
+                                if (icon) {
+                                    icon.className = 'fas fa-sort text-white/40 ml-1';
+                                }
+                            });
+                            let newSort = 'asc';
+                            if (currentSort === 'asc') newSort = 'desc';
+
+                            header.setAttribute('data-sort', newSort);
+                            const icon = header.querySelector('i');
+                            if (icon) {
+                                icon.className = `fas fa-sort-${
+                                    newSort === 'asc' ? 'up' : 'down'
+                                } text-[var(--accent)] ml-1`;
+                            }
+                            // Add your own sorting logic or server request here
+                        });
+                    }
+                });
+            });
+        }
+        initializeDataTables();
+
+        // Page transitions with Turbo
+        document.addEventListener('turbo:before-visit', () => {
+            const mainContent = document.querySelector('main');
+            if (mainContent) {
+                mainContent.style.opacity = '0';
+            }
+        });
+
+        document.addEventListener('turbo:load', () => {
+            setActiveLinks();
+            initTooltips();
+            initializeDataTables();
+            const mainContent = document.querySelector('main');
+            if (mainContent) {
+                mainContent.classList.add('page-transition');
+            }
+        });
+
+        // Add decorative elements with animations
+        function addDecorativeElements() {
+            const decorContainer = document.createElement('div');
+            decorContainer.className =
+                'fixed inset-0 pointer-events-none overflow-hidden z-0';
+
+            // Add floating orbs with different sizes and opacities
+            for (let i = 0; i < 5; i++) {
+                const orb = document.createElement('div');
+                const size = Math.floor(Math.random() * 300) + 100;
+                const posX = Math.floor(Math.random() * 100);
+                const posY = Math.floor(Math.random() * 100);
+                const delay = Math.floor(Math.random() * 5);
+
+                orb.className = 'absolute rounded-full animate-float';
+                orb.style.width = `${size}px`;
+                orb.style.height = `${size}px`;
+                orb.style.left = `${posX}%`;
+                orb.style.top = `${posY}%`;
+                orb.style.background = `radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, rgba(236, 72, 153, 0.05) 70%, transparent 100%)`;
+                orb.style.filter = 'blur(40px)';
+                orb.style.animationDelay = `${delay}s`;
+
+                decorContainer.appendChild(orb);
+            }
+
+            document.body.prepend(decorContainer);
+        }
+
+        // Only add decorative elements on larger screens
+        if (window.innerWidth > 768) {
+            addDecorativeElements();
+        }
     });
 </script>
-
 </body>
 </html>

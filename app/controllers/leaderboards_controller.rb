@@ -6,7 +6,7 @@ class LeaderboardsController < ApplicationController
 
   # GET /organizations/:organization_id/leaderboards
   def index
-    @leaderboards = @organization.leaderboards
+    @leaderboards = @organization.leaderboards.includes(:sport_type).order(:name)
   end
 
   # GET /organizations/:organization_id/leaderboards/:id
@@ -25,9 +25,9 @@ class LeaderboardsController < ApplicationController
 
     if @leaderboard.save
       flash[:notice] = "Leaderboard successfully created."
-      redirect_to organization_leaderboard_path(@organization.id, @leaderboard)
+      redirect_to organization_leaderboard_path(@organization, @leaderboard)
     else
-      flash.now[:alert] = "There was an error creating the leaderboard."
+      flash.now[:alert] = @leaderboard.errors.full_messages.to_sentence
       render :new, status: :unprocessable_entity
     end
   end
@@ -36,13 +36,13 @@ class LeaderboardsController < ApplicationController
   def edit
   end
 
-  # PATCH /organizations/:organization_id/leaderboards/:id
+  # PATCH/PUT /organizations/:organization_id/leaderboards/:id
   def update
     if @leaderboard.update(leaderboard_params)
       flash[:notice] = "Leaderboard successfully updated."
-      redirect_to organization_leaderboard_path(@organization.id, @leaderboard)
+      redirect_to organization_leaderboard_path(@organization, @leaderboard)
     else
-      flash.now[:alert] = "There was an error updating the leaderboard."
+      flash.now[:alert] = @leaderboard.errors.full_messages.to_sentence
       render :edit, status: :unprocessable_entity
     end
   end
@@ -51,10 +51,10 @@ class LeaderboardsController < ApplicationController
   def destroy
     if @leaderboard.destroy
       flash[:notice] = "Leaderboard successfully deleted."
-      redirect_to organization_leaderboards_path(@organization.id)
+      redirect_to organization_leaderboards_path(@organization)
     else
       flash[:alert] = "Failed to delete leaderboard."
-      redirect_to organization_leaderboard_path(@organization.id, @leaderboard)
+      redirect_to organization_leaderboard_path(@organization, @leaderboard)
     end
   end
 
@@ -71,17 +71,17 @@ class LeaderboardsController < ApplicationController
     @leaderboard = @organization.leaderboards.find(params[:id])
   rescue ActiveRecord::RecordNotFound
     flash[:alert] = "Leaderboard not found."
-    redirect_to organization_leaderboards_path(@organization.id)
+    redirect_to organization_leaderboards_path(@organization)
   end
 
   def authorize_admin!
     unless @organization.admin?(current_user)
       flash[:alert] = "You are not authorized to modify this leaderboard."
-      redirect_to organization_path(@organization.id)
+      redirect_to organization_path(@organization)
     end
   end
 
   def leaderboard_params
-    params.require(:leaderboard).permit(:name, :sport_type_id)
+    params.require(:leaderboard).permit(:name, :sport_type_id, :description)
   end
 end

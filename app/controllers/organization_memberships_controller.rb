@@ -5,18 +5,19 @@ class OrganizationMembershipsController < ApplicationController
   # POST /organization_memberships
   # Sends a join request for an organization
   def create
-    if @organization.organization_memberships.exists?(user_id: current_user.id)
+    membership = @organization.organization_memberships.find_or_initialize_by(user: current_user)
+
+    if membership.persisted?
       flash[:alert] = "You are already a member of this organization."
     else
-      @membership = @organization.organization_memberships.new(user: current_user, approved: false)
-
-      if @membership.save
-        flash[:notice] = "Join request sent for approval."
+      membership.status = @organization.open? ? :approved : :pending
+      if membership.save
+        flash[:notice] = @organization.open? ? "You have joined the organization." : "Join request sent for approval."
       else
         flash[:alert] = "Failed to send join request."
       end
     end
-    redirect_to @organization
+    redirect_to organizations_path
   end
 
   # DELETE /organization_memberships/:id
@@ -25,8 +26,13 @@ class OrganizationMembershipsController < ApplicationController
     membership = current_user.organization_memberships.find_by(id: params[:id])
 
     if membership
-      membership.destroy
-      flash[:notice] = "You have successfully left the organization."
+      if membership.organization.owner?(current_user)
+        flash[:alert] = "You cannot leave your own organization. Transfer ownership or delete it."
+      else
+        membership.destroy
+        flash[:notice] = "You have successfully left the organization."
+        membership.organization.destroy_if_empty # Cleanup if empty
+      end
     else
       flash[:alert] = "You are not a member of this organization."
     end
@@ -35,18 +41,19 @@ class OrganizationMembershipsController < ApplicationController
   end
 
   # GET /organization_memberships
-  # Shows all organizations the current user is a member of
+  # Shows all organizations the current user is a member of (Paginated)
   def index
-    @memberships = current_user.organization_memberships.includes(:organization)
+    @memberships = current_user.organization_memberships.includes(:organization).page(params[:page])
   end
 
   private
 
   # Finds organization for create action
   def set_organization
-    @organization = Organization.find_by!(id: params[:organization_id])
-  rescue ActiveRecord::RecordNotFound
-    flash[:alert] = "Organization not found."
-    redirect_to organizations_path
+    @organization = Organization.find_by(id: params[:organization_id])
+    unless @organization
+      flash[:alert] = "Organization not found."
+      redirect_to organizations_path
+    end
   end
 end

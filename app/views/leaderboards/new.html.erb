@@ -1,17 +1,31 @@
-<%= form_with(model: @leaderboard, url: organization_leaderboards_path(@organization), local: true, class: "space-y-4") do |form| %>
-  <%= form.hidden_field :organization_slug, value: @organization.slug %> <!-- This is the fix -->
+<% if @leaderboard.errors.any? %>
+  <div class="bg-red-100 text-red-700 p-4 rounded-md">
+    <p><strong>Errors prevented this leaderboard from being created:</strong></p>
+    <ul>
+      <% @leaderboard.errors.full_messages.each do |message| %>
+        <li>- <%= message %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
 
+<%= form_with(model: @leaderboard, url: organization_leaderboards_path(@organization), local: true, class: "space-y-4") do |form| %>
+
+  <!-- Leaderboard Name -->
   <div>
     <%= form.label :name, "Leaderboard Name", class: "block font-semibold" %>
     <%= form.text_field :name, class: "border p-2 w-full rounded-md", required: true %>
   </div>
 
+  <!-- Description Field (Optional) -->
   <div>
-    <%= form.label :sport_type_id, "Sport Type", class: "block font-semibold" %>
-    <%= form.collection_select :sport_type_id, SportType.all, :id, :name, prompt: "Select a sport type", class: "border p-2 w-full rounded-md" %>
+    <%= form.label :description, "Description", class: "block font-semibold" %>
+    <%= form.text_area :description, class: "border p-2 w-full rounded-md", rows: 3 %>
   </div>
 
+  <!-- Submit Button -->
   <div>
     <%= form.submit "Create Leaderboard", class: "bg-blue-500 text-white px-4 py-2 mt-4 rounded-md hover:bg-blue-600" %>
   </div>
+
 <% end %>

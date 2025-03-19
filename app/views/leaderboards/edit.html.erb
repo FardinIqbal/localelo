@@ -8,8 +8,8 @@
     </div>
 
     <div>
-      <%= form.label :sport_type_id, "Sport Type", class: "block font-semibold" %>
-      <%= form.collection_select :sport_type_id, SportType.all, :id, :name, prompt: "Select a sport type", class: "border p-2 w-full rounded-md" %>
+      <%= form.label :description, "Description", class: "block font-semibold" %>
+      <%= form.text_area :description, class: "border p-2 w-full rounded-md", rows: 3 %>
     </div>
 
     <div>

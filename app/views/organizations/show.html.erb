@@ -11,7 +11,7 @@
     </div>
   <% end %>
 
-  <!-- Leaderboards Se        ction -->
+  <!-- Leaderboards Section -->
   <div class="mt-6">
     <h2 class="text-2xl font-bold">Leaderboards</h2>
 
@@ -21,7 +21,7 @@
           <li class="border rounded-md p-2 flex justify-between items-center">
             <div>
               <h3 class="text-lg font-semibold"><%= link_to leaderboard.name, organization_leaderboard_path(@organization.id, leaderboard) %></h3>
-              <p class="text-sm text-gray-600">Sport Type: <%= leaderboard.sport_type.name %></p>
+              <p class="text-sm text-gray-600">Leaderboard: <%= leaderboard.name %></p>
             </div>
             <% if @organization.admin?(current_user) %>
               <%= link_to "Edit", edit_organization_leaderboard_path(@organization.id, leaderboard), class: "text-blue-500" %>

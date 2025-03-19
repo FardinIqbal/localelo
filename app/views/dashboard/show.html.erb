@@ -1,69 +1,470 @@
-<h1 class="font-bold text-4xl">Welcome, <%= current_user.first_name || current_user.email %></h1>
+<!-- app/views/dashboard/show.html.erb -->
 
-<!-- User's Organizations -->
-<h2 class="text-2xl font-semibold mt-4">Your Organizations</h2>
-<% if @organizations.any? %>
-  <ul class="list-disc ml-6">
-    <% @organizations.each do |org| %>
-      <li class="flex justify-between items-center py-2">
-        <%= link_to org.name, organization_path(org.id), class: "text-blue-500 hover:underline" %>
+<div class="relative min-h-screen bg-slate-900 text-white">
+  <!-- Decorative Background Elements -->
+  <div class="absolute -top-20 -right-20 w-96 h-96 bg-purple-600/10 rounded-full filter blur-3xl animate-pulse-slow z-0"></div>
+  <div class="absolute -bottom-20 -left-20 w-64 h-64 bg-pink-600/10 rounded-full filter blur-3xl animate-pulse-slow z-0" style="animation-delay: 1.5s;"></div>
 
-        <% unless org.user_id == current_user.id %>
-          <%= button_to "Leave", leave_organization_path(org.id),
-                        method: :delete,
-                        class: "text-red-500 hover:underline",
-                        data: { confirm: "Are you sure you want to leave #{org.name}?" } %>
-        <% else %>
-          <span class="text-gray-500 text-sm">(Owner)</span>
+  <!-- Main Content -->
+  <div class="relative z-10 max-w-7xl mx-auto px-4 py-6">
+
+    <!-- Welcome Header with Date -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+      <div>
+        <h1 class="font-extrabold text-4xl md:text-5xl bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+          Welcome, <%= current_user.first_name || current_user.username %>
+        </h1>
+        <p class="text-slate-400 mt-1">Track your matches, rankings, and gym memberships</p>
+      </div>
+      <div class="mt-4 md:mt-0 text-slate-400 text-sm">
+        <%= Time.now.strftime("%A, %B %d, %Y") %>
+      </div>
+    </div>
+
+    <!-- Quick Action Buttons -->
+    <div class="flex flex-wrap gap-3 mb-8">
+      <%= link_to new_match_path, class: "px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:shadow-lg hover:shadow-purple-500/20 transition-all transform hover:-translate-y-0.5" do %>
+        <i class="fas fa-plus mr-2"></i> Log Match
+      <% end %>
+
+      <%= link_to organizations_path, class: "px-4 py-2 rounded-lg bg-slate-700 text-white font-medium hover:bg-slate-600 transition-all transform hover:-translate-y-0.5" do %>
+        <i class="fas fa-users mr-2"></i> Join Gym
+      <% end %>
+
+      <%= link_to new_organization_path, class: "px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white font-medium hover:bg-slate-700 transition-all transform hover:-translate-y-0.5" do %>
+        <i class="fas fa-building mr-2"></i> Create Gym
+      <% end %>
+    </div>
+
+    <!-- Performance Stats Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
+        <div class="text-sm text-slate-400">Total Matches</div>
+        <div class="text-2xl font-bold text-white mt-1"><%= @user.leaderboard_ratings.sum(:wins) + @user.leaderboard_ratings.sum(:losses) %></div>
+        <div class="mt-2 text-xs text-purple-400">
+          <i class="fas fa-chart-line mr-1"></i> All time
+        </div>
+      </div>
+
+      <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
+        <div class="text-sm text-slate-400">Win/Loss Ratio</div>
+        <%
+          wins = @user.leaderboard_ratings.sum(:wins)
+          losses = @user.leaderboard_ratings.sum(:losses)
+          ratio = losses > 0 ? (wins.to_f / losses).round(2) : (wins > 0 ? "∞" : "0.0")
+        %>
+        <div class="text-2xl font-bold text-white mt-1"><%= ratio %></div>
+        <div class="mt-2 text-xs text-pink-400">
+          <i class="fas fa-trophy mr-1"></i> <%= wins %> W / <%= losses %> L
+        </div>
+      </div>
+
+      <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
+        <div class="text-sm text-slate-400">Highest Elo</div>
+        <div class="text-2xl font-bold text-white mt-1"><%= @highest_elo %></div>
+        <div class="mt-2 text-xs text-purple-400">
+          <i class="fas fa-medal mr-1"></i> Peak rating
+        </div>
+      </div>
+
+      <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
+        <div class="text-sm text-slate-400">Average Elo</div>
+        <div class="text-2xl font-bold text-white mt-1"><%= @average_elo %></div>
+        <div class="mt-2 text-xs text-pink-400">
+          <i class="fas fa-calculator mr-1"></i> Across all gyms
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Dashboard Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- Left Column - Recent Matches & Elo History -->
+      <div class="lg:col-span-2 space-y-6">
+
+        <!-- Recent Matches -->
+        <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-700 overflow-hidden">
+          <div class="flex justify-between items-center p-4 border-b border-slate-700">
+            <h2 class="text-xl font-bold text-white">Recent Matches</h2>
+            <%= link_to matches_path, class: "text-purple-400 text-sm hover:text-pink-400 transition-colors" do %>
+              View All <i class="fas fa-arrow-right ml-1"></i>
+            <% end %>
+          </div>
+
+          <% if @recent_matches.any? %>
+            <div class="divide-y divide-slate-700">
+              <% @recent_matches.each do |match| %>
+                <% opponent = (match.user1_id == @user.id ? match.opponent : match.user1) %>
+                <div class="p-4 hover:bg-slate-700/50 transition-colors">
+                  <div class="flex justify-between items-center">
+                    <div class="flex items-center">
+                      <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
+                        <%= opponent.username[0..1].upcase %>
+                      </div>
+                      <div class="ml-3">
+                        <div class="text-white font-medium"><%= opponent.username %></div>
+                        <div class="text-xs text-slate-400 mt-0.5">
+                          <%= match.leaderboard.organization.name %> • <%= match.created_at.strftime("%b %d, %Y") %>
+                          <% unless match.verified %>
+                            <span class="ml-1 text-yellow-400"><i class="fas fa-exclamation-circle" title="Unverified"></i></span>
+                          <% end %>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="flex items-center">
+                      <% if match.is_draw %>
+                        <span class="text-yellow-400 font-medium">Draw</span>
+                      <% elsif match.winner_id == @user.id %>
+                        <span class="text-green-400 font-medium">Won</span>
+                      <% else %>
+                        <span class="text-red-400 font-medium">Lost</span>
+                      <% end %>
+
+                      <div class="ml-3 px-2 py-1 rounded-md text-xs font-medium <%= match.elo_change && match.elo_change > 0 ? 'bg-green-400/20 text-green-400' : 'bg-red-400/20 text-red-400' %>">
+                        <%= match.elo_change ? (match.elo_change > 0 ? "+#{match.elo_change}" : match.elo_change) : "0" %> Elo
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="p-12 text-center">
+              <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-700 text-slate-500 mb-4">
+                <i class="fas fa-trophy text-2xl"></i>
+              </div>
+              <p class="text-slate-400 mb-4">No matches logged yet</p>
+              <%= link_to new_match_path, class: "px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:shadow-lg hover:shadow-purple-500/20 transition-all" do %>
+                <i class="fas fa-plus mr-2"></i> Log Your First Match
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Elo History Chart -->
+        <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-700 overflow-hidden">
+          <div class="flex justify-between items-center p-4 border-b border-slate-700">
+            <h2 class="text-xl font-bold text-white">Elo History</h2>
+            <div class="flex space-x-2">
+              <button class="text-xs px-2 py-1 rounded bg-purple-500 text-white" data-period="30">30 Days</button>
+              <button class="text-xs px-2 py-1 rounded bg-slate-700 text-slate-300 hover:bg-slate-600" data-period="90">90 Days</button>
+              <button class="text-xs px-2 py-1 rounded bg-slate-700 text-slate-300 hover:bg-slate-600" data-period="all">All Time</button>
+            </div>
+          </div>
+
+          <div class="p-4 h-64">
+            <% if @elo_history.any? %>
+              <div class="relative h-full" id="elo-chart">
+                <!-- Chart will be rendered here with JavaScript -->
+                <div class="absolute inset-0 flex items-center justify-center text-slate-500">
+                  <i class="fas fa-chart-line text-4xl"></i>
+                </div>
+              </div>
+            <% else %>
+              <div class="h-full flex flex-col items-center justify-center text-slate-500">
+                <i class="fas fa-chart-line text-4xl mb-3"></i>
+                <p class="text-slate-400">Play matches to see your Elo history</p>
+              </div>
+            <% end %>
+          </div>
+        </div>
+
+        <% if @most_active_leaderboard %>
+          <!-- Most Active Leaderboard -->
+          <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-700 overflow-hidden">
+            <div class="flex justify-between items-center p-4 border-b border-slate-700">
+              <h2 class="text-xl font-bold text-white">Most Active Leaderboard</h2>
+              <%= link_to rankings_leaderboard_path(@most_active_leaderboard), class: "text-purple-400 text-sm hover:text-pink-400 transition-colors" do %>
+                View Rankings <i class="fas fa-arrow-right ml-1"></i>
+              <% end %>
+            </div>
+
+            <div class="p-4">
+              <div class="flex items-center mb-4">
+                <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
+                  <%= @most_active_leaderboard.name[0..1].upcase %>
+                </div>
+                <div class="ml-3">
+                  <div class="text-white font-medium"><%= @most_active_leaderboard.name %></div>
+                  <div class="text-xs text-slate-400 mt-0.5"><%= @most_active_leaderboard.organization.name %></div>
+                </div>
+              </div>
+
+              <% user_rating = @most_active_leaderboard.leaderboard_ratings.find_by(user: @user) %>
+              <% if user_rating %>
+                <div class="grid grid-cols-3 gap-4 mt-4">
+                  <div class="bg-slate-700/50 rounded-lg p-3 text-center">
+                    <div class="text-sm text-slate-400">Your Rank</div>
+                    <div class="text-xl font-bold text-white mt-1">#<%= @most_active_leaderboard.leaderboard_ratings.where('rating > ?', user_rating.rating).count + 1 %></div>
+                  </div>
+                  <div class="bg-slate-700/50 rounded-lg p-3 text-center">
+                    <div class="text-sm text-slate-400">Your Elo</div>
+                    <div class="text-xl font-bold text-purple-400 mt-1"><%= user_rating.rating %></div>
+                  </div>
+                  <div class="bg-slate-700/50 rounded-lg p-3 text-center">
+                    <div class="text-sm text-slate-400">W/L</div>
+                    <div class="text-xl font-bold text-white mt-1"><%= user_rating.wins %>/<%= user_rating.losses %></div>
+                  </div>
+                </div>
+              <% else %>
+                <div class="text-center p-4 text-slate-400">
+                  No rating data available yet
+                </div>
+              <% end %>
+            </div>
+          </div>
         <% end %>
-      </li>
-    <% end %>
-  </ul>
-<% else %>
-  <p class="text-gray-600">
-    You are not part of any organizations.
-    <%= link_to "Join one", organizations_path, class: "text-blue-500 hover:underline" %>
-  </p>
-<% end %>
+      </div>
 
-<!-- CTA: Create Organization -->
-<div class="mt-4">
-  <%= link_to "Create Organization", new_organization_path,
-              class: "px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition" %>
+      <!-- Right Column - Gyms and Rankings -->
+      <div class="space-y-6">
+        <!-- Your Gyms -->
+        <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-700 overflow-hidden">
+          <div class="flex justify-between items-center p-4 border-b border-slate-700">
+            <h2 class="text-xl font-bold text-white">Your Gyms</h2>
+            <%= link_to organizations_path, class: "text-purple-400 text-sm hover:text-pink-400 transition-colors" do %>
+              View All <i class="fas fa-arrow-right ml-1"></i>
+            <% end %>
+          </div>
+
+          <% if @organizations.any? %>
+            <div class="divide-y divide-slate-700">
+              <% @organizations.each do |org| %>
+                <div class="p-4 hover:bg-slate-700/50 transition-colors">
+                  <div class="flex items-center">
+                    <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
+                      <%= org.name[0..1].upcase %>
+                    </div>
+                    <div class="ml-3">
+                      <div class="flex items-center">
+                        <%= link_to org.name, organization_path(org), class: "text-white font-medium hover:text-purple-400 transition-colors" %>
+
+                        <% if org.visibility == 0 %>
+                          <span class="ml-2 text-xs px-1.5 py-0.5 rounded bg-green-400/20 text-green-400">Public</span>
+                        <% elsif org.visibility == 1 %>
+                          <span class="ml-2 text-xs px-1.5 py-0.5 rounded bg-yellow-400/20 text-yellow-400">Private</span>
+                        <% end %>
+
+                        <% if org.user_id == @user.id %>
+                          <span class="ml-2 text-xs px-1.5 py-0.5 rounded bg-purple-400/20 text-purple-400">Owner</span>
+                        <% end %>
+                      </div>
+
+                      <div class="text-xs text-slate-400 mt-1">
+                        <%= pluralize(org.users.count, 'member') %>
+                        <% if org.location.present? %>
+                          • <%= org.location %>
+                        <% end %>
+                      </div>
+                    </div>
+                  </div>
+
+                  <% if org.leaderboards.any? %>
+                    <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <% org.leaderboards.first(4).each do |leaderboard| %>
+                        <% user_rating = leaderboard.leaderboard_ratings.find_by(user: @user) %>
+                        <div class="flex justify-between items-center p-2 rounded bg-slate-700/50">
+                          <span class="text-sm text-slate-300"><%= leaderboard.name %></span>
+                          <span class="text-sm font-medium text-purple-400"><%= user_rating&.rating || 1500 %> Elo</span>
+                        </div>
+                      <% end %>
+                    </div>
+                    <% if org.leaderboards.count > 4 %>
+                      <div class="mt-2 text-center">
+                        <%= link_to organization_path(org), class: "text-xs text-purple-400 hover:text-pink-400" do %>
+                          + <%= org.leaderboards.count - 4 %> more leaderboards
+                        <% end %>
+                      </div>
+                    <% end %>
+                  <% else %>
+                    <div class="mt-3 text-sm text-slate-500">No leaderboards yet</div>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="p-12 text-center">
+              <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-700 text-slate-500 mb-4">
+                <i class="fas fa-building text-2xl"></i>
+              </div>
+              <p class="text-slate-400 mb-4">You are not part of any gyms yet</p>
+              <%= link_to organizations_path, class: "px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:shadow-lg hover:shadow-purple-500/20 transition-all" do %>
+                <i class="fas fa-users mr-2"></i> Find Gyms to Join
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Your Rankings -->
+        <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-700 overflow-hidden">
+          <div class="flex justify-between items-center p-4 border-b border-slate-700">
+            <h2 class="text-xl font-bold text-white">Your Rankings</h2>
+          </div>
+
+          <% if @user_rankings.any? %>
+            <div class="divide-y divide-slate-700">
+              <% @user_rankings.each do |ranking| %>
+                <div class="p-4 hover:bg-slate-700/50 transition-colors">
+                  <div class="flex justify-between items-center">
+                    <div>
+                      <div class="text-white font-medium"><%= ranking.leaderboard.name %></div>
+                      <div class="text-xs text-slate-400 mt-0.5"><%= ranking.leaderboard.organization.name %></div>
+                    </div>
+
+                    <div class="flex items-center">
+                      <div class="text-lg font-bold text-purple-400"><%= ranking.rating %></div>
+                      <div class="ml-3 px-2 py-1 rounded-md text-xs font-medium bg-slate-700 text-slate-300">
+                        Rank #<%= ranking.leaderboard.leaderboard_ratings.where('rating > ?', ranking.rating).count + 1 %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="p-8 text-center">
+              <p class="text-slate-400">Play matches to earn rankings</p>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Personalized Tips -->
+        <div class="bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-sm rounded-xl border border-purple-500/30 p-4">
+          <div class="flex items-start">
+            <div class="w-10 h-10 rounded-full bg-purple-500/30 flex items-center justify-center text-purple-300">
+              <i class="fas fa-lightbulb"></i>
+            </div>
+            <div class="ml-3">
+              <h3 class="text-lg font-bold text-white">Tips for Success</h3>
+              <p class="text-sm text-slate-300 mt-1">
+                <% if @user_rankings.any? %>
+                  Play consistently to improve your Elo rating. Your highest rating is currently <%= @highest_elo %>.
+                <% else %>
+                  Log your first match to start building your Elo rating and track your progress.
+                <% end %>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Upcoming Features (if you plan to add these) -->
+        <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-700 overflow-hidden mt-6">
+          <div class="p-4 border-b border-slate-700">
+            <h2 class="text-xl font-bold text-white">Coming Soon</h2>
+          </div>
+
+          <div class="p-4">
+            <div class="flex items-center mb-3">
+              <div class="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 mr-3">
+                <i class="fas fa-calendar"></i>
+              </div>
+              <div class="text-slate-300">Match scheduling</div>
+            </div>
+
+            <div class="flex items-center mb-3">
+              <div class="w-8 h-8 rounded-full bg-pink-500/20 flex items-center justify-center text-pink-400 mr-3">
+                <i class="fas fa-trophy"></i>
+              </div>
+              <div class="text-slate-300">Tournament brackets</div>
+            </div>
+
+            <div class="flex items-center">
+              <div class="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 mr-3">
+                <i class="fas fa-chart-bar"></i>
+              </div>
+              <div class="text-slate-300">Advanced statistics</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- Recent Matches -->
-<h2 class="text-2xl font-semibold mt-6">Recent Matches</h2>
-<% if @recent_matches.any? %>
-  <ul class="list-disc ml-6">
-    <% @recent_matches.each do |match| %>
-      <li class="py-2">
-        <% opponent = (match.user1_id == current_user.id ? match.opponent : match.user1) %>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Chart period selectors
+        const chartButtons = document.querySelectorAll('[data-period]');
 
-        <%= link_to "Match vs #{opponent.username}", match_path(match.id),
-                    class: "text-blue-500 hover:underline" %>
-        - <strong>
-        <% if match.winner_id == current_user.id %>
-          You Won 🎉
-        <% elsif match.winner_id.nil? %>
-          Draw
-        <% else %>
-          You Lost ❌
+        chartButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove active class (purple background) from all buttons
+                chartButtons.forEach(btn => {
+                    btn.classList.remove('bg-purple-500');
+                    btn.classList.add('bg-slate-700');
+                });
+
+                // Add active class to clicked button
+                this.classList.remove('bg-slate-700');
+                this.classList.add('bg-purple-500');
+
+                // In a real implementation, you would fetch and update chart data here
+                // based on the selected period (this.dataset.period)
+
+                // Example AJAX call to fetch data for different time periods
+                fetch(`/dashboard?period=${this.dataset.period}`, {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        // Here you would update the chart with the new data
+                        console.log('Elo history data:', data.elo_history);
+                    });
+            });
+        });
+
+        <% if @elo_history.any? %>
+        // This is a placeholder for where you would initialize a chart library
+        // For example, using Chart.js:
+
+        // const ctx = document.getElementById('elo-chart').getContext('2d');
+        // const labels = <%= raw @elo_history.map { |date, _| date.strftime("%b %d") }.to_json %>;
+        // const data = <%= raw @elo_history.map { |_, elo| elo }.to_json %>;
+
+        // new Chart(ctx, {
+        //   type: 'line',
+        //   data: {
+        //     labels: labels,
+        //     datasets: [{
+        //       label: 'Elo Rating',
+        //       data: data,
+        //       borderColor: '#a855f7',
+        //       backgroundColor: 'rgba(168, 85, 247, 0.1)',
+        //       tension: 0.3,
+        //       fill: true
+        //     }]
+        //   },
+        //   options: {
+        //     responsive: true,
+        //     maintainAspectRatio: false,
+        //     plugins: {
+        //       legend: {
+        //         display: false
+        //       }
+        //     },
+        //     scales: {
+        //       y: {
+        //         grid: {
+        //           color: 'rgba(255, 255, 255, 0.1)'
+        //         },
+        //         ticks: {
+        //           color: '#94a3b8'
+        //         }
+        //       },
+        //       x: {
+        //         grid: {
+        //           display: false
+        //         },
+        //         ticks: {
+        //           color: '#94a3b8'
+        //         }
+        //       }
+        //     }
+        //   }
+        // });
         <% end %>
-      </strong>
-
-        <% if match.submission_used.present? %>
-          <span class="text-gray-600 text-sm">(Submission: <%= match.submission_used %>)</span>
-        <% end %>
-      </li>
-    <% end %>
-  </ul>
-<% else %>
-  <p class="text-gray-600">No recent matches logged.</p>
-<% end %>
-
-<!-- CTA: Log a Match -->
-<div class="mt-4">
-  <%= link_to "Log Match", new_match_path,
-              class: "px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition" %>
-</div>
+    });
+</script>

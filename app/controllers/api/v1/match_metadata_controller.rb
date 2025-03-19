@@ -1,2 +1,0 @@
-class MatchMetadataController < ApplicationController
-end

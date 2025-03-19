@@ -1,111 +1,125 @@
-<h1 class="font-bold text-4xl">Log a Match</h1>
+<h1 class="font-bold text-4xl mb-6">Log a Match</h1>
 
-<%= form_with(model: @match, local: true, class: "space-y-4") do |f| %>
+<%= form_with(model: @match, local: true, id: "match-form", class: "space-y-6") do |f| %>
 
   <!-- Select Leaderboard -->
   <div>
-    <%= f.label :leaderboard_id, "Select Leaderboard", class: "block font-semibold" %>
-    <%= f.collection_select :leaderboard_id, (@leaderboards || []), :id, :name, { prompt: "Choose leaderboard" }, class: "border p-2 w-full rounded-md" %>
+    <%= f.label :leaderboard_id, "Select Leaderboard", class: "block font-semibold mb-1" %>
+    <%= f.collection_select :leaderboard_id, @leaderboards, :id, :name, { prompt: "Choose a leaderboard" },
+                            class: "border p-2 w-full rounded-md focus:ring focus:ring-indigo-300", required: true %>
   </div>
 
-  <!-- Select Opponent -->
+  <!-- Select Opponent (with search) -->
   <div>
-    <%= f.label :opponent_id, "Select Opponent", class: "block font-semibold" %>
-    <%= f.collection_select :opponent_id, (@users || []), :id, :username, { prompt: "Choose opponent" }, class: "border p-2 w-full rounded-md" %>
+    <%= f.label :opponent_id, "Select Opponent", class: "block font-semibold mb-1" %>
+    <select id="opponent-select"
+            name="match[opponent_id]"
+            class="border p-2 w-full rounded-md focus:ring focus:ring-indigo-300">
+      <option value="" disabled selected>Choose an opponent</option>
+      <% @users.each do |user| %>
+        <option value="<%= user.id %>"><%= user.username %></option>
+      <% end %>
+    </select>
   </div>
 
   <!-- Select Winner -->
   <div>
-    <%= f.label :winner_id, "Who won?", class: "block font-semibold" %>
-    <div class="flex items-center space-x-4">
-      <label class="flex items-center">
-        <%= f.radio_button :winner_id, current_user.id, class: "mr-2" %> <%= current_user.username %>
+    <%= f.label :winner_id, "Who won?", class: "block font-semibold mb-1" %>
+    <div class="flex flex-col space-y-2" id="winner-options">
+      <label class="flex items-center space-x-2">
+        <%= f.radio_button :winner_id, current_user.id, id: "winner-player1", class: "mr-2" %>
+        <span><%= current_user.username %></span>
       </label>
-      <label class="flex items-center">
-        <%= f.radio_button :winner_id, nil, class: "mr-2" %> Draw
-      </label>
-      <label class="flex items-center">
-        <%= f.radio_button :winner_id, nil, checked: true, class: "mr-2" %> TBD
+
+      <label class="flex items-center space-x-2 hidden" id="winner-player2-option">
+        <%= f.radio_button :winner_id, nil, id: "winner-player2", class: "mr-2" %>
+        <span id="winner-player2-name"></span>
       </label>
     </div>
   </div>
 
-  <!-- Dynamic Metadata Fields (Based on Sport Type) -->
-  <div id="metadata-fields" class="mt-4">
-    <h3 class="font-semibold">Additional Match Details (Optional)</h3>
-    <div id="metadata-container" class="space-y-2"></div>
-  </div>
-
+  <!-- Submit Button -->
   <div>
-    <%= f.submit "Log Match", class: "bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600" %>
+    <button id="submit-button" type="submit"
+            class="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition flex items-center justify-center">
+      <span id="submit-text">Log Match</span>
+      <svg id="spinner" class="hidden ml-2 w-5 h-5 animate-spin text-white" viewBox="0 0 24 24" fill="none">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor"
+              d="M4 12a8 8 0 018-8v8H4z"></path>
+      </svg>
+    </button>
   </div>
 
 <% end %>
 
-<!-- JavaScript to dynamically load sport-specific metadata fields -->
+<!-- Toast Notification -->
+<div id="success-toast" class="hidden fixed top-5 right-5 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg">
+  Match Successfully Logged!
+</div>
+
+<!-- JavaScript -->
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const leaderboardSelect = document.getElementById("match_leaderboard_id");
-        const metadataContainer = document.getElementById("metadata-container");
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("match-form");
+        const opponentSelect = document.getElementById("opponent-select");
+        const winnerPlayer2Option = document.getElementById("winner-player2-option");
+        const winnerPlayer2Radio = document.getElementById("winner-player2");
+        const winnerPlayer2Name = document.getElementById("winner-player2-name");
+        const submitButton = document.getElementById("submit-button");
+        const submitText = document.getElementById("submit-text");
+        const spinner = document.getElementById("spinner");
+        const successToast = document.getElementById("success-toast");
 
-        // Load leaderboard data into a JS object
-        const leaderboards = <%= @leaderboards.map { |lb| { id: lb.id, organization_id: lb.organization_id } }.to_json.html_safe %>;
+        function updateWinnerOptions() {
+            const selectedOpponent = opponentSelect.options[opponentSelect.selectedIndex];
 
-        function getOrganizationId(leaderboardId) {
-            const leaderboard = leaderboards.find(lb => lb.id == leaderboardId);
-            return leaderboard ? leaderboard.organization_id : null;
+            if (selectedOpponent && selectedOpponent.value) {
+                winnerPlayer2Radio.value = selectedOpponent.value;
+                winnerPlayer2Name.textContent = selectedOpponent.text;
+                winnerPlayer2Option.classList.remove("hidden");
+            } else {
+                winnerPlayer2Option.classList.add("hidden");
+            }
         }
 
-        if (leaderboardSelect) {
-            leaderboardSelect.addEventListener("change", function() {
-                const leaderboardId = this.value;
-                const organizationId = getOrganizationId(leaderboardId);
-
-                if (!leaderboardId || !organizationId) {
-                    metadataContainer.innerHTML = "<p class='text-gray-500'>No leaderboard selected.</p>";
-                    return;
-                }
-
-                fetch(`/api/v1/organizations/${organizationId}/leaderboards/${leaderboardId}.json`)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`HTTP ${response.status} - ${response.statusText}`);
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        console.log("API Response:", data); // Debugging output
-
-                        metadataContainer.innerHTML = ""; // Clear existing fields
-
-                        if (data.sport_type && data.sport_type.metadata_template) {
-                            Object.entries(data.sport_type.metadata_template).forEach(([field, config]) => {
-                                const fieldWrapper = document.createElement("div");
-                                fieldWrapper.classList.add("space-y-1");
-
-                                const label = document.createElement("label");
-                                label.textContent = config.label || field.replace(/_/g, " ").toUpperCase();
-                                label.classList.add("block", "font-semibold");
-
-                                const input = document.createElement("input");
-                                input.type = config.type === "string" ? "text" : "text";
-                                input.name = `match[metadata][${field}]`;
-                                input.required = config.required || false;
-                                input.classList.add("border", "p-2", "w-full", "rounded-md");
-
-                                fieldWrapper.appendChild(label);
-                                fieldWrapper.appendChild(input);
-                                metadataContainer.appendChild(fieldWrapper);
-                            });
-                        } else {
-                            metadataContainer.innerHTML = `<p class="text-gray-500">No additional metadata required.</p>`;
-                        }
-                    })
-                    .catch(error => {
-                        console.error("Error loading metadata:", error);
-                        metadataContainer.innerHTML = `<p class="text-red-500">Error loading metadata. Please try again.</p>`;
-                    });
-            });
+        if (opponentSelect) {
+            opponentSelect.addEventListener("change", updateWinnerOptions);
         }
+
+        // Initialize searchable dropdown (Using Tom Select.js for better UX)
+        new TomSelect("#opponent-select", {
+            maxItems: 1,
+            create: false,
+            allowEmptyOption: false,
+            placeholder: "Search for an opponent..."
+        });
+
+        form.addEventListener("submit", function (event) {
+            event.preventDefault();
+            submitButton.disabled = true;
+            submitText.textContent = "Logging Match...";
+            spinner.classList.remove("hidden");
+
+            // Simulate a delay (like a real-world API request)
+            setTimeout(() => {
+                successToast.classList.remove("hidden");
+                submitButton.disabled = false;
+                submitText.textContent = "Log Match";
+                spinner.classList.add("hidden");
+
+                // Auto-hide toast after 3 seconds
+                setTimeout(() => {
+                    successToast.classList.add("hidden");
+                }, 3000);
+
+                // Submit the form properly after the visual feedback
+                form.submit();
+            }, 1500);
+        });
     });
 </script>
+
+<!-- Include Tom Select.js -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.bootstrap5.min.css">
+<script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>

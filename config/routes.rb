@@ -24,7 +24,6 @@ Rails.application.routes.draw do
       delete :leave
     end
 
-    # Nested leaderboards within organizations
     resources :leaderboards, except: [:destroy] do
       member do
         get :rankings
@@ -41,21 +40,17 @@ Rails.application.routes.draw do
   # Elo History
   resources :elo_history, only: [:index, :show]
 
-  # Matches
+  # Matches (Removed bulk_log)
   resources :matches, except: [:destroy] do
     collection do
       get :recent
-      post :bulk_log
     end
     member do
       patch :verify
     end
   end
 
-  # Linkflairs
-  resources :linkflairs, only: [:index, :show]
-
-  # API Routes
+  # API Routes (Consider keeping only if used)
   namespace :api do
     namespace :v1 do
       resources :organizations, only: [:index, :show, :create] do
@@ -80,14 +75,12 @@ Rails.application.routes.draw do
       resources :matches, only: [:index, :create, :show] do
         collection do
           get :recent
-          post :bulk_log
         end
         member do
           patch :verify
         end
       end
 
-      resources :linkflairs, only: [:index, :show]
       resources :users, only: [:index, :show]
     end
   end

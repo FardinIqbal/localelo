@@ -1,90 +1,79 @@
 class MatchesController < ApplicationController
-  # Ensure users are signed in before they can access these actions
   before_action :authenticate_user!
-  before_action :set_match, only: [:show, :verify]
-  before_action :authorize_match_participant!, only: [:show, :verify]
+  before_action :set_match, only: [:show]
 
   # GET /matches/new
-  # Renders the form to log a new match
   def new
     @match = Match.new
 
-    # Fetch all users except the current user (potential opponents)
-    @users = User.where.not(id: current_user.id)
+    # Get leaderboards the user belongs to
+    @leaderboards = current_user.organizations.includes(:leaderboards).flat_map(&:leaderboards).uniq || []
 
-    # Fetch all leaderboards from the organizations the user is part of
-    @leaderboards = current_user.organizations.includes(:leaderboards).flat_map(&:leaderboards) || []
+    # Ensure users are only those in the selected leaderboard, not just in the organization
+    @users = User.joins(:leaderboard_ratings)
+                 .where(leaderboard_ratings: { leaderboard_id: @leaderboards.map(&:id) })
+                 .where.not(id: current_user.id)
+                 .distinct
 
-    # Ensure @leaderboards is not nil
-    @leaderboards = [] if @leaderboards.nil?
+    # Debugging logs
+    Rails.logger.info "=== DEBUG: Leaderboards ==="
+    Rails.logger.info "Leaderboards: #{@leaderboards.map(&:name)}"
+    Rails.logger.info "=== DEBUG: Available Opponents ==="
+    Rails.logger.info "Users: #{@users.map(&:username)}"
   end
 
   # POST /matches
-  # Handles form submission to create a new match record
   def create
     @match = Match.new(match_params)
-    @match.user1_id = current_user.id # Automatically set the current user as Player 1
+    @match.user1_id = current_user.id
+
+    Rails.logger.info "=== DEBUG: Creating Match ==="
+    Rails.logger.info "Params: #{match_params}"
+    Rails.logger.info "User1: #{@match.user1_id}, Opponent: #{@match.opponent_id}, Winner: #{@match.winner_id}, Leaderboard: #{@match.leaderboard_id}"
 
     unless valid_opponent?(@match.opponent_id, @match.leaderboard_id)
-      flash.now[:alert] = "Invalid opponent selection."
-      return render :new
+      Rails.logger.error "=== DEBUG: Invalid Opponent! ==="
+      flash.now[:error] = "Invalid opponent selection. Please choose a valid opponent."
+      return render :new, status: :unprocessable_entity
     end
 
     if @match.save
-      redirect_to @match, notice: "Match successfully logged! Awaiting opponent verification."
+      Rails.logger.info "=== DEBUG: Match Successfully Saved ==="
+      adjust_elo_ratings(@match)
+      redirect_to organization_leaderboard_path(@match.leaderboard.organization, @match.leaderboard),
+                  notice: "Match successfully logged!"
     else
-      flash.now[:alert] = @match.errors.full_messages.to_sentence
-      render :new
+      Rails.logger.error "=== DEBUG: Match Save Failed ==="
+      Rails.logger.error "Errors: #{@match.errors.full_messages}"
+
+      @users = User.joins(:leaderboard_ratings)
+                   .where(leaderboard_ratings: { leaderboard_id: @match.leaderboard_id })
+                   .where.not(id: current_user.id)
+                   .distinct
+
+      @leaderboards = current_user.organizations.includes(:leaderboards).flat_map(&:leaderboards).uniq || []
+
+      flash.now[:error] = @match.errors.full_messages.to_sentence.presence || "An unexpected error occurred."
+      render :new, status: :unprocessable_entity
     end
   end
 
   # GET /matches/:id
-  def show
-  end
-
-  # PATCH /matches/:id/verify
-  # Allows the opponent to verify the match result
-  def verify
-    unless current_user.id == @match.opponent_id
-      flash[:alert] = "You are not authorized to verify this match."
-      return redirect_to root_path
-    end
-
-    # Ensure atomic updates for Elo adjustments and verification
-    if adjust_elo_ratings(@match)
-      @match.update(verified: true)
-      flash[:notice] = "Match verified successfully!"
-    else
-      flash[:alert] = "Elo adjustment failed. Please try again."
-    end
-
-    redirect_to @match
-  end
+  def show; end
 
   private
 
-  # Strong parameters
   def match_params
-    params.require(:match).permit(:opponent_id, :winner_id, :leaderboard_id, :is_draw)
+    params.require(:match).permit(:leaderboard_id, :opponent_id, :winner_id)
   end
 
-  # Finds match by ID before actions that require it
   def set_match
     @match = Match.find(params[:id])
   rescue ActiveRecord::RecordNotFound
-    flash[:alert] = "Match not found."
+    flash[:error] = "Match not found."
     redirect_to matches_path
   end
 
-  # Ensures only match participants can view or verify the match
-  def authorize_match_participant!
-    unless current_user.id.in?([@match.user1_id, @match.opponent_id])
-      flash[:alert] = "You are not authorized to view this match."
-      redirect_to root_path
-    end
-  end
-
-  # Checks if the opponent is in the same leaderboard
   def valid_opponent?(opponent_id, leaderboard_id)
     return false unless opponent_id.present? && leaderboard_id.present?
 
@@ -93,54 +82,39 @@ class MatchesController < ApplicationController
         .exists?(id: opponent_id)
   end
 
-  # Adjusts Elo ratings based on match results
   def adjust_elo_ratings(match)
     player1 = match.user1
     player2 = match.opponent
     leaderboard = match.leaderboard
 
-    player1_rating = leaderboard.leaderboard_ratings.find_by(user_id: player1.id)
-    player2_rating = leaderboard.leaderboard_ratings.find_by(user_id: player2.id)
+    player1_rating = leaderboard.leaderboard_ratings.find_or_create_by(user_id: player1.id) { |r| r.rating = 1500 }
+    player2_rating = leaderboard.leaderboard_ratings.find_or_create_by(user_id: player2.id) { |r| r.rating = 1500 }
 
-    return false unless player1_rating && player2_rating
-
-    # Elo Calculation
     change = calculate_elo_change(player1_rating.rating, player2_rating.rating, match.winner_id, player1.id)
 
     ActiveRecord::Base.transaction do
-      player1_rating.update_columns(rating: player1_rating.rating + change)
-      player2_rating.update_columns(rating: player2_rating.rating - change)
-
       if match.winner_id == player1.id
         player1_rating.increment!(:wins)
         player2_rating.increment!(:losses)
-      elsif match.winner_id == player2.id
+        player1_rating.update!(rating: player1_rating.rating + change)
+        player2_rating.update!(rating: player2_rating.rating - change)
+      else
         player2_rating.increment!(:wins)
         player1_rating.increment!(:losses)
+        player2_rating.update!(rating: player2_rating.rating + change)
+        player1_rating.update!(rating: player1_rating.rating - change)
       end
-
-      # Record Elo history
-      EloHistory.create!(user_id: player1.id, leaderboard_id: leaderboard.id, elo: player1_rating.rating)
-      EloHistory.create!(user_id: player2.id, leaderboard_id: leaderboard.id, elo: player2_rating.rating)
     end
-
-    true
   rescue => e
     Rails.logger.error "Elo adjustment failed: #{e.message}"
-    false
-  end
-
-  # Elo rating calculation using standard formula
-  def expected_score(rating_a, rating_b)
-    1.0 / (1.0 + 10**((rating_b - rating_a) / 400.0))
   end
 
   def calculate_elo_change(rating_a, rating_b, winner_id, player1_id, k_factor = 32)
-    if winner_id.nil? # Draw
-      return (k_factor * (0.5 - expected_score(rating_a, rating_b))).round
-    end
-
     outcome = winner_id == player1_id ? 1 : 0
     (k_factor * (outcome - expected_score(rating_a, rating_b))).round
+  end
+
+  def expected_score(rating_a, rating_b)
+    1.0 / (1.0 + 10**((rating_b - rating_a) / 400.0))
   end
 end

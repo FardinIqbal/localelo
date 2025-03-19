@@ -1,18 +1,51 @@
 <div>
   <h1 class="font-bold text-4xl"><%= @leaderboard.name %></h1>
-  <p class="text-gray-600">Sport Type: <%= @leaderboard.sport_type.name %></p>
+
+  <p class="text-gray-600 mt-2"><strong>Description:</strong> <%= @leaderboard.description.presence || "No description available" %></p>
 
   <% if @organization.admin?(current_user) %>
     <div class="mt-4">
-      <%= link_to "Edit", edit_organization_leaderboard_path(@organization.id, @leaderboard.id),
+      <%= link_to "Edit", edit_organization_leaderboard_path(@organization, @leaderboard),
                   class: "bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600" %>
-      <%= link_to "Delete", organization_leaderboard_path(@organization.id, @leaderboard.id),
+
+      <%= link_to "Delete", organization_leaderboard_path(@organization, @leaderboard),
                   method: :delete, data: { confirm: "Are you sure you want to delete this leaderboard?" },
                   class: "bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 ml-2" %>
     </div>
   <% end %>
 
+  <div class="mt-6">
+    <h2 class="text-2xl font-bold">Rankings</h2>
+
+    <% if @leaderboard.leaderboard_ratings.any? %>
+      <table class="mt-4 w-full border-collapse border border-gray-300">
+        <thead>
+        <tr class="bg-gray-100">
+          <th class="border border-gray-300 p-2">Rank</th>
+          <th class="border border-gray-300 p-2">Player</th>
+          <th class="border border-gray-300 p-2">Rating</th>
+          <th class="border border-gray-300 p-2">Wins</th>
+          <th class="border border-gray-300 p-2">Losses</th>
+        </tr>
+        </thead>
+        <tbody>
+        <% @leaderboard.leaderboard_ratings.order(rating: :desc).each_with_index do |rating, index| %>
+          <tr>
+            <td class="border border-gray-300 p-2"><%= index + 1 %></td>
+            <td class="border border-gray-300 p-2"><%= rating.user.username %></td>
+            <td class="border border-gray-300 p-2"><%= rating.rating %></td>
+            <td class="border border-gray-300 p-2"><%= rating.wins %></td>
+            <td class="border border-gray-300 p-2"><%= rating.losses %></td>
+          </tr>
+        <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <p class="text-gray-600 mt-2">No rankings available.</p>
+    <% end %>
+  </div>
+
   <div class="mt-4">
-    <%= link_to "Back to Organization", organization_path(@organization.id), class: "text-blue-500" %>
+    <%= link_to "Back to Organization", organization_path(@organization), class: "text-blue-500" %>
   </div>
 </div>

@@ -1,89 +1,129 @@
 class User < ApplicationRecord
-  # Include default Devise modules for authentication and user management.
-  # - `database_authenticatable` → Encrypts and stores passwords securely.
-  # - `registerable` → Allows users to sign up and edit their accounts.
-  # - `recoverable` → Enables password resets via email.
-  # - `rememberable` → Supports "remember me" functionality for persistent sessions.
-  # - `validatable` → Provides built-in email and password validation.
+  # Include Devise modules for authentication functionality
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
 
-  # Associations
-  # -----------------
-
-  # A user can belong to multiple organizations (gyms, clubs, etc.).
-  # The `organization_memberships` table acts as the join table.
+  # == Associations ==
   has_many :organization_memberships, dependent: :destroy
   has_many :organizations, through: :organization_memberships
 
-  # A user can be part of multiple leaderboards.
   has_many :leaderboard_ratings, dependent: :destroy
   has_many :leaderboards, through: :leaderboard_ratings
 
-  # Matches where the user is one of the competitors.
   has_many :matches_as_user1, class_name: "Match", foreign_key: "user1_id", dependent: :destroy
   has_many :matches_as_opponent, class_name: "Match", foreign_key: "opponent_id", dependent: :destroy
-
-  # Matches where the user was declared the winner.
   has_many :matches_won, class_name: "Match", foreign_key: "winner_id", dependent: :nullify
 
-  # Validations
-  # -----------------
-
-  # Ensure every user has a unique email.
+  # == Validations ==
   validates :email, presence: true, uniqueness: true
-
-  # Ensure every user has a unique username.
   validates :username, presence: true, uniqueness: true
-
-  # Ensure first and last names are provided (for better identification in leaderboards).
   validates :first_name, presence: true
   validates :last_name, presence: true
 
-  # Scopes
-  # -----------------
+  # == Instance Methods ==
 
-  # Retrieves users ordered by their creation date (newest first).
-  scope :recent, -> { order(created_at: :desc) }
-
-  # Instance Methods
-  # -----------------
-
-  # Returns the full name of a user for display purposes.
-  # Example: "John Doe"
+  # Returns full name of the user (or just username if no name exists)
   def full_name
     "#{first_name} #{last_name}"
   end
 
-  # Checks if the user is a member of a specific organization.
-  # Useful for access control in views and controllers.
+  # Checks if the user is a member of a given organization
   def member_of?(organization)
     organizations.exists?(organization.id)
   end
 
-  # Finds a user's Elo rating for a specific leaderboard.
-  # Returns 1500 (default Elo) if no rating exists.
+  # Returns Elo rating for a given leaderboard (defaults to 1500 if no rating found)
   def elo_for(leaderboard)
     leaderboard_ratings.find_by(leaderboard: leaderboard)&.rating || 1500
   end
 
-  # Returns the total number of matches played by a user.
+  # Total number of matches played by the user
   def total_matches
     matches_as_user1.count + matches_as_opponent.count
   end
 
-  # Returns the total number of matches won.
+  # Total matches won by the user
   def total_wins
     matches_won.count
   end
 
-  # Returns the total number of matches lost.
+  # Total matches lost by the user
   def total_losses
     total_matches - total_wins
   end
 
-  # Returns the win percentage (avoiding division by zero).
-  def win_percentage
-    total_matches > 0 ? (total_wins.to_f / total_matches * 100).round(2) : 0
+  # Calculates the user's overall win/loss ratio
+  def win_loss_ratio
+    total_matches.positive? ? (total_wins.to_f / total_matches).round(2) : 0
+  end
+
+  # Returns win/loss ratio for a specific leaderboard
+  def win_loss_ratio_for_leaderboard(leaderboard)
+    matches = Match.where(leaderboard: leaderboard)
+                   .where("user1_id = ? OR opponent_id = ?", id, id)
+    wins = matches.where(winner_id: id).count
+    total = matches.count
+    total.positive? ? (wins.to_f / total).round(2) : 0
+  end
+
+  # Returns the user's **most frequent opponent across all matches**
+  def most_frequent_opponent
+    matches = Match.where("user1_id = ? OR opponent_id = ?", id, id)
+    return nil if matches.empty?
+
+    opponent_column = Arel.sql("CASE WHEN user1_id = #{id} THEN opponent_id ELSE user1_id END")
+
+    most_faced_opponent_id = matches
+                               .group(opponent_column)
+                               .order(Arel.sql("COUNT(*) DESC"))
+                               .limit(1)
+                               .pluck(opponent_column)
+                               .first
+
+    User.find_by(id: most_faced_opponent_id)
+  end
+
+  # Returns the user's **most frequent opponent in a specific leaderboard**
+  def most_frequent_opponent_for_leaderboard(leaderboard)
+    matches = Match.where(leaderboard: leaderboard)
+                   .where("user1_id = ? OR opponent_id = ?", id, id)
+    return nil if matches.empty?
+
+    opponent_column = Arel.sql("CASE WHEN user1_id = #{id} THEN opponent_id ELSE user1_id END")
+
+    most_faced_opponent_id = matches
+                               .group(opponent_column)
+                               .order(Arel.sql("COUNT(*) DESC"))
+                               .limit(1)
+                               .pluck(opponent_column)
+                               .first
+
+    User.find_by(id: most_faced_opponent_id)
+  end
+
+  # Calculates the percentage change in win ratio compared to the previous month
+  def win_ratio_trend
+    # Get this month's matches
+    this_month_matches = Match.where("created_at >= ?", Time.current.beginning_of_month)
+                              .where("user1_id = ? OR opponent_id = ?", id, id)
+    this_month_wins = this_month_matches.where(winner_id: id).count
+    this_month_ratio = this_month_matches.any? ? (this_month_wins.to_f / this_month_matches.count * 100).round(2) : 0
+
+    # Get last month's matches
+    last_month_start = 1.month.ago.beginning_of_month
+    last_month_end = 1.month.ago.end_of_month
+    last_month_matches = Match.where(created_at: last_month_start..last_month_end)
+                              .where("user1_id = ? OR opponent_id = ?", id, id)
+    last_month_wins = last_month_matches.where(winner_id: id).count
+    last_month_ratio = last_month_matches.any? ? (last_month_wins.to_f / last_month_matches.count * 100).round(2) : 0
+
+    # Calculate percentage change
+    return 0 if last_month_ratio.zero? # Avoid division by zero
+    ((this_month_ratio - last_month_ratio) / last_month_ratio * 100).round(2)
+  end
+
+  # Returns the highest Elo rating the user has ever achieved
+  def highest_elo
+    leaderboard_ratings.maximum(:rating) || 1500
   end
 end

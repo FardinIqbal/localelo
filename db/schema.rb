@@ -10,9 +10,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_03_17_015126) do
+ActiveRecord::Schema[7.1].define(version: 2025_03_19_022942) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "elo_histories", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "leaderboard_id", null: false
+    t.integer "elo"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["leaderboard_id"], name: "index_elo_histories_on_leaderboard_id"
+    t.index ["user_id"], name: "index_elo_histories_on_user_id"
+  end
 
   create_table "elo_history", force: :cascade do |t|
     t.bigint "user_id", null: false
@@ -39,11 +49,9 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_17_015126) do
   create_table "leaderboards", force: :cascade do |t|
     t.bigint "organization_id", null: false
     t.string "name", null: false
-    t.string "slug", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.text "description"
-    t.index ["organization_id", "slug"], name: "index_leaderboards_on_organization_id_and_slug", unique: true
     t.index ["organization_id"], name: "index_leaderboards_on_organization_id"
   end
 
@@ -81,13 +89,11 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_17_015126) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id"
-    t.string "slug"
     t.text "description"
     t.string "location"
     t.string "website"
     t.integer "visibility", default: 0
     t.bigint "created_by"
-    t.index ["slug"], name: "index_organizations_on_slug", unique: true
     t.index ["user_id"], name: "index_organizations_on_user_id"
   end
 
@@ -107,6 +113,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_17_015126) do
     t.index ["username"], name: "index_users_on_username", unique: true
   end
 
+  add_foreign_key "elo_histories", "leaderboards"
+  add_foreign_key "elo_histories", "users"
   add_foreign_key "elo_history", "leaderboards"
   add_foreign_key "elo_history", "users"
   add_foreign_key "leaderboard_ratings", "leaderboards"

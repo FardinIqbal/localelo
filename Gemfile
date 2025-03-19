@@ -76,3 +76,5 @@ gem "sidekiq", "~> 7.3"
 gem "sidekiq-cron", "~> 2.1"
 
 gem "tailwindcss-rails", "~> 4.1"
+
+gem "kaminari", "~> 1.2"
