@@ -2,13 +2,12 @@ class MatchesController < ApplicationController
   before_action :authenticate_user!
   before_action :set_match, only: [:show, :verify]
   before_action :load_leaderboards_and_users, only: [:new, :create]
-  before_action :load_recent_opponents, only: [:new]
   before_action :authorize_match_verification!, only: [:verify]
 
   # GET /matches
   def index
     @matches = current_user.matches
-                           .includes(:user1, :opponent, :leaderboard => :organization)
+                           .includes(:user1, :opponent, leaderboard: :organization)
                            .recent
                            .page(params[:page])
                            .per(20)
@@ -21,7 +20,7 @@ class MatchesController < ApplicationController
 
   # GET /matches/recent
   def recent
-    @matches = Match.includes(:user1, :opponent, :leaderboard => :organization)
+    @matches = Match.includes(:user1, :opponent, leaderboard: :organization)
                     .recent
                     .limit(10)
 
@@ -35,10 +34,45 @@ class MatchesController < ApplicationController
   def new
     @match = Match.new(leaderboard_id: params[:leaderboard_id], opponent_id: params[:opponent_id])
 
+    # Load recent opponents for the quick selection feature
+    @recent_opponents = User.where.not(id: current_user.id)
+                            .joins("LEFT JOIN matches ON users.id = matches.opponent_id OR users.id = matches.user1_id")
+                            .where("matches.user1_id = ? OR matches.opponent_id = ?", current_user.id, current_user.id)
+                            .distinct
+                            .limit(5)
+
     # Pre-select leaderboard if provided
     if params[:leaderboard_id].present?
       @leaderboard = Leaderboard.find_by(id: params[:leaderboard_id])
-      @users = LeaderboardUsersQuery.new(params[:leaderboard_id], current_user.id).call if @leaderboard
+      @users = Leaderboard.find(params[:leaderboard_id]).users.where.not(id: current_user.id) if @leaderboard
+    end
+  end
+
+  # GET /matches/update_opponents
+  def update_opponents
+    @leaderboard = Leaderboard.find_by(id: params[:leaderboard_id])
+
+    if @leaderboard.nil?
+      render turbo_stream: turbo_stream.replace("opponent_selection", "<p class='text-red-500'>❌ Leaderboard not found.</p>")
+      return
+    end
+
+    @opponents = @leaderboard.users.where.not(id: current_user.id)
+
+    if @opponents.empty?
+      render turbo_stream: turbo_stream.replace("opponent_selection", "<p class='text-yellow-500'>⚠️ No opponents available.</p>")
+      return
+    end
+
+    respond_to do |format|
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.replace(
+          "opponent_selection",
+          partial: "matches/opponent_selection",
+          locals: { opponents: @opponents }
+        )
+      end
+      format.any { head :not_acceptable }  # Prevents full HTML responses
     end
   end
 
@@ -87,7 +121,7 @@ class MatchesController < ApplicationController
   private
 
   def match_params
-    params.require(:match).permit(:leaderboard_id, :opponent_id, :winner_id, :is_draw)
+    params.require(:match).permit(:leaderboard_id, :opponent_id, :winner_id)
   end
 
   def set_match
@@ -103,36 +137,23 @@ class MatchesController < ApplicationController
   end
 
   def load_leaderboards_and_users
-    # Cache this query for better performance
-    @leaderboards = Rails.cache.fetch("user_#{current_user.id}_leaderboards", expires_in: 1.hour) do
-      current_user.organizations
-                  .includes(:leaderboards)
-                  .flat_map(&:leaderboards)
-                  .uniq
-    end || []
+    @leaderboards = current_user.organizations
+                                .includes(:leaderboards)
+                                .flat_map(&:leaderboards)
+                                .uniq
 
     # Only load users if a leaderboard is selected
     if params[:match] && params[:match][:leaderboard_id].present?
-      leaderboard_id = params[:match][:leaderboard_id]
-      @users = LeaderboardUsersQuery.new(leaderboard_id, current_user.id).call
+      @users = Leaderboard.find(params[:match][:leaderboard_id]).users.where.not(id: current_user.id)
     elsif params[:leaderboard_id].present?
-      @users = LeaderboardUsersQuery.new(params[:leaderboard_id], current_user.id).call
+      @users = Leaderboard.find(params[:leaderboard_id]).users.where.not(id: current_user.id)
     else
       @users = []
     end
   end
 
-  def load_recent_opponents
-    @recent_opponents = User.joins(:matches)
-                            .where("matches.user1_id = ? OR matches.opponent_id = ?", current_user.id, current_user.id)
-                            .where.not(id: current_user.id)
-                            .distinct
-                            .limit(5)
-  end
-
   def authorize_match_verification!
-    unless @match.opponent_id == current_user.id ||
-      @match.leaderboard.organization.admin?(current_user)
+    unless @match.opponent_id == current_user.id || @match.leaderboard.organization.admin?(current_user)
       respond_to do |format|
         format.html do
           flash[:error] = "You don't have permission to verify this match."
@@ -142,12 +163,4 @@ class MatchesController < ApplicationController
       end
     end
   end
-  def load_recent_opponents
-    @recent_opponents = User.joins("LEFT JOIN matches ON users.id = matches.opponent_id OR users.id = matches.user1_id")
-                            .where("matches.user1_id = ? OR matches.opponent_id = ?", current_user.id, current_user.id)
-                            .where.not(id: current_user.id)
-                            .distinct
-                            .limit(5)
-  end
-
 end

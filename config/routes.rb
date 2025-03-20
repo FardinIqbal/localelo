@@ -47,6 +47,7 @@ Rails.application.routes.draw do
   resources :matches, except: [:destroy] do
     collection do
       get :recent
+      get :update_opponents  # Added this line to fix the 404 error
     end
     member do
       patch :verify
@@ -78,6 +79,9 @@ Rails.application.routes.draw do
       resources :matches, only: [:index, :create, :show] do
         collection do
           get :recent
+        end
+        collection do
+          get :update_opponents
         end
         member do
           patch :verify

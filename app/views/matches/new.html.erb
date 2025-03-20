@@ -43,20 +43,19 @@
                          options_from_collection_for_select(@leaderboards, :id, :name, params[:leaderboard_id]),
                          { include_blank: "Select leaderboard" },
                          { class: "w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white",
-                           required: true,
-                           data: { action: "change->match#fetchOpponents" } } %>
+                           required: true } %>
             <div class="text-xs text-red-400 hidden mt-1" id="leaderboard-error">Please select a leaderboard</div>
           </div>
 
           <!-- Opponent Selection -->
-          <div>
+          <div id="opponent_selection">
             <label class="text-sm text-slate-400 mb-1 block">Opponent <span class="text-pink-400">*</span></label>
             <%= f.select :opponent_id,
-                         params[:opponent_id].present? ? [[User.find(params[:opponent_id]).username, params[:opponent_id]]] : [],
+                         @users.present? ? options_from_collection_for_select(@users, :id, :username) : [],
                          { include_blank: "Select opponent" },
                          { class: "w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white",
                            required: true,
-                           data: { action: "change->match#updatePreview" } } %>
+                           name: "match[opponent_id]" } %>
             <div class="text-xs text-red-400 hidden mt-1" id="opponent-error">Please select an opponent</div>
           </div>
         </div>
@@ -98,10 +97,10 @@
           </div>
         </div>
 
-        <!-- Result Selection -->
+        <!-- Result Selection (without Draw option) -->
         <div>
           <label class="text-sm text-slate-400 mb-3 block">Match Result <span class="text-pink-400">*</span></label>
-          <div class="grid grid-cols-3 gap-3">
+          <div class="grid grid-cols-2 gap-3">
             <!-- I Won -->
             <label class="cursor-pointer">
               <%= f.radio_button :winner_id, current_user.id, class: "hidden result-radio" %>
@@ -125,18 +124,6 @@
                 </div>
               </div>
             </label>
-
-            <!-- Draw -->
-            <label class="cursor-pointer">
-              <%= f.check_box :is_draw, class: "hidden draw-checkbox" %>
-              <div class="p-3 rounded-lg border border-slate-700 hover:border-yellow-500/50 transition-all duration-300 bg-slate-800/50 text-center result-option">
-                <div class="text-yellow-400 text-lg mb-1"><i class="fas fa-handshake"></i></div>
-                <div class="text-white text-sm">Draw</div>
-                <div class="w-4 h-4 rounded-full border border-slate-600 mx-auto mt-2 flex items-center justify-center draw-check">
-                  <i class="fas fa-check text-yellow-500 opacity-0 transition-opacity duration-300"></i>
-                </div>
-              </div>
-            </label>
           </div>
           <div class="text-xs text-red-400 hidden mt-1" id="result-error">Please select a match result</div>
         </div>
@@ -148,8 +135,7 @@
             <i class="fas fa-spinner fa-spin ml-2 hidden" id="spinner"></i>
           </button>
           <div class="text-xs text-center text-slate-400 mt-2">
-            <span class="text-purple-400">Pro tip:</span> Press
-            <kbd class="px-1.5 py-0.5 bg-slate-700 rounded text-xs">Alt + Enter</kbd> to quickly submit
+            <span class="text-purple-400">Pro tip:</span> Press <kbd class="px-1.5 py-0.5 bg-slate-700 rounded text-xs">Alt + Enter</kbd> to quickly submit
           </div>
         </div>
       </div>
@@ -166,348 +152,241 @@
   </div>
 </div>
 
+
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        // --------------------
-        // Form elements
-        // --------------------
-        const form = document.getElementById("match-form");
+    document.addEventListener("DOMContentLoaded", function() {
+        console.log("✅ DOM Loaded! JavaScript is running.");
+
         const leaderboardSelect = document.getElementById("match_leaderboard_id");
         const opponentSelect = document.getElementById("match_opponent_id");
         const opponentWinnerRadio = document.getElementById("opponent-winner-radio");
-        const resultRadios = document.querySelectorAll(".result-radio");
-        const drawCheckbox = document.querySelector(".draw-checkbox");
+        const matchForm = document.getElementById("match-form");
         const submitButton = document.getElementById("submit-button");
-        const submitText = document.getElementById("submit-text");
         const spinner = document.getElementById("spinner");
-        const toast = document.getElementById("toast");
 
-        // --------------------
-        // Preview elements
-        // --------------------
-        const matchPreview = document.getElementById("match-preview");
-        const opponentInitials = document.getElementById("opponent-initials");
-        const opponentName = document.getElementById("opponent-name");
-        const leaderboardNamePreview = document.getElementById("leaderboard-name");
-        const userRating = document.getElementById("user-rating");
-        const opponentRating = document.getElementById("opponent-rating");
-        const eloPrediction = document.getElementById("elo-prediction");
+        // Handle leaderboard change
+        leaderboardSelect.addEventListener("change", updateOpponents);
 
-        // --------------------
-        // Error elements
-        // --------------------
-        const leaderboardError = document.getElementById("leaderboard-error");
-        const opponentError = document.getElementById("opponent-error");
-        const resultError = document.getElementById("result-error");
-
-        // --------------------
-        // Quick opponent buttons
-        // --------------------
-        const quickOpponentButtons = document.querySelectorAll(".quick-opponent");
-
-        // --------------------
-        // TomSelect initialization
-        // --------------------
-        let tomSelect = new TomSelect("#match_opponent_id", {
-            create: false,
-            sortField: {field: "text", direction: "asc"},
-            placeholder: "Search for an opponent...",
-            render: {
-                option: function (data, escape) {
-                    return `<div class="flex items-center p-2">
-            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center text-white font-bold mr-2">
-              ${escape(data.text.substring(0, 2).toUpperCase())}
-            </div>
-            <div>${escape(data.text)}</div>
-          </div>`;
-                },
-                item: function (data, escape) {
-                    return `<div class="flex items-center">
-            <div class="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center text-white font-bold mr-2 text-xs">
-              ${escape(data.text.substring(0, 2).toUpperCase())}
-            </div>
-            <div>${escape(data.text)}</div>
-          </div>`;
-                }
-            }
-        });
-
-        // --------------------
-        // Quick opponent selection
-        // --------------------
-        quickOpponentButtons.forEach(button => {
-            button.addEventListener("click", function () {
-                const opponentId = this.dataset.opponentId;
-                const opponentUsername = this.dataset.opponentName;
-
-                if (leaderboardSelect.value) {
-                    tomSelect.setValue(opponentId);
-                    updateOpponentPreview(opponentId, opponentUsername);
-                    fetchRatings(leaderboardSelect.value, opponentId);
-                } else {
-                    showToast("Please select a leaderboard first", "error");
-                    leaderboardError.classList.remove("hidden");
-                }
-            });
-        });
-
-        // --------------------
-        // Leaderboard selection
-        // --------------------
-        leaderboardSelect.addEventListener("change", function () {
-            leaderboardError.classList.add("hidden");
-
-            if (this.value) {
-                fetchOpponents(this.value);
-                const leaderboardName = this.options[this.selectedIndex].text;
-                leaderboardNamePreview.textContent = leaderboardName;
-
-                // If opponent is already selected, fetch ratings
-                if (opponentSelect.value) {
-                    fetchRatings(this.value, opponentSelect.value);
-                }
-            } else {
-                tomSelect.clear();
-                tomSelect.clearOptions();
-                matchPreview.classList.add("hidden");
-            }
-        });
-
-        // --------------------
-        // Opponent selection (TomSelect)
-        // --------------------
-        tomSelect.on("change", function (value) {
-            opponentError.classList.add("hidden");
-            if (value) {
-                const selectedOption = tomSelect.options[value];
-                if (selectedOption) {
-                    updateOpponentPreview(value, selectedOption.text);
-
-                    if (leaderboardSelect.value) {
-                        fetchRatings(leaderboardSelect.value, value);
-                    }
-                }
-            } else {
-                matchPreview.classList.add("hidden");
-            }
-        });
-
-        // --------------------
-        // Result selection (Winner radios)
-        // --------------------
+        // Handle match result selection
+        const resultRadios = document.querySelectorAll(".result-radio");
         resultRadios.forEach(radio => {
-            radio.addEventListener("change", function () {
-                resultError.classList.add("hidden");
-
-                // Reset checks
-                document.querySelectorAll(".result-check i").forEach(check => {
-                    check.style.opacity = "0";
+            radio.addEventListener("change", function() {
+                // Reset all result options
+                document.querySelectorAll(".result-option").forEach(option => {
+                    option.classList.remove("ring-2");
+                    const checkIcon = option.querySelector(".result-check i");
+                    if (checkIcon) {
+                        checkIcon.style.opacity = "0";
+                    }
                 });
 
-                // Show check for selected
+                // Highlight selected option
                 if (this.checked) {
-                    this.closest("label").querySelector(".result-check i").style.opacity = "1";
+                    const parent = this.parentElement;
+                    parent.querySelector(".result-option").classList.add("ring-2");
+                    const checkIcon = parent.querySelector(".result-check i");
+                    if (checkIcon) {
+                        checkIcon.style.opacity = "1";
+                    }
 
-                    // Uncheck draw if a winner is selected
-                    if (drawCheckbox.checked) {
-                        drawCheckbox.checked = false;
-                        document.querySelector(".draw-check i").style.opacity = "0";
+                    // If "I Lost" is selected, set the opponent as winner
+                    if (this.id === "opponent-winner-radio") {
+                        updateWinnerOpponent();
                     }
                 }
             });
         });
 
-        // --------------------
-        // Draw checkbox
-        // --------------------
-        drawCheckbox.addEventListener("change", function () {
-            resultError.classList.add("hidden");
-            if (this.checked) {
-                document.querySelector(".draw-check i").style.opacity = "1";
-
-                // Uncheck winner radios if draw is selected
-                resultRadios.forEach(radio => {
-                    radio.checked = false;
-                    radio.closest("label").querySelector(".result-check i").style.opacity = "0";
-                });
-            } else {
-                document.querySelector(".draw-check i").style.opacity = "0";
-            }
-        });
-
-        // --------------------
         // Form submission
-        // --------------------
-        form.addEventListener("submit", function (event) {
+        matchForm.addEventListener("submit", function(event) {
             event.preventDefault();
+
+            // Validate form
             let isValid = true;
 
-            // Validate leaderboard
             if (!leaderboardSelect.value) {
+                const leaderboardError = document.getElementById("leaderboard-error");
+                if (leaderboardError) {
+                    leaderboardError.classList.remove("hidden");
+                }
                 isValid = false;
-                leaderboardError.classList.remove("hidden");
+            } else {
+                const leaderboardError = document.getElementById("leaderboard-error");
+                if (leaderboardError) {
+                    leaderboardError.classList.add("hidden");
+                }
             }
 
-            // Validate opponent
             if (!opponentSelect.value) {
+                const opponentError = document.getElementById("opponent-error");
+                if (opponentError) {
+                    opponentError.classList.remove("hidden");
+                }
                 isValid = false;
-                opponentError.classList.remove("hidden");
+            } else {
+                const opponentError = document.getElementById("opponent-error");
+                if (opponentError) {
+                    opponentError.classList.add("hidden");
+                }
             }
 
-            // Validate result
-            if (!document.querySelector('input[name="match[winner_id]"]:checked') && !drawCheckbox.checked) {
+            const winnerSelected = document.querySelector('input[name="match[winner_id]"]:checked');
+
+            if (!winnerSelected) {
+                const resultError = document.getElementById("result-error");
+                if (resultError) {
+                    resultError.classList.remove("hidden");
+                }
                 isValid = false;
-                resultError.classList.remove("hidden");
+            } else {
+                const resultError = document.getElementById("result-error");
+                if (resultError) {
+                    resultError.classList.add("hidden");
+                }
             }
 
-            if (!isValid) {
-                return;
+            if (isValid) {
+                // Show loading state
+                submitButton.disabled = true;
+                const submitText = document.getElementById("submit-text");
+                if (submitText) {
+                    submitText.textContent = "Submitting...";
+                }
+                spinner.classList.remove("hidden");
+
+                // Submit the form
+                this.submit();
+            } else {
+                // Show toast error
+                showToast("Error", "Please fill in all required fields", "error");
             }
-
-            // If "I lost" is chosen, set winner_id to the opponent
-            if (opponentWinnerRadio.checked) {
-                opponentWinnerRadio.value = opponentSelect.value;
-            }
-
-            // Show loading state
-            submitButton.disabled = true;
-            submitText.textContent = "Logging Match...";
-            spinner.classList.remove("hidden");
-
-            // Slight delay then submit
-            setTimeout(() => {
-                form.submit();
-            }, 300);
         });
 
-        // --------------------
-        // Keyboard shortcuts
-        // --------------------
-        document.addEventListener("keydown", function (e) {
-            // Alt+Enter to submit form
+        // Alt+Enter shortcut for form submission
+        document.addEventListener("keydown", function(e) {
             if (e.altKey && e.key === "Enter") {
                 submitButton.click();
             }
-            // Escape to clear form
-            if (e.key === "Escape") {
-                if (confirm("Clear form and start over?")) {
-                    leaderboardSelect.value = "";
-                    tomSelect.clear();
-                    resultRadios.forEach(radio => {
-                        radio.checked = false;
-                    });
-                    drawCheckbox.checked = false;
-                    document.querySelectorAll(".result-check i, .draw-check i").forEach(check => {
-                        check.style.opacity = "0";
-                    });
-                    matchPreview.classList.add("hidden");
-                }
-            }
         });
 
-        // --------------------
         // Helper functions
-        // --------------------
-        function updateOpponentPreview(opponentId, opponentUsername) {
-            opponentName.textContent = opponentUsername;
-            opponentInitials.textContent = opponentUsername.substring(0, 2).toUpperCase();
-            matchPreview.classList.remove("hidden");
-        }
+        function updateOpponents() {
+            const leaderboardId = leaderboardSelect.value;
+            console.log("🎯 Leaderboard changed:", leaderboardId);
 
-        function fetchOpponents(leaderboardId) {
-            fetch(`/api/v1/leaderboards/${leaderboardId}/users?exclude_current=true`, {
-                headers: {"Accept": "application/json"}
-            })
-                .then(response => response.json())
-                .then(data => {
-                    tomSelect.clear();
-                    tomSelect.clearOptions();
-                    data.forEach(user => {
-                        tomSelect.addOption({value: user.id, text: user.username});
-                    });
-                    tomSelect.refreshOptions(false);
-                })
-                .catch(error => {
-                    console.error("Error fetching opponents:", error);
-                    showToast("Failed to load opponents", "error");
-                });
-        }
-
-        function fetchRatings(leaderboardId, userId) {
-            fetch(`/api/v1/leaderboards/${leaderboardId}/ratings?user_id=${userId}`, {
-                headers: {"Accept": "application/json"}
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.current_user_rating) {
-                        userRating.textContent = `${data.current_user_rating} Elo`;
-                    }
-                    if (data.opponent_rating) {
-                        opponentRating.textContent = `${data.opponent_rating} Elo`;
-                    }
-                    if (data.current_user_rating && data.opponent_rating) {
-                        const winChange = calculateEloChange(data.current_user_rating, data.opponent_rating, 1);
-                        const lossChange = calculateEloChange(data.current_user_rating, data.opponent_rating, 0);
-                        eloPrediction.innerHTML = `<i class="fas fa-calculator mr-1"></i> Win: <span class="text-green-400">+${winChange}</span> | Loss: <span class="text-red-400">${lossChange}</span>`;
-                    }
-                })
-                .catch(error => {
-                    console.error("Error fetching ratings:", error);
-                });
-        }
-
-        function calculateEloChange(ratingA, ratingB, outcome) {
-            const K_FACTOR = 32;
-            const expectedScore = 1.0 / (1.0 + Math.pow(10, (ratingB - ratingA) / 400.0));
-            return Math.round(K_FACTOR * (outcome - expectedScore));
-        }
-
-        function showToast(message, type = "success") {
-            const toastIcon = document.querySelector(".toast-icon");
-            const toastTitle = document.querySelector(".toast-title");
-            const toastMessage = document.querySelector(".toast-message");
-
-            if (type === "success") {
-                toastIcon.className = "fas fa-check-circle mr-2 text-xl text-green-400 toast-icon";
-                toastTitle.textContent = "Success";
-                toastTitle.className = "toast-title font-medium text-green-400";
-                toast.className = "fixed bottom-5 right-5 bg-slate-800 border border-green-500 px-4 py-3 rounded-lg shadow-lg transform translate-y-10 opacity-0 transition-all duration-500 z-50 flex items-center";
-            } else {
-                toastIcon.className = "fas fa-exclamation-circle mr-2 text-xl text-red-400 toast-icon";
-                toastTitle.textContent = "Error";
-                toastTitle.className = "toast-title font-medium text-red-400";
-                toast.className = "fixed bottom-5 right-5 bg-slate-800 border border-red-500 px-4 py-3 rounded-lg shadow-lg transform translate-y-10 opacity-0 transition-all duration-500 z-50 flex items-center";
+            if (!leaderboardId) {
+                console.warn("⚠️ No leaderboard selected. Exiting.");
+                return;
             }
 
-            toastMessage.textContent = message;
-            toast.classList.remove("hidden");
+            // Show loading state
+            const opponentSelection = document.getElementById("opponent_selection");
+            opponentSelection.innerHTML = `
+        <label class="text-sm text-slate-400 mb-1 block">Opponent <span class="text-pink-400">*</span></label>
+        <select class="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white" disabled>
+          <option>Loading opponents...</option>
+        </select>
+      `;
 
-// Show toast
+            const url = `/matches/update_opponents?leaderboard_id=${leaderboardId}`;
+            console.log("📡 Fetching opponents from:", url);
+
+            fetch(url, {
+                headers: {
+                    "Accept": "text/vnd.turbo-stream.html, application/json, text/html",
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            })
+              .then(response => {
+                  console.log("🔄 Response status:", response.status);
+                  if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                  return response.text();
+              })
+              .then(html => {
+                  if (!html.trim()) {
+                      console.warn("❌ EMPTY RESPONSE from server");
+                      opponentSelection.innerHTML = `
+            <label class="text-sm text-slate-400 mb-1 block">Opponent <span class="text-pink-400">*</span></label>
+            <div class="w-full px-3 py-2 bg-slate-800/50 border border-slate-600 rounded-lg text-red-400">
+              No opponents available
+            </div>
+          `;
+                      return;
+                  }
+
+                  // Extract the HTML content from turbo-stream
+                  const parser = new DOMParser();
+                  const doc = parser.parseFromString(html, 'text/html');
+                  const template = doc.querySelector('template');
+
+                  if (template) {
+                      opponentSelection.innerHTML = template.innerHTML;
+                  } else {
+                      // Fallback if we can't parse the turbo stream
+                      opponentSelection.innerHTML = html;
+                  }
+                  // Re-initialize the opponent select reference
+                  const newOpponentSelect = document.getElementById("match_opponent_id");
+                  if (newOpponentSelect) {
+                      newOpponentSelect.addEventListener("change", function() {
+                          updateWinnerOpponent();
+                      });
+                  }
+              })
+              .catch(error => {
+                  console.error("🚨 Error loading opponents:", error);
+                  opponentSelection.innerHTML = `
+      <label class="text-sm text-slate-400 mb-1 block">Opponent <span class="text-pink-400">*</span></label>
+      <div class="w-full px-3 py-2 bg-slate-800/50 border border-slate-600 rounded-lg text-red-400">
+        Error loading opponents. Please try again.
+      </div>
+    `;
+              });
+        }
+
+        function updateWinnerOpponent() {
+            const opponentId = opponentSelect.value;
+            opponentWinnerRadio.value = opponentId;
+        }
+
+        function showToast(title, message, type) {
+            const toast = document.getElementById("toast");
+            const toastTitle = document.querySelector(".toast-title");
+            const toastMessage = document.querySelector(".toast-message");
+            const toastIcon = document.querySelector(".toast-icon");
+
+            // Set content
+            toastTitle.textContent = title;
+            toastMessage.textContent = message;
+
+            // Set type styling
+            toast.classList.remove("bg-green-500/90", "bg-red-500/90", "bg-blue-500/90");
+            toastIcon.classList.remove("fa-check-circle", "fa-times-circle", "fa-info-circle");
+
+            if (type === "success") {
+                toast.classList.add("bg-green-500/90");
+                toastIcon.classList.add("fa-check-circle");
+            } else if (type === "error") {
+                toast.classList.add("bg-red-500/90");
+                toastIcon.classList.add("fa-times-circle");
+            } else {
+                toast.classList.add("bg-blue-500/90");
+                toastIcon.classList.add("fa-info-circle");
+            }
+
+            // Show toast
+            toast.classList.remove("hidden");
             setTimeout(() => {
                 toast.classList.remove("translate-y-10", "opacity-0");
             }, 10);
 
-// Hide toast after 3 seconds
+            // Hide toast after 3 seconds
             setTimeout(() => {
                 toast.classList.add("translate-y-10", "opacity-0");
                 setTimeout(() => {
                     toast.classList.add("hidden");
                 }, 500);
             }, 3000);
-        }
-
-// --------------------
-// If the page loads with a pre-selected leaderboard or opponent
-// --------------------
-        if (leaderboardSelect.value) {
-            const leaderboardName =
-                leaderboardSelect.options[leaderboardSelect.selectedIndex].text;
-            leaderboardNamePreview.textContent = leaderboardName;
-            fetchOpponents(leaderboardSelect.value);
-
-            if (opponentSelect.value) {
-                fetchRatings(leaderboardSelect.value, opponentSelect.value);
-            }
         }
     });
 </script>

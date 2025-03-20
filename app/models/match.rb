@@ -3,20 +3,18 @@ class Match < ApplicationRecord
   belongs_to :user1, class_name: "User"
   belongs_to :opponent, class_name: "User", foreign_key: "opponent_id"
   belongs_to :leaderboard
-  belongs_to :winner, class_name: "User", foreign_key: "winner_id", optional: true
+  belongs_to :winner, class_name: "User", foreign_key: "winner_id"
 
   # Validations
-  validates :user1_id, :opponent_id, :leaderboard_id, presence: true
+  validates :user1_id, :opponent_id, :leaderboard_id, :winner_id, presence: true
   validates :winner_id, inclusion: {
     in: ->(match) { [match.user1_id, match.opponent_id] },
-    message: "must be either Player 1 or Opponent",
-    allow_nil: true # Allow nil for draw matches
+    message: "must be either Player 1 or Opponent"
   }
   validates :user1_id, comparison: {
     other_than: :opponent_id,
     message: "cannot play against themselves"
   }
-  validate :validate_draw_or_winner
   validate :validate_users_in_leaderboard
 
   # Callbacks
@@ -28,9 +26,10 @@ class Match < ApplicationRecord
   scope :by_leaderboard, ->(leaderboard_id) { where(leaderboard_id: leaderboard_id) }
   scope :involving_user, ->(user_id) { where("user1_id = ? OR opponent_id = ?", user_id, user_id) }
   scope :won_by, ->(user_id) { where(winner_id: user_id) }
-  scope :lost_by, ->(user_id) { where("(user1_id = ? AND winner_id = ?) OR (opponent_id = ? AND winner_id = ?)",
-                                      user_id, :opponent_id, user_id, :user1_id) }
-  scope :draws, -> { where(is_draw: true) }
+  scope :lost_by, ->(user_id) {
+    where("(user1_id = ? AND winner_id = opponent_id) OR (opponent_id = ? AND winner_id = user1_id)",
+          user_id, user_id)
+  }
   scope :verified, -> { where(verified: true) }
   scope :unverified, -> { where(verified: false) }
   scope :recent_by_user, ->(user_id) { involving_user(user_id).recent.limit(10) }
@@ -55,12 +54,10 @@ class Match < ApplicationRecord
 
   # Instance methods
   def winner_name
-    return "Draw" if is_draw
     winner&.username || "Unknown"
   end
 
   def loser
-    return nil if is_draw
     winner_id == user1_id ? opponent : user1
   end
 
@@ -73,16 +70,6 @@ class Match < ApplicationRecord
   end
 
   private
-
-  def validate_draw_or_winner
-    if is_draw && winner_id.present?
-      errors.add(:base, "Match cannot be both a draw and have a winner")
-    end
-
-    if !is_draw && winner_id.nil?
-      errors.add(:base, "Match must either be a draw or have a winner")
-    end
-  end
 
   def validate_users_in_leaderboard
     unless leaderboard.users.include?(user1)
@@ -112,41 +99,14 @@ class Match < ApplicationRecord
       r.losses = 0
     end
 
-    if is_draw
-      handle_draw(player1_rating, player2_rating)
-    else
-      change = calculate_elo_change(player1_rating.rating, player2_rating.rating)
+    change = calculate_elo_change(player1_rating.rating, player2_rating.rating)
 
-      ActiveRecord::Base.transaction do
-        update_ratings(player1_rating, player2_rating, change)
-      end
+    ActiveRecord::Base.transaction do
+      update_ratings(player1_rating, player2_rating, change)
     end
   rescue => e
     Rails.logger.error "Elo adjustment failed for match #{id}: #{e.message}"
     Rails.logger.error e.backtrace.join("\n")
-
-    # Consider using an error tracking service like Sentry here
-    # Sentry.capture_exception(e, extra: { match_id: id })
-  end
-
-  def handle_draw(player1_rating, player2_rating)
-    # For draws, adjust ratings slightly based on expected outcome
-    expected = expected_score(player1_rating.rating, player2_rating.rating)
-    change = (K_FACTOR * (0.5 - expected)).round
-
-    ActiveRecord::Base.transaction do
-      # In a draw, both players' draw counts would be incremented
-      # This requires adding a 'draws' column to leaderboard_ratings
-
-      # Update ratings
-      player1_rating.update!(rating: player1_rating.rating + change)
-      player2_rating.update!(rating: player2_rating.rating - change)
-
-      # Store the change for display purposes
-      update_column(:elo_change, change.abs)
-    end
-
-    log_rating_changes(player1_rating, player2_rating, change, "Draw")
   end
 
   def calculate_elo_change(rating_a, rating_b)
