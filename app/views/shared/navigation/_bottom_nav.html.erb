@@ -16,14 +16,14 @@
 >
   <div class="flex justify-around items-center h-full px-2">
     <%# Home navigation link %>
-    <%= render 'shared/bottom_nav_link',
+    <%= render 'shared/navigation/bottom_nav_link',
                text: 'Home',
                path: authenticated_root_path,
                icon: 'fa-home',
                extra_classes: nav_active_class(authenticated_root_path) %>
 
     <%# Explore navigation link %>
-    <%= render 'shared/bottom_nav_link',
+    <%= render 'shared/navigation/bottom_nav_link',
                text: 'Explore',
                path: organizations_path,
                icon: 'fa-search',
@@ -40,14 +40,14 @@
     <% end %>
 
     <%# My Organizations navigation link %>
-    <%= render 'shared/bottom_nav_link',
+    <%= render 'shared/navigation/bottom_nav_link',
                text: 'My Orgs',
                path: account_organizations_path,
                icon: 'fa-users',
                extra_classes: nav_active_class(account_organizations_path) %>
 
     <%# User Profile navigation link %>
-    <%= render 'shared/bottom_nav_link',
+    <%= render 'shared/navigation/bottom_nav_link',
                text: 'Profile',
                path: user_path(current_user),
                icon: 'fa-user',

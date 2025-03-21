@@ -15,10 +15,10 @@
     <!-- Nav Links -->
     <div class="flex items-center space-x-2">
       <% if user_signed_in? %>
-        <%= render 'shared/nav_link', text: 'Home', path: authenticated_root_path, icon: 'fa-home' %>
-        <%= render 'shared/nav_link', text: 'Explore', path: organizations_path, icon: 'fa-search' %>
-        <%= render 'shared/nav_link', text: 'My Organizations', path: account_organizations_path, icon: 'fa-users' %>
-        <%= render 'shared/nav_link', text: 'Matches', path: matches_path, icon: 'fa-trophy' %>
+        <%= render 'shared/navigation/nav_link', text: 'Home', path: authenticated_root_path, icon: 'fa-home' %>
+        <%= render 'shared/navigation/nav_link', text: 'Explore', path: organizations_path, icon: 'fa-search' %>
+        <%= render 'shared/navigation/nav_link', text: 'My Organizations', path: account_organizations_path, icon: 'fa-users' %>
+        <%= render 'shared/navigation/nav_link', text: 'Matches', path: matches_path, icon: 'fa-trophy' %>
 
         <!-- Log Match Button -->
         <%= link_to new_match_path,
@@ -63,9 +63,9 @@
         </div>
 
       <% else %>
-        <%= render 'shared/nav_link', text: 'Explore', path: organizations_path, icon: 'fa-search' %>
-        <%= render 'shared/nav_link', text: 'Sign In', path: new_user_session_path, icon: 'fa-sign-in-alt' %>
-        <%= render 'shared/nav_link', text: 'Sign Up', path: new_user_registration_path, icon: 'fa-user-plus' %>
+        <%= render 'shared/navigation/nav_link', text: 'Explore', path: organizations_path, icon: 'fa-search' %>
+        <%= render 'shared/navigation/nav_link', text: 'Sign In', path: new_user_session_path, icon: 'fa-sign-in-alt' %>
+        <%= render 'shared/navigation/nav_link', text: 'Sign Up', path: new_user_registration_path, icon: 'fa-user-plus' %>
       <% end %>
     </div>
   </div>

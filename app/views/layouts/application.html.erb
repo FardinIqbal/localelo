@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <%= render 'shared/head' %>
+  <%= render 'shared/system/head' %>
 </head>
 <body
       class="min-h-screen flex flex-col font-['Inter'] bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-50"
       data-controller="navigation flash bottom-nav tooltip table"
 >
 
-<%= render 'shared/header' %>         <!-- desktop nav -->
-<%= render 'shared/mobile_nav' %>     <!-- mobile nav/menu -->
-<%= render 'shared/flash_messages' %>
+<%= render 'shared/navigation/desktop_nav' %>         <!-- desktop nav -->
+<%= render 'shared/navigation/mobile_nav_menu' %>     <!-- mobile nav/menu -->
+<%= render 'shared/system/flash_messages' %>
 
 <main
       class="container mx-auto px-4 flex-grow py-8 md:py-12 opacity-0 translate-y-4 transition-all duration-500 <%= 'pb-16' if user_signed_in? %>"
@@ -20,9 +20,9 @@
 </main>
 
 <% if user_signed_in? %>
-  <%= render 'shared/footer' %>       <!-- bottom nav -->
+  <%= render 'shared/navigation/bottom_nav' %>       <!-- bottom nav -->
 <% end %>
 
-<%= render 'shared/toast' %>          <!-- toast container -->
+<%= render 'shared/system/toast_container' %>          <!-- toast container -->
 </body>
 </html>
