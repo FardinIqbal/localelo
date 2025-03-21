@@ -1,72 +1,145 @@
 <% if user_signed_in? %>
-  <!-- Mobile Menu Button -->
-  <button
-    id="mobile-menu-button"
-    type="button"
-    class="md:hidden flex items-center justify-center w-10 h-10 rounded-full bg-slate-800 text-white border border-white/10"
-    data-action="click->mobile-menu#open"
-  >
-    <i class="fas fa-bars"></i>
-  </button>
-
-  <!-- Slideout Menu -->
-  <div
-    id="mobile-menu"
-    class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden"
-    data-controller="mobile-menu"
-  >
-    <div
-      id="mobile-menu-container"
-      class="h-full w-72 bg-slate-800/90 backdrop-blur-xl p-6 shadow-lg rounded-r-lg border-l border-white/10 transform -translate-x-full transition-transform duration-300"
-      data-mobile-menu-target="container"
-    >
-      <div class="flex justify-between items-center mb-6">
-        <div class="text-xl font-bold bg-gradient-to-r from-pink-500 to-indigo-500 bg-clip-text text-transparent flex items-center">
-          <i class="fas fa-chart-line mr-2"></i>
-          LocalElo
+  <!-- Enhanced mobile nav controller wrapper -->
+  <div class="md:hidden" data-controller="mobile-menu">
+    <!-- Top Bar with improved spacing and visual hierarchy -->
+    <div class="flex justify-between items-center px-5 py-4 bg-gradient-to-r from-slate-900 to-slate-800 border-b border-white/10 shadow-md">
+      <!-- Logo with enhanced styling -->
+      <%= link_to authenticated_root_path,
+                  class: "text-xl font-bold tracking-tight flex items-center" do %>
+        <div class="flex items-center">
+          <div class="bg-gradient-to-r from-pink-500 to-indigo-500 rounded-lg p-1.5 mr-2 shadow-lg">
+            <i class="fas fa-chart-line text-white"></i>
+          </div>
+          <span class="bg-gradient-to-r from-pink-500 to-indigo-500 bg-clip-text text-transparent">LocalElo</span>
         </div>
-        <button
-          type="button"
-          class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-700 text-white border border-white/10"
-          data-action="click->mobile-menu#close"
-        >
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-
-      <!-- User Info -->
-      <div class="flex items-center mb-6 pb-4 border-b border-white/5">
-        <div class="bg-slate-700 rounded-full w-12 h-12 flex items-center justify-center border border-white/10">
-          <i class="fas fa-user text-white/70 text-xl"></i>
-        </div>
-        <div class="ml-3">
-          <div class="font-medium text-white"><%= current_user.username %></div>
-          <div class="text-sm text-white/60">View Profile</div>
-        </div>
-      </div>
-
-      <!-- Nav Items -->
-      <%= render 'shared/nav_link', text: 'Home', path: authenticated_root_path, icon: 'fa-home', extra_classes: 'mobile-nav-item mb-1' %>
-      <%= render 'shared/nav_link', text: 'Explore', path: organizations_path, icon: 'fa-search', extra_classes: 'mobile-nav-item mb-1' %>
-      <%= render 'shared/nav_link', text: 'My Organizations', path: account_organizations_path, icon: 'fa-users', extra_classes: 'mobile-nav-item mb-1' %>
-      <%= render 'shared/nav_link', text: 'Matches', path: matches_path, icon: 'fa-trophy', extra_classes: 'mobile-nav-item mb-1' %>
-      <%= render 'shared/nav_link', text: 'Log Match', path: new_match_path, icon: 'fa-plus', extra_classes: 'mobile-nav-item mb-1' %>
-
-      <div class="border-t border-white/10 my-4"></div>
-
-      <%= render 'shared/nav_link', text: 'Settings', path: '#', icon: 'fa-cog', extra_classes: 'mobile-nav-item mb-1' %>
-
-      <%= button_to destroy_user_session_path, method: :delete,
-                    class: "block py-3 px-4 text-red-400 rounded-md transition-all duration-300 hover:bg-slate-700/50 hover:text-red-300 mb-1 w-full text-left" do %>
-        <i class="fas fa-sign-out-alt mr-3 w-6 text-center"></i> Logout
       <% end %>
+
+      <!-- Improved Hamburger Toggle with animation hint -->
+      <button
+        type="button"
+        class="flex items-center justify-center w-11 h-11 rounded-full bg-slate-800/80 text-white border border-white/10 shadow-lg hover:bg-slate-700/80 transition-all duration-200 active:scale-95"
+        data-action="click->mobile-menu#open"
+        aria-label="Open menu"
+      >
+        <i class="fas fa-bars text-white/90"></i>
+      </button>
+    </div>
+
+    <!-- Enhanced Slideout Menu with better transitions -->
+    <div
+      class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden transition-opacity duration-300 ease-in-out"
+      data-mobile-menu-target="overlay"
+    >
+      <div
+        class="h-full w-80 bg-gradient-to-b from-slate-800 to-slate-900 p-6 shadow-xl rounded-r-xl border-l border-white/10 transform -translate-x-full transition-transform duration-300 ease-out"
+        data-mobile-menu-target="menu"
+      >
+        <!-- Header with better spacing -->
+        <div class="flex justify-between items-center mb-8">
+          <div class="text-xl font-bold flex items-center">
+            <div class="bg-gradient-to-r from-pink-500 to-indigo-500 rounded-lg p-1.5 mr-2 shadow-lg">
+              <i class="fas fa-chart-line text-white"></i>
+            </div>
+            <span class="bg-gradient-to-r from-pink-500 to-indigo-500 bg-clip-text text-transparent">LocalElo</span>
+          </div>
+          <button
+            type="button"
+            class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-700/80 text-white/90 border border-white/10 hover:bg-slate-600/80 transition-all duration-200 active:scale-95"
+            data-action="click->mobile-menu#close"
+            aria-label="Close menu"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <!-- Enhanced User Info with better visual hierarchy -->
+        <div class="flex items-center mb-8 pb-5 border-b border-white/10">
+          <div class="bg-gradient-to-br from-slate-600 to-slate-700 rounded-full w-14 h-14 flex items-center justify-center border border-white/10 shadow-md">
+            <i class="fas fa-user text-white/80 text-xl"></i>
+          </div>
+          <div class="ml-4">
+            <div class="font-medium text-white text-lg"><%= current_user.username %></div>
+            <%= link_to "#", class: "text-sm text-white/70 hover:text-white/90 transition-colors flex items-center mt-1 group" do %>
+              <span>View Profile</span>
+              <i class="fas fa-chevron-right ml-1 text-xs opacity-70 group-hover:translate-x-0.5 transition-transform"></i>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Navigation Links with improved styling and grouping -->
+        <div class="space-y-1.5 mb-6">
+          <h3 class="text-white/50 uppercase text-xs font-semibold tracking-wider mb-2 px-2">Main Navigation</h3>
+          <%= render 'shared/nav_link', text: 'Home', path: authenticated_root_path, icon: 'fa-home', extra_classes: 'mobile-nav-item' %>
+          <%= render 'shared/nav_link', text: 'Explore', path: organizations_path, icon: 'fa-search', extra_classes: 'mobile-nav-item' %>
+          <%= render 'shared/nav_link', text: 'My Organizations', path: account_organizations_path, icon: 'fa-users', extra_classes: 'mobile-nav-item' %>
+        </div>
+
+        <div class="space-y-1.5 mb-6">
+          <h3 class="text-white/50 uppercase text-xs font-semibold tracking-wider mb-2 px-2">Matches</h3>
+          <%= render 'shared/nav_link', text: 'View Matches', path: matches_path, icon: 'fa-trophy', extra_classes: 'mobile-nav-item' %>
+          <%= render 'shared/nav_link', text: 'Log New Match', path: new_match_path, icon: 'fa-plus-circle', extra_classes: 'mobile-nav-item' %>
+        </div>
+
+        <div class="border-t border-white/10 my-5 pt-5">
+          <div class="space-y-1.5">
+            <h3 class="text-white/50 uppercase text-xs font-semibold tracking-wider mb-2 px-2">Account</h3>
+            <%= render 'shared/nav_link', text: 'Settings', path: '#', icon: 'fa-cog', extra_classes: 'mobile-nav-item' %>
+
+            <%= button_to destroy_user_session_path,
+                          method: :delete,
+                          class: "w-full flex items-center py-3 px-4 text-red-400 rounded-lg transition-all duration-200 hover:bg-slate-700/70 hover:text-red-300 active:scale-98 focus:outline-none focus:ring-2 focus:ring-red-500/30" do %>
+              <i class="fas fa-sign-out-alt mr-3 w-6 text-center"></i>
+              <span>Logout</span>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- App version at bottom -->
+        <div class="absolute bottom-6 left-0 right-0 text-center text-white/30 text-xs">
+          LocalElo v1.0
+        </div>
+      </div>
     </div>
   </div>
 <% else %>
-  <!-- Guest Links (for mobile) -->
-  <div class="md:hidden flex gap-2">
-    <%= render 'shared/nav_link', text: 'Explore', path: organizations_path, icon: 'fa-search', extra_classes: 'mobile-nav-item' %>
-    <%= render 'shared/nav_link', text: 'Sign In', path: new_user_session_path, icon: 'fa-sign-in-alt', extra_classes: 'mobile-nav-item' %>
-    <%= render 'shared/nav_link', text: 'Sign Up', path: new_user_registration_path, icon: 'fa-user-plus', extra_classes: 'mobile-nav-item' %>
+  <!-- Enhanced Guest Mobile Header -->
+  <div class="md:hidden bg-gradient-to-r from-slate-900 to-slate-800 border-b border-white/10 shadow-md">
+    <div class="flex justify-between items-center px-5 py-4">
+      <!-- Logo with enhanced styling -->
+      <%= link_to unauthenticated_root_path,
+                  class: "text-xl font-bold tracking-tight flex items-center" do %>
+        <div class="flex items-center">
+          <div class="bg-gradient-to-r from-pink-500 to-indigo-500 rounded-lg p-1.5 mr-2 shadow-lg">
+            <i class="fas fa-chart-line text-white"></i>
+          </div>
+          <span class="bg-gradient-to-r from-pink-500 to-indigo-500 bg-clip-text text-transparent">LocalElo</span>
+        </div>
+      <% end %>
+
+      <!-- Enhanced Guest Links -->
+      <div class="flex gap-3">
+        <%= link_to organizations_path, class: "flex items-center justify-center w-10 h-10 rounded-full bg-slate-800/80 text-white/90 border border-white/10 shadow-md hover:bg-slate-700/80 transition-all duration-200 active:scale-95" do %>
+          <i class="fas fa-search"></i>
+        <% end %>
+
+        <div class="relative group" data-controller="dropdown">
+          <button
+            class="flex items-center justify-center w-10 h-10 rounded-full bg-slate-800/80 text-white/90 border border-white/10 shadow-md hover:bg-slate-700/80 transition-all duration-200 active:scale-95"
+            data-action="click->dropdown#toggle"
+          >
+            <i class="fas fa-user"></i>
+          </button>
+
+          <div class="absolute right-0 mt-2 w-48 bg-slate-800 rounded-lg shadow-lg border border-white/10 hidden z-50 transform origin-top-right transition-all duration-150 scale-95 opacity-0" data-dropdown-target="menu">
+            <%= link_to new_user_session_path, class: "block px-4 py-3 text-white hover:bg-slate-700/70 rounded-t-lg transition-colors flex items-center" do %>
+              <i class="fas fa-sign-in-alt mr-3 w-5 text-center text-white/70"></i> Sign In
+            <% end %>
+            <%= link_to new_user_registration_path, class: "block px-4 py-3 text-white hover:bg-slate-700/70 rounded-b-lg transition-colors flex items-center" do %>
+              <i class="fas fa-user-plus mr-3 w-5 text-center text-white/70"></i> Sign Up
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 <% end %>

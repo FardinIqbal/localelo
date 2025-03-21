@@ -1,9 +1,10 @@
-<!--app/views/shared/_nav_link.html.erb-->
 <% extra_classes ||= "" %>
 <% icon ||= "fa-circle" %>
 <% text ||= "Link" %>
-<%= link_to path, class: "nav-link #{active_nav_class(path)} #{extra_classes}" do %>
-  <i class="fas <%= icon %> mr-1.5"></i>
-  <%= text %>
+<%= link_to path, class: "flex items-center py-4 px-4 text-base text-white/90 rounded-lg transition-all duration-200 hover:bg-slate-700/50 active:scale-98 #{active_nav_class(path)} #{extra_classes}" do %>
+  <div class="bg-gradient-to-br from-slate-600 to-slate-700 rounded-full w-8 h-8 flex items-center justify-center mr-3 shadow-sm">
+    <i class="fas <%= icon %> text-white/80 text-sm"></i>
+  </div>
+  <span class="font-medium"><%= text %></span>
+  <i class="fas fa-chevron-right ml-auto text-xs opacity-50"></i>
 <% end %>
-
