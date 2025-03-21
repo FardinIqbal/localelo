@@ -1,23 +1,56 @@
-<%# Bottom Navigation for Mobile (visible only when signed in) %>
+<%#
+  Bottom Navigation for Mobile
+  - Visible only when user is signed in
+  - Fixed to bottom of viewport with responsive design
+  - Includes home, explore, create new match, organizations, and profile links
+  - Uses Tailwind CSS for styling and Stimulus controller for behavior
+%>
 <div
   id="bottom-nav"
-  class="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900/80 backdrop-blur-xl z-40 shadow-lg h-16 rounded-t-2xl transition-transform duration-300 border-t border-white/10"
+  class="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900/80 backdrop-blur-xl z-40
+         shadow-lg h-16 rounded-t-2xl transition-transform duration-300
+         border-t border-white/10"
   data-controller="bottom-nav"
+  data-action="scroll@window->bottom-nav#handleScroll"
+  data-bottom-nav-hidden-class="translate-y-full"
 >
-  <div class="flex justify-around items-center h-full">
-    <%= render 'shared/nav_link', text: 'Home', path: authenticated_root_path, icon: 'fa-home', extra_classes: 'flex flex-col items-center text-white/60 w-1/5 text-xs hover:text-pink-500' %>
+  <div class="flex justify-around items-center h-full px-2">
+    <%# Home navigation link %>
+    <%= render 'shared/bottom_nav_link',
+               text: 'Home',
+               path: authenticated_root_path,
+               icon: 'fa-home',
+               extra_classes: nav_active_class(authenticated_root_path) %>
 
-    <%= render 'shared/nav_link', text: 'Explore', path: organizations_path, icon: 'fa-search', extra_classes: 'flex flex-col items-center text-white/60 w-1/5 text-xs hover:text-pink-500' %>
+    <%# Explore navigation link %>
+    <%= render 'shared/bottom_nav_link',
+               text: 'Explore',
+               path: organizations_path,
+               icon: 'fa-search',
+               extra_classes: nav_active_class(organizations_path) %>
 
+    <%# Create new match button (elevated above the navigation bar) %>
     <%= link_to new_match_path,
+                aria: { label: "Create new match" },
                 class: "flex items-center justify-center rounded-full shadow-lg text-white w-14 h-14 -mt-7
-                   bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-500 hover:to-pink-400
-                   shadow-purple-500/20 hover:shadow-purple-500/40 transform hover:scale-105" do %>
-      <i class="fas fa-plus"></i>
+                        bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-500 hover:to-pink-400
+                        shadow-purple-500/20 hover:shadow-purple-500/40 transform hover:scale-105 transition-all" do %>
+      <i class="fas fa-plus" aria-hidden="true"></i>
+      <span class="sr-only">Create new match</span>
     <% end %>
 
-    <%= render 'shared/nav_link', text: 'My Orgs', path: account_organizations_path, icon: 'fa-users', extra_classes: 'flex flex-col items-center text-white/60 w-1/5 text-xs hover:text-pink-500' %>
+    <%# My Organizations navigation link %>
+    <%= render 'shared/bottom_nav_link',
+               text: 'My Orgs',
+               path: account_organizations_path,
+               icon: 'fa-users',
+               extra_classes: nav_active_class(account_organizations_path) %>
 
-    <%= render 'shared/nav_link', text: 'Profile', path: user_path(current_user), icon: 'fa-user', extra_classes: 'flex flex-col items-center text-white/60 w-1/5 text-xs hover:text-pink-500' %>
+    <%# User Profile navigation link %>
+    <%= render 'shared/bottom_nav_link',
+               text: 'Profile',
+               path: user_path(current_user),
+               icon: 'fa-user',
+               extra_classes: nav_active_class(user_path(current_user)) %>
   </div>
 </div>

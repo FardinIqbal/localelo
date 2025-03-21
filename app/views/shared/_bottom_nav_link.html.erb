@@ -1,0 +1,27 @@
+<%#
+  Bottom Navigation Link Component
+
+  Parameters:
+  - path: URL the link should navigate to
+  - icon: FontAwesome icon class (without the 'fa-' prefix)
+  - text: Text label to display under the icon
+  - extra_classes: Additional CSS classes to apply to the link
+
+  Usage:
+  <%= render 'shared/bottom_nav_link',
+             text: 'Home',
+             path: root_path,
+             icon: 'fa-home',
+             extra_classes: 'some-class' %>
+
+<% extra_classes ||= "" %>
+<% icon ||= "fa-circle" %>
+<% text ||= "Link" %>
+
+<%= link_to path,
+            class: "flex flex-col items-center justify-center px-2 py-1
+                   transition-colors duration-200 #{active_nav_class(path)} #{extra_classes}",
+            aria: { label: text } do %>
+  <i class="fas <%= icon %> text-lg mb-1" aria-hidden="true"></i>
+  <span class="text-xs font-medium"><%= text %></span>
+<% end %>
