@@ -1,0 +1,9 @@
+<!--app/views/shared/_nav_link.html.erb-->
+<% extra_classes ||= "" %>
+<% icon ||= "fa-circle" %>
+<% text ||= "Link" %>
+<%= link_to path, class: "nav-link #{active_nav_class(path)} #{extra_classes}" do %>
+  <i class="fas <%= icon %> mr-1.5"></i>
+  <%= text %>
+<% end %>
+

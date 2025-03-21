@@ -1,134 +1,72 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title><%= content_for?(:title) ? yield(:title) : "Admin - ELO Tracker" %></title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <%= csrf_meta_tags %>
-  <%= csp_meta_tag %>
+<% if user_signed_in? %>
+  <!-- Mobile Menu Button -->
+  <button
+    id="mobile-menu-button"
+    type="button"
+    class="md:hidden flex items-center justify-center w-10 h-10 rounded-full bg-slate-800 text-white border border-white/10"
+    data-action="click->mobile-menu#open"
+  >
+    <i class="fas fa-bars"></i>
+  </button>
 
-  <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
-  <%= javascript_include_tag "application", "data-turbo-track": "reload", defer: true %>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
+  <!-- Slideout Menu -->
+  <div
+    id="mobile-menu"
+    class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden"
+    data-controller="mobile-menu"
+  >
+    <div
+      id="mobile-menu-container"
+      class="h-full w-72 bg-slate-800/90 backdrop-blur-xl p-6 shadow-lg rounded-r-lg border-l border-white/10 transform -translate-x-full transition-transform duration-300"
+      data-mobile-menu-target="container"
+    >
+      <div class="flex justify-between items-center mb-6">
+        <div class="text-xl font-bold bg-gradient-to-r from-pink-500 to-indigo-500 bg-clip-text text-transparent flex items-center">
+          <i class="fas fa-chart-line mr-2"></i>
+          LocalElo
+        </div>
+        <button
+          type="button"
+          class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-700 text-white border border-white/10"
+          data-action="click->mobile-menu#close"
+        >
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
 
-<body class="bg-slate-900 text-white min-h-screen flex">
-<!-- Admin sidebar -->
-<aside class="w-64 bg-slate-800 fixed inset-y-0 z-50 hidden md:block">
-  <div class="p-6">
-    <div class="text-xl font-bold mb-8">
-      <span class="text-pink-500">ELO</span>Tracker Admin
-    </div>
-
-    <nav class="space-y-1">
-      <%= link_to admin_dashboard_path, class: "flex items-center px-4 py-3 rounded-lg text-gray-300 hover:bg-slate-700 hover:text-white" do %>
-        <i class="fas fa-tachometer-alt w-5 mr-3"></i>
-        <span>Dashboard</span>
-      <% end %>
-
-      <%= link_to admin_organizations_path, class: "flex items-center px-4 py-3 rounded-lg text-gray-300 hover:bg-slate-700 hover:text-white" do %>
-        <i class="fas fa-building w-5 mr-3"></i>
-        <span>Organizations</span>
-      <% end %>
-
-      <%= link_to admin_users_path, class: "flex items-center px-4 py-3 rounded-lg text-gray-300 hover:bg-slate-700 hover:text-white" do %>
-        <i class="fas fa-users w-5 mr-3"></i>
-        <span>Users</span>
-      <% end %>
-
-      <%= link_to admin_leaderboards_path, class: "flex items-center px-4 py-3 rounded-lg text-gray-300 hover:bg-slate-700 hover:text-white" do %>
-        <i class="fas fa-list-ol w-5 mr-3"></i>
-        <span>Leaderboards</span>
-      <% end %>
-
-      <%= link_to admin_matches_path, class: "flex items-center px-4 py-3 rounded-lg text-gray-300 hover:bg-slate-700 hover:text-white" do %>
-        <i class="fas fa-trophy w-5 mr-3"></i>
-        <span>Matches</span>
-      <% end %>
-    </nav>
-  </div>
-
-  <div class="absolute bottom-0 left-0 right-0 p-6">
-    <%= link_to root_path, class: "flex items-center px-4 py-3 rounded-lg text-gray-300 hover:bg-slate-700 hover:text-white" do %>
-      <i class="fas fa-arrow-left w-5 mr-3"></i>
-      <span>Back to App</span>
-    <% end %>
-
-    <%= link_to destroy_user_session_path, method: :delete, class: "flex items-center px-4 py-3 rounded-lg text-gray-300 hover:bg-slate-700 hover:text-white" do %>
-      <i class="fas fa-sign-out-alt w-5 mr-3"></i>
-      <span>Sign Out</span>
-    <% end %>
-  </div>
-</aside>
-
-<!-- Mobile admin header -->
-<div class="md:hidden fixed top-0 left-0 right-0 bg-slate-800 z-50">
-  <div class="flex items-center justify-between p-4">
-    <div class="text-xl font-bold">
-      <span class="text-pink-500">ELO</span>Tracker Admin
-    </div>
-
-    <div data-controller="mobile-menu" data-mobile-menu-target="container">
-      <button data-mobile-menu-target="button" data-action="mobile-menu#toggle" class="text-gray-300 hover:text-white">
-        <i data-mobile-menu-target="icon" class="fas fa-bars text-xl"></i>
-      </button>
-      <div data-mobile-menu-target="menu" class="hidden fixed inset-0 z-50 bg-slate-900/95 backdrop-blur-sm">
-        <div class="flex flex-col h-full">
-          <div class="flex justify-end p-4">
-            <button data-action="mobile-menu#close" class="text-gray-300 hover:text-white">
-              <i class="fas fa-times text-xl"></i>
-            </button>
-          </div>
-          <div class="flex flex-col items-center justify-center flex-grow space-y-8 text-xl">
-            <%= link_to admin_dashboard_path, class: "mobile-nav-item px-4 py-2 rounded-lg w-64 text-center" do %>
-              <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
-            <% end %>
-
-            <%= link_to admin_organizations_path, class: "mobile-nav-item px-4 py-2 rounded-lg w-64 text-center" do %>
-              <i class="fas fa-building mr-2"></i> Organizations
-            <% end %>
-
-            <%= link_to admin_users_path, class: "mobile-nav-item px-4 py-2 rounded-lg w-64 text-center" do %>
-              <i class="fas fa-users mr-2"></i> Users
-            <% end %>
-
-            <%= link_to admin_leaderboards_path, class: "mobile-nav-item px-4 py-2 rounded-lg w-64 text-center" do %>
-              <i class="fas fa-list-ol mr-2"></i> Leaderboards
-            <% end %>
-
-            <%= link_to admin_matches_path, class: "mobile-nav-item px-4 py-2 rounded-lg w-64 text-center" do %>
-              <i class="fas fa-trophy mr-2"></i> Matches
-            <% end %>
-
-            <%= link_to root_path, class: "mobile-nav-item px-4 py-2 rounded-lg w-64 text-center" do %>
-              <i class="fas fa-arrow-left mr-2"></i> Back to App
-            <% end %>
-
-            <%= link_to destroy_user_session_path, method: :delete, class: "mobile-nav-item px-4 py-2 rounded-lg w-64 text-center bg-pink-600" do %>
-              <i class="fas fa-sign-out-alt mr-2"></i> Sign Out
-            <% end %>
-          </div>
+      <!-- User Info -->
+      <div class="flex items-center mb-6 pb-4 border-b border-white/5">
+        <div class="bg-slate-700 rounded-full w-12 h-12 flex items-center justify-center border border-white/10">
+          <i class="fas fa-user text-white/70 text-xl"></i>
+        </div>
+        <div class="ml-3">
+          <div class="font-medium text-white"><%= current_user.username %></div>
+          <div class="text-sm text-white/60">View Profile</div>
         </div>
       </div>
+
+      <!-- Nav Items -->
+      <%= render 'shared/nav_link', text: 'Home', path: authenticated_root_path, icon: 'fa-home', extra_classes: 'mobile-nav-item mb-1' %>
+      <%= render 'shared/nav_link', text: 'Explore', path: organizations_path, icon: 'fa-search', extra_classes: 'mobile-nav-item mb-1' %>
+      <%= render 'shared/nav_link', text: 'My Organizations', path: account_organizations_path, icon: 'fa-users', extra_classes: 'mobile-nav-item mb-1' %>
+      <%= render 'shared/nav_link', text: 'Matches', path: matches_path, icon: 'fa-trophy', extra_classes: 'mobile-nav-item mb-1' %>
+      <%= render 'shared/nav_link', text: 'Log Match', path: new_match_path, icon: 'fa-plus', extra_classes: 'mobile-nav-item mb-1' %>
+
+      <div class="border-t border-white/10 my-4"></div>
+
+      <%= render 'shared/nav_link', text: 'Settings', path: '#', icon: 'fa-cog', extra_classes: 'mobile-nav-item mb-1' %>
+
+      <%= button_to destroy_user_session_path, method: :delete,
+                    class: "block py-3 px-4 text-red-400 rounded-md transition-all duration-300 hover:bg-slate-700/50 hover:text-red-300 mb-1 w-full text-left" do %>
+        <i class="fas fa-sign-out-alt mr-3 w-6 text-center"></i> Logout
+      <% end %>
     </div>
   </div>
-</div>
-
-<!-- Main content -->
-<div class="flex-1 md:ml-64 pt-16 md:pt-0">
-  <div class="p-6 md:p-10">
-    <%= render "shared/flash_messages" %>
-
-    <% if content_for?(:admin_header) %>
-      <div class="mb-8">
-        <%= yield :admin_header %>
-      </div>
-    <% end %>
-
-    <%= yield %>
+<% else %>
+  <!-- Guest Links (for mobile) -->
+  <div class="md:hidden flex gap-2">
+    <%= render 'shared/nav_link', text: 'Explore', path: organizations_path, icon: 'fa-search', extra_classes: 'mobile-nav-item' %>
+    <%= render 'shared/nav_link', text: 'Sign In', path: new_user_session_path, icon: 'fa-sign-in-alt', extra_classes: 'mobile-nav-item' %>
+    <%= render 'shared/nav_link', text: 'Sign Up', path: new_user_registration_path, icon: 'fa-user-plus', extra_classes: 'mobile-nav-item' %>
   </div>
-</div>
-
-<!-- Toast container for notifications -->
-<div id="toast-container" data-controller="toast" class="fixed top-4 right-4 z-50 flex flex-col items-end"></div>
-</body>
-</html>
+<% end %>

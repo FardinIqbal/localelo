@@ -1,34 +1,23 @@
-<footer class="bg-slate-800/90 backdrop-blur-sm py-8 mt-12">
-  <div class="container mx-auto px-4">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-      <div>
-        <h3 class="text-xl font-bold mb-4"><span class="text-pink-500">ELO</span>Tracker</h3>
-        <p class="text-gray-400">Track your competitive rankings across multiple organizations and leaderboards.</p>
-      </div>
-      <div>
-        <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
-        <ul class="space-y-2">
-          <li><%= link_to "Home", root_path, class: "text-gray-400 hover:text-white" %></li>
-          <li><%= link_to "Organizations", organizations_path, class: "text-gray-400 hover:text-white" %></li>
-          <li><%= link_to "Matches", matches_path, class: "text-gray-400 hover:text-white" %></li>
-        </ul>
-      </div>
-      <div>
-        <h3 class="text-lg font-semibold mb-4">Account</h3>
-        <ul class="space-y-2">
-          <% if user_signed_in? %>
-            <li><%= link_to "Profile", user_profile_path, class: "text-gray-400 hover:text-white" %></li>
-            <li><%= link_to "My Organizations", account_organizations_path, class: "text-gray-400 hover:text-white" %></li>
-            <li><%= link_to "Sign Out", destroy_user_session_path, method: :delete, class: "text-gray-400 hover:text-white" %></li>
-          <% else %>
-            <li><%= link_to "Sign In", new_user_session_path, class: "text-gray-400 hover:text-white" %></li>
-            <li><%= link_to "Sign Up", new_user_registration_path, class: "text-gray-400 hover:text-white" %></li>
-          <% end %>
-        </ul>
-      </div>
-    </div>
-    <div class="border-t border-slate-700 mt-8 pt-8 text-center text-gray-500">
-      <p>&copy; <%= Date.current.year %> ELO Tracker. All rights reserved.</p>
-    </div>
+<%# Bottom Navigation for Mobile (visible only when signed in) %>
+<div
+  id="bottom-nav"
+  class="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900/80 backdrop-blur-xl z-40 shadow-lg h-16 rounded-t-2xl transition-transform duration-300 border-t border-white/10"
+  data-controller="bottom-nav"
+>
+  <div class="flex justify-around items-center h-full">
+    <%= render 'shared/nav_link', text: 'Home', path: authenticated_root_path, icon: 'fa-home', extra_classes: 'flex flex-col items-center text-white/60 w-1/5 text-xs hover:text-pink-500' %>
+
+    <%= render 'shared/nav_link', text: 'Explore', path: organizations_path, icon: 'fa-search', extra_classes: 'flex flex-col items-center text-white/60 w-1/5 text-xs hover:text-pink-500' %>
+
+    <%= link_to new_match_path,
+                class: "flex items-center justify-center rounded-full shadow-lg text-white w-14 h-14 -mt-7
+                   bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-500 hover:to-pink-400
+                   shadow-purple-500/20 hover:shadow-purple-500/40 transform hover:scale-105" do %>
+      <i class="fas fa-plus"></i>
+    <% end %>
+
+    <%= render 'shared/nav_link', text: 'My Orgs', path: account_organizations_path, icon: 'fa-users', extra_classes: 'flex flex-col items-center text-white/60 w-1/5 text-xs hover:text-pink-500' %>
+
+    <%= render 'shared/nav_link', text: 'Profile', path: user_path(current_user), icon: 'fa-user', extra_classes: 'flex flex-col items-center text-white/60 w-1/5 text-xs hover:text-pink-500' %>
   </div>
-</footer>
+</div>

@@ -1,22 +1,22 @@
-// app/javascript/controllers/flash_controller.js
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
+    static targets = ["message"]
+
     connect() {
-        // Auto-dismiss after 5 seconds
-        setTimeout(() => {
-            this.dismiss()
-        }, 5000)
+        this.messageTargets.forEach((el) => {
+            setTimeout(() => this.fadeOut(el), 5000)
+        })
     }
 
-    dismiss() {
-        this.element.style.opacity = "0"
-        setTimeout(() => {
-            this.element.remove()
-        }, 500)
+    close(event) {
+        const el = event.target.closest(".flash-message")
+        if (el) this.fadeOut(el)
     }
 
-    close() {
-        this.dismiss()
+    fadeOut(el) {
+        el.classList.remove("opacity-100", "translate-y-0")
+        el.classList.add("opacity-0", "-translate-y-2")
+        setTimeout(() => el.remove(), 500)
     }
 }

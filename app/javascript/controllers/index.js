@@ -1,37 +1,31 @@
-// app/javascript/controllers/index.js
+// Entry point for Stimulus controllers
 import { application } from "./application"
 
-// Import your controllers
-import MobileMenuController from "./mobile_menu_controller"
+// === General Controllers ===
 import FlashController from "./flash_controller"
-import NavigationController from "./navigation_controller"
 import ToastController from "./toast_controller"
+import HelloController from "./hello_controller"
+
+// === Navigation Controllers ===
+import NavigationController from "./navigation_controller"
+import MobileMenuController from "./mobile_menu_controller"
+import ProfileDropdownController from "./profile_dropdown_controller"
+
+// === Optional / Future (uncomment when needed)
+// import TableController from "./table_controller"
+// import TooltipController from "./tooltip_controller"
+// import BottomNavController from "./bottom_nav_controller"
 
 // Register controllers
-application.register("mobile-menu", MobileMenuController)
 application.register("flash", FlashController)
-application.register("navigation", NavigationController)
 application.register("toast", ToastController)
+application.register("hello", HelloController)
 
-// Register global toast function
-window.showToast = function(message, type = 'info') {
-    const event = new CustomEvent('toast:show', {
-        detail: { message, type }
-    })
-    document.getElementById('toast-container').dispatchEvent(event)
-}
+application.register("navigation", NavigationController)
+application.register("mobile-menu", MobileMenuController)
+application.register("profile-dropdown", ProfileDropdownController)
 
-// Add event listener for toast:show events
-document.addEventListener('DOMContentLoaded', () => {
-    const toastContainer = document.getElementById('toast-container')
-    if (toastContainer) {
-        toastContainer.addEventListener('toast:show', (event) => {
-            const controller = application.getControllerForElementAndIdentifier(
-                toastContainer, 'toast'
-            )
-            if (controller) {
-                controller.show(event)
-            }
-        })
-    }
-})
+// Uncomment to enable these:
+// application.register("table", TableController)
+// application.register("tooltip", TooltipController)
+// application.register("bottom-nav", BottomNavController)
