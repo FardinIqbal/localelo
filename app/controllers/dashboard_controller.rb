@@ -59,6 +59,9 @@ class DashboardController < ApplicationController
                                           .limit(1)
                                           .first
 
+    # Ensure @organization is assigned
+    @organization = @most_active_leaderboard&.organization
+
     # Get upcoming matches if you have a scheduling feature
     @upcoming_matches = Match.where("(user1_id = ? OR opponent_id = ?) AND match_time > ?",
                                     @user.id, @user.id, Time.now)
