@@ -8,29 +8,32 @@ class DashboardController < ApplicationController
     @user = current_user
 
     # == Organizations and Leaderboards ==
-    # Load all organizations the user is part of. We eager-load their leaderboards
-    # and ratings to avoid N+1 queries.
     @organizations = current_user.organizations
                                  .includes(leaderboards: :leaderboard_ratings)
                                  .order(created_at: :desc)
 
-    # == Match History ==
-    # Shows the 10 most recent matches involving the user (either as user1 or opponent).
-    @recent_matches = Match.where("user1_id = ? OR opponent_id = ?", @user.id, @user.id)
-                           .includes(:leaderboard, :user1, :opponent)
-                           .order(created_at: :desc)
-                           .limit(10)
+    # == Match History (Recent Activity Partial) ==
+    @recent_matches_all = Match
+                            .joins(:leaderboard)
+                            .where(leaderboards: { organization_id: current_user.organization_ids })
+                            .includes(:user1, :opponent, leaderboard: :organization)
+                            .order(match_time: :desc)
+                            .limit(20)
+
+    @recent_matches_mine = Match
+                             .where("user1_id = :id OR opponent_id = :id", id: current_user.id)
+                             .includes(:user1, :opponent, leaderboard: :organization)
+                             .order(match_time: :desc)
+                             .limit(20)
 
     @pending_matches = Match.where("(user1_id = :id OR opponent_id = :id) AND verified = false", id: current_user.id)
                             .order(created_at: :desc)
                             .limit(10)
 
-
     # == Elo History for Visualization (used by Stimulus or Turbo frame refreshes) ==
     @time_period = params[:period] || '30'
     period_days = @time_period == 'all' ? 365 : @time_period.to_i
 
-    # NOTE: EloHistory uses 'recorded_at', not 'created_at'.
     @elo_history = EloHistory.where(user_id: @user.id)
                              .where("recorded_at >= ?", period_days.days.ago)
                              .order(:recorded_at)
@@ -52,7 +55,6 @@ class DashboardController < ApplicationController
     @win_loss_ratio = @total_losses > 0 ? (@total_wins.to_f / @total_losses).round(2) : (@total_wins > 0 ? "∞" : "0.0")
 
     # == Match Activity Trend (30d vs previous 30d) ==
-    # Uses match_time instead of created_at to reflect actual event dates.
     current_period_matches = Match.where("(user1_id = ? OR opponent_id = ?) AND match_time >= ?", @user.id, @user.id, 30.days.ago).count
     previous_period_matches = Match.where("(user1_id = ? OR opponent_id = ?) AND match_time >= ? AND match_time < ?", @user.id, @user.id, 60.days.ago, 30.days.ago).count
 
@@ -61,7 +63,6 @@ class DashboardController < ApplicationController
                      (current_period_matches > 0 ? 100 : 0)
 
     # == Most Active Leaderboard ==
-    # This highlights the leaderboard where the user has the most matches played.
     @most_active_leaderboard = Leaderboard.joins(:matches)
                                           .where(matches: { user1_id: @user.id })
                                           .or(Leaderboard.joins(:matches).where(matches: { opponent_id: @user.id }))
@@ -72,7 +73,7 @@ class DashboardController < ApplicationController
 
     @organization = @most_active_leaderboard&.organization
 
-    # == Optional: Upcoming Matches (for countdown display or reminders) ==
+    # == Optional: Upcoming Matches ==
     @upcoming_matches = Match.where("(user1_id = ? OR opponent_id = ?) AND match_time > ?", @user.id, @user.id, Time.now)
                              .order(match_time: :asc)
                              .limit(3)
@@ -80,7 +81,7 @@ class DashboardController < ApplicationController
     # == Tips and Guidance ==
     @tips = generate_personalized_tips
 
-    # == Optional: Top 5 Users Globally (by highest rating across any leaderboard) ==
+    # == Optional: Top 5 Users Globally ==
     @top_players = User.joins(:leaderboard_ratings)
                        .select("users.*, MAX(leaderboard_ratings.rating) as highest_rating")
                        .group("users.id")
@@ -89,14 +90,12 @@ class DashboardController < ApplicationController
 
     respond_to do |format|
       format.html
-      format.json { render json: { elo_history: @elo_history } } # Used for Stimulus-powered chart refreshes
+      format.json { render json: { elo_history: @elo_history } }
     end
   end
 
   private
 
-  # == Tips Engine ==
-  # Dynamically builds a list of suggestions or encouragements
   def generate_personalized_tips
     tips = []
 
@@ -125,7 +124,6 @@ class DashboardController < ApplicationController
     tips.sample || "Play consistently to improve your Elo rating. Your highest rating is currently #{@highest_elo}."
   end
 
-  # == Performance Stats ==
   def performance
     @user = current_user
 
@@ -153,6 +151,4 @@ class DashboardController < ApplicationController
       end
     end
   end
-
-
 end

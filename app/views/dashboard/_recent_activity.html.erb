@@ -1,45 +1,34 @@
+<div data-controller="toggle" class="space-y-2">
+  <!-- Toggle Buttons -->
+  <div role="tablist" class="flex gap-2">
+    <button type="button"
+            data-action="toggle#switch"
+            data-toggle-target="all"
+            aria-selected="<%= params[:view] != 'mine' %>"
+            class="btn">
+      <%= t("dashboard.recent_activity.all") %>
+    </button>
 
-<!-- app/views/dashboard/_recent_activity.html.erb -->
-
-<%# ============================================================ %>
-<%# Partial: _recent_activity.html.erb                          %>
-<%# Purpose: Section with buttons to toggle "All" vs "Mine"    %>
-<%# recent matches + Turbo Frame for polling and updates       %>
-<%# ============================================================ %>
-
-<section data-controller="recent-toggle"
-         data-recent-toggle-url-base-value="<%= recent_matches_path %>"
-         class="bg-slate-800 rounded-xl shadow-lg border border-slate-700">
-  <div class="flex justify-between items-center p-4">
-    <h2 class="text-xl font-bold" id="recent-matches-label">
-      <%= t("dashboard.recent_activity") %>
-    </h2>
-
-    <!-- Toggle Buttons for "All" vs "Mine" -->
-    <div class="space-x-2">
-      <button data-action="recent-toggle#showAll"
-              data-recent-toggle-target="allButton"
-              class="text-sm px-3 py-1 rounded bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
-              aria-pressed="true" aria-label="Show All Activity">
-        <%= t("dashboard.toggle.all") %>
-      </button>
-
-      <button data-action="recent-toggle#showMine"
-              data-recent-toggle-target="mineButton"
-              class="text-sm px-3 py-1 rounded bg-slate-700 hover:bg-slate-600 focus:outline-none"
-              aria-pressed="false" aria-label="Show My Matches">
-        <%= t("dashboard.toggle.mine") %>
-      </button>
-    </div>
+    <button type="button"
+            data-action="toggle#switch"
+            data-toggle-target="mine"
+            aria-selected="<%= params[:view] == 'mine' %>"
+            class="btn">
+      <%= t("dashboard.recent_activity.mine") %>
+    </button>
   </div>
 
-  <!-- Turbo Frame: Automatically polls + allows dynamic toggle -->
-  <%= turbo_frame_tag "recent_matches", data: {
-    controller: "poll",
-    poll_url_value: recent_matches_path, # Handles dynamic polling updates
-    poll_interval_value: 30000,          # 30s interval for updates
-    recent_toggle_target: "frame"
-  } do %>
-    <%= render "dashboard/recent_match_list", matches: @recent_matches %>
+  <!-- Turbo Frame: recent match list -->
+  <%= turbo_frame_tag "recent_activity" do %>
+    <% matches = params[:view] == "mine" ? @recent_matches_mine : @recent_matches_all %>
+    <% if matches.any? %>
+      <div class="space-y-2">
+        <% matches.each do |match| %>
+          <%= render partial: "dashboard/match_card", locals: { match: match, current_user: current_user } %>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="text-muted"><%= t("dashboard.empty_states.no_matches") %></p>
+    <% end %>
   <% end %>
-</section>
+</div>

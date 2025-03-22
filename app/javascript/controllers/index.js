@@ -48,5 +48,6 @@ import PollController from "./poll_controller"
 application.register("poll", PollController)
 import VerifyMatchController from "./verify_match_controller"
 application.register("verify-match", VerifyMatchController)
-import RecentMatchesController from "./recent_toggle_controller"
-application.register("recent-toggle", RecentMatchesController)
+import ToggleController from "./toggle_controller"
+
+application.register("toggle", ToggleController)

@@ -1,0 +1,36 @@
+<div class="p-3 rounded-xl shadow border bg-white dark:bg-gray-900">
+  <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
+    <!-- Player Info -->
+    <div class="text-sm">
+      <% user1 = match.user1 %>
+      <% opponent = match.opponent %>
+
+      <strong><%= user1 == current_user ? t("you") : user1.username %></strong>
+      vs
+      <strong><%= opponent == current_user ? t("you") : opponent.username %></strong>
+
+      <% if match.is_draw %>
+        <span class="ml-2 text-xs text-yellow-600">(<%= t("dashboard.match.draw") %>)</span>
+      <% elsif match.winner_id.present? %>
+        <span class="ml-2 text-xs text-green-600">
+          (<%= t("dashboard.match.winner") %>: <%= match.winner_id == current_user.id ? t("you") : User.find(match.winner_id).username %>)
+        </span>
+      <% end %>
+    </div>
+
+    <!-- Match Meta -->
+    <div class="text-xs text-gray-500 dark:text-gray-400">
+      <%= match.match_time&.strftime("%b %d, %Y") %> &middot;
+      <%= match.leaderboard.organization.name %>
+    </div>
+  </div>
+
+  <!-- Status or Action -->
+  <div class="mt-1 text-xs">
+    <% if match.verified? %>
+      <span class="text-green-700"><%= t("dashboard.match.verified") %></span>
+    <% else %>
+      <span class="text-red-600"><%= t("dashboard.match.unverified") %></span>
+    <% end %>
+  </div>
+</div>
