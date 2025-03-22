@@ -1,0 +1,47 @@
+<!--app/views/dashboard/_match_verifications.html.erb-->
+<% if matches.any? %>
+  <ul class="divide-y divide-slate-700" role="list" aria-label="<%= t('dashboard.matches_to_verify.title') %>">
+    <% matches.each do |match| %>
+      <li id="verify_match_<%= match.id %>" class="p-4" data-controller="verify-match" data-verify-match-id-value="<%= match.id %>">
+        <div class="flex flex-col md:flex-row justify-between md:items-center">
+          <div class="space-y-1">
+            <p class="text-sm">
+              <%= t("dashboard.matches_to_verify.logged_by",
+                    user: match.user1.username,
+                    time: l(match.match_time, format: :short)) %>
+            </p>
+            <p class="text-sm text-slate-300">
+              <strong><%= t("dashboard.matches_to_verify.claimed_winner") %>:</strong>
+              <%= match.winner_id == current_user.id ? t("dashboard.matches_to_verify.you") : match.user1.username %>
+            </p>
+            <p class="text-sm text-slate-400">
+              <%= t("dashboard.matches_to_verify.leaderboard") %>: <%= match.leaderboard.name %>
+            </p>
+          </div>
+
+          <div class="flex space-x-2 mt-3 md:mt-0">
+            <button
+              type="button"
+              class="px-3 py-1 rounded bg-green-600 hover:bg-green-700 text-sm font-medium"
+              data-action="click->verify-match#confirmVerify"
+              aria-label="<%= t('dashboard.actions.verify') %>">
+              <%= t("dashboard.actions.verify") %>
+            </button>
+
+            <button
+              type="button"
+              class="px-3 py-1 rounded bg-red-600 hover:bg-red-700 text-sm font-medium"
+              data-action="click->verify-match#confirmDeny"
+              aria-label="<%= t('dashboard.actions.deny') %>">
+              <%= t("dashboard.actions.deny") %>
+            </button>
+          </div>
+        </div>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <div class="text-center text-slate-400 py-12" role="status">
+    <p><%= t("dashboard.matches_to_verify.empty") %></p>
+  </div>
+<% end %>
