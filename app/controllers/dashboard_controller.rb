@@ -18,13 +18,13 @@ class DashboardController < ApplicationController
                             .where(leaderboards: { organization_id: current_user.organization_ids })
                             .includes(:user1, :opponent, leaderboard: :organization)
                             .order(match_time: :desc)
-                            .limit(20)
+                            .limit(5)
 
     @recent_matches_mine = Match
                              .where("user1_id = :id OR opponent_id = :id", id: current_user.id)
                              .includes(:user1, :opponent, leaderboard: :organization)
                              .order(match_time: :desc)
-                             .limit(20)
+                             .limit(5)
 
     @pending_matches = Match.where("(user1_id = :id OR opponent_id = :id) AND verified = false", id: current_user.id)
                             .order(created_at: :desc)

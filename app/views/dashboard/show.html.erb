@@ -1,45 +1,56 @@
-<!--
-  NEW DASHBOARD VIEW FOR LOCALELO
-  ======================================
-  Purpose: This is the user's main landing page after login. It shows:
-  - Matches to verify (if someone logged a match with you as opponent)
-  - Recent match activity across all organizations you are part of
-  - Leaderboard spotlight (most active leaderboard)
-  - Roadmap / teaser box (optional future-facing section)
-
-  DESIGN GOALS:
-  -------------
-  - Mobile-first layout with desktop enhancements
-  - Only show essential, actionable user info
-  - Use Turbo Streams for live updates (no reload)
-  - Use Stimulus for toggles and polling fallback
-  - Strong accessibility (ARIA support, keyboard nav)
-  - Empty states for all components
-  - i18n-ready (all text wrapped in translation keys)
+<!-- REVAMPED DASHBOARD VIEW FOR LOCALELO ===================================
+     Purpose: A visually rich, mobile-first landing page with all the new partials
+     integrated and enhanced using design from the older dashboard.
 -->
 
-<div class="relative min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white">
-  <div class="relative z-10 max-w-5xl mx-auto px-4 py-6 space-y-8">
+<div class="relative min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white overflow-x-hidden">
 
-    <!-- Matches to Verify (Live via Turbo Streams) -->
-    <!-- This section no longer uses turbo-frame because we rely on turbo_stream_from and DOM targeting instead -->
-    <!-- Turbo Stream updates from the server will dynamically remove <li id="verify_match_#{match.id}"> -->
-    <%= render "dashboard/match_verifications", matches: @pending_matches %>
+  <!-- Decorative Background Elements -->
+  <div class="absolute -top-20 -right-20 w-96 h-96 bg-purple-600/10 rounded-full filter blur-3xl animate-pulse-slow z-0"></div>
+  <div class="absolute -bottom-20 -left-20 w-64 h-64 bg-pink-600/10 rounded-full filter blur-3xl animate-pulse-slow z-0" style="animation-delay: 1.5s;"></div>
 
-    <!-- Recent Activity (Toggle between All and Mine) -->
-    <!-- This pulls in the full <section> with Stimulus controller, buttons, and turbo frame -->
-    <%= render "dashboard/recent_activity", matches: @recent_matches %>
+  <!-- Main Content -->
+  <div class="relative z-10 max-w-7xl mx-auto px-4 py-6 space-y-8">
 
-    <!-- Leaderboard Spotlight (Most Active) -->
-    <!-- IMPLEMENTATION LATER -->
+    <!-- Welcome Header -->
+    <%= render "dashboard/welcome_header" %>
 
-    <!-- Roadmap / Feature Teaser (Optional future section) -->
-    <!-- IMPLEMENTATION LATER -->
+    <!-- Quick Actions -->
+    <%= render "dashboard/quick_actions" %>
+
+    <!-- Stat Cards Row -->
+    <%= render "dashboard/performance_stats" %>
+
+    <!-- Match Verifications -->
+    <div class="bg-slate-800/70 rounded-xl border border-slate-700">
+      <%= render "dashboard/match_verifications", matches: @pending_matches %>
+    </div>
+
+    <!-- My Organizations -->
+    <div class="bg-slate-800/70 rounded-xl border border-slate-700">
+      <%= render "dashboard/my_organizations" %>
+    </div>
+
+    <!-- Recent Activity Toggle + Match Feed -->
+    <div class="bg-slate-800/70 rounded-xl border border-slate-700">
+      <%= render "dashboard/recent_activity" %>
+    </div>
+
+    <!-- Leaderboard Spotlight -->
+    <div class="bg-slate-800/70 rounded-xl border border-slate-700">
+      <%= render "dashboard/leaderboard_spotlight" %>
+    </div>
+
+    <!-- Roadmap / Teaser -->
+    <div class="bg-slate-800/70 rounded-xl border border-slate-700">
+      <%= render "dashboard/roadmap_teaser" %>
+    </div>
 
   </div>
 
-  <!-- Turbo Stream subscriptions -->
-  <!-- Enables real-time updates for both verifications and activity -->
-  <%= turbo_stream_from "user_#{current_user.id}_verifications" %>
-  <%= turbo_stream_from "user_#{current_user.id}_activity" %>
+  <!-- Turbo Stream Channels -->
+  <%= turbo_stream_from "user_#{current_user.id}verifications" %>
+  <%= turbo_stream_from "user#{current_user.id}activity" %>
+  <%= turbo_stream_from "user#{current_user.id}_organizations" %>
+
 </div>

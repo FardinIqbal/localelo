@@ -1,0 +1,45 @@
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+  <!-- Total Matches -->
+  <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
+    <div class="text-sm text-slate-400">Total Matches</div>
+    <div class="text-2xl font-bold text-white mt-1">
+      <%= @total_wins + @total_losses %>
+    </div>
+    <div class="mt-2 text-xs text-purple-400">
+      <i class="fas fa-chart-line mr-1"></i> All time
+    </div>
+  </div>
+
+  <!-- Win/Loss Ratio -->
+  <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
+    <div class="text-sm text-slate-400">Win/Loss Ratio</div>
+    <div class="text-2xl font-bold text-white mt-1">
+      <%= @win_loss_ratio %>
+    </div>
+    <div class="mt-2 text-xs text-pink-400">
+      <i class="fas fa-trophy mr-1"></i> <%= @total_wins %> W / <%= @total_losses %> L
+    </div>
+  </div>
+
+  <!-- Highest Elo -->
+  <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
+    <div class="text-sm text-slate-400">Highest Elo</div>
+    <div class="text-2xl font-bold text-white mt-1">
+      <%= @highest_elo %>
+    </div>
+    <div class="mt-2 text-xs text-purple-400">
+      <i class="fas fa-medal mr-1"></i> Peak rating
+    </div>
+  </div>
+
+  <!-- Average Elo -->
+  <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
+    <div class="text-sm text-slate-400">Average Elo</div>
+    <div class="text-2xl font-bold text-white mt-1">
+      <%= @average_elo %>
+    </div>
+    <div class="mt-2 text-xs text-pink-400">
+      <i class="fas fa-calculator mr-1"></i> Across all gyms
+    </div>
+  </div>
+</div>

@@ -1,34 +1,52 @@
-<div data-controller="toggle" class="space-y-2">
-  <!-- Toggle Buttons -->
-  <div role="tablist" class="flex gap-2">
-    <button type="button"
-            data-action="toggle#switch"
-            data-toggle-target="all"
-            aria-selected="<%= params[:view] != 'mine' %>"
-            class="btn">
-      <%= t("dashboard.recent_activity.all") %>
-    </button>
+<!-- _recent_activity.html.erb -->
+<div class="p-6" data-controller="toggle">
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+      Recent Activity
+    </h2>
 
-    <button type="button"
-            data-action="toggle#switch"
-            data-toggle-target="mine"
-            aria-selected="<%= params[:view] == 'mine' %>"
-            class="btn">
-      <%= t("dashboard.recent_activity.mine") %>
-    </button>
+    <!-- Toggle Buttons -->
+    <div role="tablist" class="flex gap-2">
+      <button type="button"
+              data-action="toggle#switch"
+              data-toggle-target="all"
+              aria-selected="<%= params[:view] != 'mine' %>"
+              class="px-4 py-2 rounded-lg <%= params[:view] != 'mine' ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium' : 'bg-slate-700 text-slate-300' %> hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+        <i class="fas fa-globe mr-2"></i> <%= t("dashboard.recent_activity.all") %>
+      </button>
+
+      <button type="button"
+              data-action="toggle#switch"
+              data-toggle-target="mine"
+              aria-selected="<%= params[:view] == 'mine' %>"
+              class="px-4 py-2 rounded-lg <%= params[:view] == 'mine' ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium' : 'bg-slate-700 text-slate-300' %> hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+        <i class="fas fa-user mr-2"></i> <%= t("dashboard.recent_activity.mine") %>
+      </button>
+    </div>
   </div>
 
   <!-- Turbo Frame: recent match list -->
   <%= turbo_frame_tag "recent_activity" do %>
     <% matches = params[:view] == "mine" ? @recent_matches_mine : @recent_matches_all %>
-    <% if matches.any? %>
-      <div class="space-y-2">
+
+    <% if matches.present? %>
+      <div class="space-y-3">
         <% matches.each do |match| %>
           <%= render partial: "dashboard/match_card", locals: { match: match, current_user: current_user } %>
         <% end %>
       </div>
     <% else %>
-      <p class="text-muted"><%= t("dashboard.empty_states.no_matches") %></p>
+      <div class="flex flex-col items-center justify-center py-10 text-slate-400">
+        <div class="w-20 h-20 rounded-full bg-slate-800/70 flex items-center justify-center mb-4">
+          <i class="fas fa-trophy text-3xl text-purple-400/70"></i>
+        </div>
+        <p class="text-lg"><%= t("dashboard.empty_states.no_matches") %></p>
+
+        <%= link_to new_match_path,
+                    class: "mt-4 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:shadow-lg hover:shadow-purple-500/20 transition-all transform hover:-translate-y-0.5" do %>
+          <i class="fas fa-plus mr-2"></i> Log Your First Match
+        <% end %>
+      </div>
     <% end %>
   <% end %>
 </div>

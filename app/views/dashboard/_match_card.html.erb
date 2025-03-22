@@ -1,36 +1,109 @@
-<div class="p-3 rounded-xl shadow border bg-white dark:bg-gray-900">
-  <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
-    <!-- Player Info -->
-    <div class="text-sm">
-      <% user1 = match.user1 %>
-      <% opponent = match.opponent %>
-
-      <strong><%= user1 == current_user ? t("you") : user1.username %></strong>
-      vs
-      <strong><%= opponent == current_user ? t("you") : opponent.username %></strong>
-
-      <% if match.is_draw %>
-        <span class="ml-2 text-xs text-yellow-600">(<%= t("dashboard.match.draw") %>)</span>
-      <% elsif match.winner_id.present? %>
-        <span class="ml-2 text-xs text-green-600">
-          (<%= t("dashboard.match.winner") %>: <%= match.winner_id == current_user.id ? t("you") : User.find(match.winner_id).username %>)
+<div class="bg-slate-800 rounded-lg p-5 border border-slate-700 hover:border-purple-500/50 transition-all group shadow-lg">
+  <div class="flex justify-between items-center">
+    <!-- Players Section -->
+    <div class="flex items-center space-x-2">
+      <!-- Player 1 -->
+      <div class="flex flex-col items-center relative">
+        <div class="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center mb-1.5 text-lg font-bold <%= match.user1_id == current_user.id ? 'ring-2 ring-purple-400' : '' %> <%= match.winner_id == match.user1_id ? 'ring-2 ring-green-400' : '' %>">
+          <%= match.user1.first_name&.first || match.user1.username.first %>
+          <% if match.winner_id == match.user1_id %>
+            <div class="absolute -top-1 -right-1 bg-green-500 rounded-full w-5 h-5 flex items-center justify-center">
+              <i class="fas fa-crown text-xs text-white"></i>
+            </div>
+          <% end %>
+        </div>
+        <span class="text-sm font-medium truncate max-w-[80px] text-center">
+          <%= match.user1.first_name || match.user1.username %>
         </span>
+      </div>
+
+      <!-- VS Indicator with Score -->
+      <div class="flex flex-col items-center mx-3 bg-slate-700/50 px-4 py-2 rounded-lg">
+        <% if match.is_draw %>
+          <div class="text-yellow-400 font-bold text-lg">DRAW</div>
+        <% elsif match.winner_id.present? %>
+          <div class="flex items-center">
+            <span class="font-bold text-lg <%= match.winner_id == match.user1_id ? 'text-green-400' : 'text-slate-400' %>">1</span>
+            <span class="mx-2 text-slate-400 font-bold">:</span>
+            <span class="font-bold text-lg <%= match.winner_id == match.opponent_id ? 'text-green-400' : 'text-slate-400' %>">1</span>
+          </div>
+        <% else %>
+          <div class="text-slate-400 font-bold">VS</div>
+          <span class="text-xs px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 mt-1">In Progress</span>
+        <% end %>
+      </div>
+
+      <!-- Player 2 -->
+      <div class="flex flex-col items-center relative">
+        <div class="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center mb-1.5 text-lg font-bold <%= match.opponent_id == current_user.id ? 'ring-2 ring-purple-400' : '' %> <%= match.winner_id == match.opponent_id ? 'ring-2 ring-green-400' : '' %>">
+          <%= match.opponent.first_name&.first || match.opponent.username.first %>
+          <% if match.winner_id == match.opponent_id %>
+            <div class="absolute -top-1 -right-1 bg-green-500 rounded-full w-5 h-5 flex items-center justify-center">
+              <i class="fas fa-crown text-xs text-white"></i>
+            </div>
+          <% end %>
+        </div>
+        <span class="text-sm font-medium truncate max-w-[80px] text-center">
+          <%= match.opponent.first_name || match.opponent.username %>
+        </span>
+      </div>
+    </div>
+
+    <!-- Match Info Section -->
+    <div class="flex flex-col items-end">
+      <!-- Match Result for Current User -->
+      <% if match.winner_id.present? %>
+        <% if match.winner_id == current_user.id %>
+          <div class="flex items-center bg-green-500/20 text-green-400 px-4 py-1.5 rounded-full">
+            <i class="fas fa-trophy mr-2"></i>
+            <span class="font-medium">Victory</span>
+            <% if match.elo_change.present? %>
+              <span class="ml-2 bg-green-400/30 px-2 py-0.5 rounded-full text-sm">+<%= match.elo_change.abs %> ELO</span>
+            <% end %>
+          </div>
+        <% elsif (match.user1_id == current_user.id || match.opponent_id == current_user.id) && !match.is_draw %>
+          <div class="flex items-center bg-red-500/20 text-red-400 px-4 py-1.5 rounded-full">
+            <i class="fas fa-times mr-2"></i>
+            <span class="font-medium">Defeat</span>
+            <% if match.elo_change.present? %>
+              <span class="ml-2 bg-red-400/30 px-2 py-0.5 rounded-full text-sm">-<%= match.elo_change.abs %> ELO</span>
+            <% end %>
+          </div>
+        <% elsif match.is_draw %>
+          <div class="flex items-center bg-yellow-500/20 text-yellow-400 px-4 py-1.5 rounded-full">
+            <i class="fas fa-handshake mr-2"></i>
+            <span class="font-medium">Draw</span>
+            <% if match.elo_change.present? %>
+              <span class="ml-2 bg-yellow-400/30 px-2 py-0.5 rounded-full text-sm"><%= match.elo_change %> ELO</span>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="flex items-center bg-slate-600/50 px-4 py-1.5 rounded-full">
+            <% if match.winner_id == match.user1_id %>
+              <span class="font-medium text-green-400"><%= match.user1.first_name || match.user1.username %></span>
+              <span class="text-slate-400 mx-2">defeated</span>
+              <span class="font-medium text-slate-300"><%= match.opponent.first_name || match.opponent.username %></span>
+            <% else %>
+              <span class="font-medium text-green-400"><%= match.opponent.first_name || match.opponent.username %></span>
+              <span class="text-slate-400 mx-2">defeated</span>
+              <span class="font-medium text-slate-300"><%= match.user1.first_name || match.user1.username %></span>
+            <% end %>
+          </div>
+        <% end %>
       <% end %>
-    </div>
 
-    <!-- Match Meta -->
-    <div class="text-xs text-gray-500 dark:text-gray-400">
-      <%= match.match_time&.strftime("%b %d, %Y") %> &middot;
-      <%= match.leaderboard.organization.name %>
-    </div>
-  </div>
+      <!-- Verification Status -->
+      <% unless match.verified? %>
+        <div class="flex items-center text-orange-400 mt-2 bg-orange-500/10 px-3 py-1 rounded-full text-sm">
+          <i class="fas fa-exclamation-circle mr-1.5"></i> Awaiting verification
+        </div>
+      <% end %>
 
-  <!-- Status or Action -->
-  <div class="mt-1 text-xs">
-    <% if match.verified? %>
-      <span class="text-green-700"><%= t("dashboard.match.verified") %></span>
-    <% else %>
-      <span class="text-red-600"><%= t("dashboard.match.unverified") %></span>
-    <% end %>
+      <!-- Match Details -->
+      <div class="flex items-center text-xs text-slate-400 mt-2">
+        <span class="bg-slate-700 px-2 py-1 rounded-full mr-2"><%= match.leaderboard.name %></span>
+        <i class="far fa-clock mr-1"></i> <%= time_ago_in_words(match.created_at) %> ago
+      </div>
+    </div>
   </div>
 </div>

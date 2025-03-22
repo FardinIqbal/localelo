@@ -1,0 +1,13 @@
+<div class="flex flex-wrap gap-3">
+  <%= link_to new_match_path, class: "px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:shadow-lg hover:shadow-purple-500/20 transition-all transform hover:-translate-y-0.5" do %>
+    <i class="fas fa-plus mr-2"></i> Log Match
+  <% end %>
+
+  <%= link_to organizations_path, class: "px-4 py-2 rounded-lg bg-slate-700 text-white font-medium hover:bg-slate-600 transition-all transform hover:-translate-y-0.5" do %>
+    <i class="fas fa-users mr-2"></i> Join Gym
+  <% end %>
+
+  <%= link_to new_organization_path, class: "px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white font-medium hover:bg-slate-700 transition-all transform hover:-translate-y-0.5" do %>
+    <i class="fas fa-building mr-2"></i> Create Gym
+  <% end %>
+</div>
