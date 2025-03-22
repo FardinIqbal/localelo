@@ -12,6 +12,12 @@ import MobileMenuController from "./mobile_menu_controller"
 import ProfileDropdownController from "./profile_dropdown_controller"
 import DropdownController from "./dropdown_controller"
 
+// === Dashboard / Stats Controllers ===
+import GreetingController from "./greeting_controller"
+import StatsCardController from "./stats_card_controller"
+import CountdownController from "./countdown_controller"
+import PerformanceStatsController from "./performance_stats_controller"  // NEW
+
 // === Optional / Future (uncomment when needed)
 // import TableController from "./table_controller"
 // import TooltipController from "./tooltip_controller"
@@ -27,7 +33,20 @@ application.register("mobile-menu", MobileMenuController)
 application.register("profile-dropdown", ProfileDropdownController)
 application.register("dropdown", DropdownController)
 
+// Register dashboard-specific controllers
+application.register("greeting", GreetingController)
+application.register("stats-card", StatsCardController)
+application.register("countdown", CountdownController)
+application.register("performance-stats", PerformanceStatsController)  // NEW
+
 // Uncomment to enable these:
 // application.register("table", TableController)
 // application.register("tooltip", TooltipController)
 // application.register("bottom-nav", BottomNavController)
+
+import PollController from "./poll_controller"
+application.register("poll", PollController)
+import VerifyMatchController from "./verify_match_controller"
+application.register("verify-match", VerifyMatchController)
+import RecentMatchesController from "./recent_toggle_controller"
+application.register("recent-toggle", RecentMatchesController)

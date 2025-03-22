@@ -1,0 +1,12 @@
+<!-- app/views/leaderboards/_rankings.html.erb -->
+<div class="space-y-2">
+  <% rankings.each_with_index do |rating, index| %>
+    <div class="flex justify-between p-2 bg-slate-700 rounded-md">
+      <div class="flex items-center space-x-3">
+        <span class="text-white font-bold">#<%= index + 1 %></span>
+        <span class="text-slate-300"><%= rating.user.username %></span>
+      </div>
+      <span class="text-green-400 font-semibold"><%= rating.rating %> Elo</span>
+    </div>
+  <% end %>
+</div>

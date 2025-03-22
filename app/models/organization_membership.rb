@@ -1,32 +1,68 @@
+# app/models/organization_membership.rb
 class OrganizationMembership < ApplicationRecord
+  # == Associations ==
   belongs_to :user
   belongs_to :organization
 
-  enum status: { pending: 0, approved: 1, banned: 2 }, _default: :pending  # Default status to "pending"
+  # == Enums ==
+  # Define status values with meaningful names
+  # pending (0): User has requested to join but not yet approved
+  # approved (1): User is an active member of the organization
+  # banned (2): User has been banned from the organization
+  enum status: { pending: 0, approved: 1, banned: 2 }, _default: :pending
 
+  # == Validations ==
   validates :status, inclusion: { in: statuses.keys }
-  validates :user_id, uniqueness: { scope: :organization_id, message: "User is already a member of this organization" }
+  validates :user_id, uniqueness: {
+    scope: :organization_id,
+    message: "User is already a member of this organization"
+  }
 
-  # Indexing for performance
-  # In a migration: add_index :organization_memberships, [:organization_id, :user_id], unique: true
-
-  # Scopes for cleaner queries
+  # == Scopes ==
+  # Convenience scopes for common queries
   scope :admins, -> { where(admin: true) }
   scope :members, -> { where(status: :approved) }
   scope :banned_users, -> { where(status: :banned) }
+  scope :active, -> { where(status: :approved) }
+  scope :by_organization, ->(org_id) { where(organization_id: org_id) }
+  scope :by_user, ->(user_id) { where(user_id: user_id) }
 
-  # Check if a membership is pending
+  # == Instance Methods ==
+  # Predicate methods for checking membership status
   def pending?
     status == "pending"
   end
 
-  # Check if a membership is approved
   def approved?
     status == "approved"
   end
 
-  # Check if a membership is banned
   def banned?
     status == "banned"
+  end
+
+  # Check if user is an admin of the organization
+  def admin?
+    admin
+  end
+
+  # Promote a user to admin status
+  def promote_to_admin!
+    update!(admin: true)
+  end
+
+  # Demote a user from admin status
+  def demote_from_admin!
+    update!(admin: false)
+  end
+
+  # Approve a pending membership
+  def approve!
+    update!(status: :approved)
+  end
+
+  # Ban a user from the organization
+  def ban!
+    update!(status: :banned)
   end
 end

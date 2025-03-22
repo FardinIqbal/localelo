@@ -1,24 +1,29 @@
 Rails.application.routes.draw do
+  # Devise authentication routes
   devise_for :users, controllers: { sessions: 'devise/sessions' }
 
-  # Home Page (for unauthenticated users)
+  # Public home page for unauthenticated visitors
   unauthenticated do
     root to: "home#index", as: :unauthenticated_root
   end
 
-  # Authenticated Users Dashboard
+  # Dashboard for signed-in users
   authenticated :user do
     root to: "dashboard#show", as: :authenticated_root
   end
 
-  # User Profile
+  # User profile routes
   resources :users, only: [:show, :edit, :update]
   get "profile", to: "users#show", as: "user_profile"
 
-  # Account-specific resources
+  # Account-level pages (e.g., organization membership overview)
   get "/account/my-organizations", to: "account_organizations#index", as: :account_organizations
+  get "dashboard/performance", to: "dashboard#performance", as: :dashboard_performance
 
-  # Organizations
+  # Turbo polling endpoints for dashboard widgets
+  get "dashboard/matches_to_verify", to: "dashboard#matches_to_verify"
+
+  # Core organization routes with nested leaderboards
   resources :organizations do
     member do
       get :members
@@ -34,27 +39,25 @@ Rails.application.routes.draw do
     end
   end
 
-  # Organization Memberships
+  # Membership management
   resources :organization_memberships, only: [:index, :create, :destroy]
 
-  # Leaderboard Ratings
+  # User stats and performance history
   resources :leaderboard_ratings, only: [:index, :show, :update]
-
-  # Elo History
   resources :elo_history, only: [:index, :show]
 
-  # Matches
-  resources :matches, except: [:destroy] do
+  # Match system (includes verify and dynamic opponent updates)
+  resources :matches do
     collection do
-      get :recent
-      get :update_opponents  # Added this line to fix the 404 error
+      get :recent                      # Recent match activity (for dashboard)
+      get :update_opponents           # Dynamic Turbo update when changing leaderboard
     end
     member do
-      patch :verify
+      patch :verify                   # Opponent verifies the match (trigger Elo calc)
     end
   end
 
-  # API Routes
+  # API namespace for JSON access (e.g., mobile or client apps)
   namespace :api do
     namespace :v1 do
       resources :organizations, only: [:index, :show, :create] do
@@ -79,8 +82,6 @@ Rails.application.routes.draw do
       resources :matches, only: [:index, :create, :show] do
         collection do
           get :recent
-        end
-        collection do
           get :update_opponents
         end
         member do

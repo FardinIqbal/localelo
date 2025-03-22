@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_03_19_212202) do
+ActiveRecord::Schema[7.1].define(version: 2025_03_21_165956) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -45,16 +45,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_19_212202) do
   create_table "elo_histories", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "leaderboard_id", null: false
-    t.integer "elo"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["leaderboard_id"], name: "index_elo_histories_on_leaderboard_id"
-    t.index ["user_id"], name: "index_elo_histories_on_user_id"
-  end
-
-  create_table "elo_history", force: :cascade do |t|
-    t.bigint "user_id", null: false
-    t.bigint "leaderboard_id", null: false
     t.integer "elo", null: false
     t.datetime "recorded_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.index ["user_id", "leaderboard_id", "recorded_at"], name: "index_elo_history_on_user_and_leaderboard"
@@ -80,6 +70,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_19_212202) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.text "description"
+    t.string "sport"
+    t.index ["organization_id", "sport"], name: "index_leaderboards_on_organization_and_sport"
     t.index ["organization_id"], name: "index_leaderboards_on_organization_id"
   end
 
@@ -124,7 +116,9 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_19_212202) do
     t.string "website"
     t.integer "visibility", default: 0
     t.bigint "created_by"
+    t.string "subdomain"
     t.index ["name"], name: "index_organizations_on_name"
+    t.index ["subdomain"], name: "index_organizations_on_subdomain", unique: true
     t.index ["user_id"], name: "index_organizations_on_user_id"
     t.index ["visibility"], name: "index_organizations_on_visibility"
   end
@@ -149,8 +143,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_19_212202) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "elo_histories", "leaderboards"
   add_foreign_key "elo_histories", "users"
-  add_foreign_key "elo_history", "leaderboards"
-  add_foreign_key "elo_history", "users"
   add_foreign_key "leaderboard_ratings", "leaderboards"
   add_foreign_key "leaderboard_ratings", "users"
   add_foreign_key "leaderboards", "organizations"
