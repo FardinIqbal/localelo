@@ -201,9 +201,6 @@
                             </div>
                             <div class="text-xs text-slate-400 mt-0.5">
                               <%= match.leaderboard.name %> • <%= match.created_at.strftime("%b %d, %Y") %>
-                              <% unless match.verified %>
-                                <span class="ml-1 text-yellow-400"><i class="fas fa-exclamation-circle" title="Unverified"></i></span>
-                              <% end %>
                             </div>
                           </div>
                         </div>
@@ -625,7 +622,6 @@
                 <th class="px-4 py-3">Result</th>
                 <th class="px-4 py-3">Elo Change</th>
                 <th class="px-4 py-3">Date</th>
-                <th class="px-4 py-3">Status</th>
                 <% if @organization.admin?(current_user) %>
                   <th class="px-4 py-3">Actions</th>
                 <% end %> </tr>
@@ -659,21 +655,13 @@
                     <% else %> <span class="text-slate-400">-</span>
                     <% end %> </td>
                   <td class="px-4 py-3 text-slate-400 text-sm"> <%= match.created_at.strftime("%b %d, %Y") %> </td>
-                  <td class="px-4 py-3">
-                    <% if match.verified %>
-                      <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-400/20 text-green-400">Verified</span>
-                    <% else %>
-                      <span class="px-2 py-1 rounded-full text-xs font-medium bg-yellow-400/20 text-yellow-400">Unverified</span>
-                    <% end %> </td>
                   <% if @organization.admin?(current_user) %>
                     <td class="px-4 py-3">
                       <div class="flex items-center space-x-2"> <%= link_to match_path(match), class: "text-slate-400 hover:text-white transition-colors" do %>
                           <i class="fas fa-eye"></i>
                         <% end %>
-                        <% unless match.verified %>
-                          <%= link_to verify_match_path(match), method: :patch, class: "text-green-400 hover:text-green-300 transition-colors" do %>
-                            <i class="fas fa-check"></i>
-                          <% end %>
+                        <%= link_to match_path(match), data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to remove this match?" }, class: "text-red-400 hover:text-red-300 transition-colors" do %>
+                          <i class="fas fa-trash"></i>
                         <% end %>
                       </div>
                     </td>

@@ -92,13 +92,6 @@
         <% end %>
       <% end %>
 
-      <!-- Verification Status -->
-      <% unless match.verified? %>
-        <div class="flex items-center text-orange-400 mt-2 bg-orange-500/10 px-3 py-1 rounded-full text-sm">
-          <i class="fas fa-exclamation-circle mr-1.5"></i> Awaiting verification
-        </div>
-      <% end %>
-
       <!-- Match Details -->
       <div class="flex items-center text-xs text-slate-400 mt-2">
         <span class="bg-slate-700 px-2 py-1 rounded-full mr-2"><%= match.leaderboard.name %></span>
