@@ -46,8 +46,6 @@ application.register("performance-stats", PerformanceStatsController)  // NEW
 
 import PollController from "./poll_controller"
 application.register("poll", PollController)
-import VerifyMatchController from "./verify_match_controller"
-application.register("verify-match", VerifyMatchController)
 import ToggleController from "./toggle_controller"
 
 application.register("toggle", ToggleController)
