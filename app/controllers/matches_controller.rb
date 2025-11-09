@@ -40,20 +40,19 @@ class MatchesController < ApplicationController
   # GET /matches/new
   # Form for logging a new match
   def new
-    @match = Match.new(leaderboard_id: params[:leaderboard_id], opponent_id: params[:opponent_id])
+    @match = Match.new(leaderboard_id: params[:leaderboard_id])
+    @selected_opponent_id = params[:opponent_id]
 
     # Recently faced opponents for quick selection
-    @recent_opponents = User.where.not(id: current_user.id)
-                            .joins("LEFT JOIN matches ON users.id = matches.opponent_id OR users.id = matches.user1_id")
-                            .where("matches.user1_id = ? OR matches.opponent_id = ?", current_user.id, current_user.id)
-                            .distinct
-                            .limit(5)
+    @recent_opponents = recent_opponent_users
 
     # Preload users from leaderboard (if selected)
     if params[:leaderboard_id].present?
       @leaderboard = Leaderboard.find_by(id: params[:leaderboard_id])
-      @users = @leaderboard&.users&.where.not(id: current_user.id)
+      @users = available_users_for_leaderboard(@leaderboard)
     end
+
+    @users ||= []
   end
 
   # GET /matches/update_opponents
@@ -66,7 +65,7 @@ class MatchesController < ApplicationController
       return
     end
 
-    @opponents = @leaderboard.users.where.not(id: current_user.id)
+    @opponents = available_users_for_leaderboard(@leaderboard)
 
     if @opponents.empty?
       render turbo_stream: turbo_stream.replace("opponent_selection", "<p class='text-yellow-500'>⚠️ No opponents available.</p>")
@@ -92,6 +91,13 @@ class MatchesController < ApplicationController
         format.json { render json: match, status: :created }
       end
     else
+      form_attributes = match_params
+      @match = Match.new(leaderboard_id: form_attributes[:leaderboard_id])
+      @selected_opponent_id = form_attributes[:opponent_id]
+      @leaderboard = Leaderboard.find_by(id: form_attributes[:leaderboard_id])
+      @recent_opponents = recent_opponent_users
+      @users = available_users_for_leaderboard(@leaderboard)
+
       respond_to do |format|
         format.html do
           flash.now[:error] = @match_form.errors.full_messages.to_sentence
@@ -147,16 +153,17 @@ class MatchesController < ApplicationController
     @leaderboards = current_user.organizations.includes(:leaderboards).flat_map(&:leaderboards).uniq
 
     if params[:match] && params[:match][:leaderboard_id].present?
-      @users = Leaderboard.find(params[:match][:leaderboard_id]).users.where.not(id: current_user.id)
+      @users = available_users_for_leaderboard(Leaderboard.find_by(id: params[:match][:leaderboard_id]))
     elsif params[:leaderboard_id].present?
-      @users = Leaderboard.find(params[:leaderboard_id]).users.where.not(id: current_user.id)
+      @users = available_users_for_leaderboard(Leaderboard.find_by(id: params[:leaderboard_id]))
     else
       @users = []
     end
   end
 
   def authorize_match_management!
-    return if [@match.user1_id, @match.opponent_id].include?(current_user.id)
+    profile_ids = current_user.profile_ids
+    return if profile_ids.include?(@match.profile1_id) || profile_ids.include?(@match.opponent_profile_id)
     return if @match.leaderboard.organization.admin?(current_user)
 
     logger.warn "[MATCH] Unauthorized match removal attempt on match #{@match.id} by user #{current_user.id}"
@@ -169,5 +176,32 @@ class MatchesController < ApplicationController
       format.json { render json: { error: "Unauthorized" }, status: :unauthorized }
     end
     false
+  end
+
+  def recent_opponent_users
+    profiles = current_user.profiles.includes(:organization)
+    return [] if profiles.empty?
+
+    profile_ids = profiles.map(&:id)
+
+    Match.involving_profiles(profile_ids)
+         .includes(profile1: :user, opponent_profile: :user)
+         .order(created_at: :desc)
+         .limit(5)
+         .map do |match|
+           if profile_ids.include?(match.profile1_id)
+             match.opponent
+           else
+             match.user1
+           end
+         end
+         .compact
+         .uniq { |user| user.id }
+  end
+
+  def available_users_for_leaderboard(leaderboard)
+    return [] unless leaderboard
+
+    leaderboard.users.where.not(id: current_user.id).distinct
   end
 end

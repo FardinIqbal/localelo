@@ -411,7 +411,11 @@
                     <p class="text-slate-300 text-sm mb-4"><%= leaderboard.description %></p>
                   <% end %>
 
-                  <% user_rating = leaderboard.leaderboard_ratings.find_by(user: current_user) if @organization.member?(current_user) %>
+                  <% user_rating = nil %>
+                  <% if @organization.member?(current_user) %>
+                    <% current_profile ||= current_user.profile_for(@organization) %>
+                    <% user_rating = current_profile ? leaderboard.leaderboard_ratings.find_by(profile: current_profile) : nil %>
+                  <% end %>
                   <% if user_rating %>
                     <div class="bg-slate-700/50 rounded-lg p-3 mb-4">
                       <div class="flex justify-between items-center">
@@ -513,7 +517,7 @@
               </tr>
               </thead>
               <tbody class="divide-y divide-slate-700" id="members-table-body">
-              <% @organization.organization_memberships.includes(:user).each do |membership| %>
+              <% @organization.organization_memberships.includes(profile: :user).each do |membership| %>
                 <tr class="hover:bg-slate-700/50 transition-colors">
                   <td class="px-4 py-3">
                     <div class="flex items-center">
@@ -539,12 +543,12 @@
                   <td class="px-4 py-3 text-slate-400 text-sm">
                     <%= Match.joins(:leaderboard)
                              .where(leaderboards: { organization_id: @organization.id })
-                             .where("user1_id = ? OR opponent_id = ?", membership.user_id, membership.user_id)
+                             .where("profile1_id = :id OR opponent_profile_id = :id", id: membership.profile_id)
                              .count %>
                   </td>
                   <td class="px-4 py-3 text-purple-400 font-medium">
                     <%= LeaderboardRating.joins(:leaderboard)
-                                         .where(user_id: membership.user_id, leaderboards: { organization_id: @organization.id })
+                                         .where(profile_id: membership.profile_id, leaderboards: { organization_id: @organization.id })
                                          .maximum(:rating) || 1500 %>
                   </td>
                   <% if @organization.admin?(current_user) %>
@@ -560,23 +564,23 @@
                     <td class="px-4 py-3">
                       <div class="flex items-center space-x-2">
                         <% if membership.status == "pending" %>
-                          <button class="text-green-400 hover:text-green-300 transition-colors approve-member-btn" data-user-id="<%= membership.user_id %>">
+                          <button class="text-green-400 hover:text-green-300 transition-colors approve-member-btn" data-user-id="<%= membership.user&.id %>">
                             <i class="fas fa-check"></i>
                           </button>
                         <% end %>
 
-                        <% if !@organization.owner?(membership.user) && membership.user_id != current_user.id %>
+                        <% if !@organization.owner?(membership.user) && membership.user&.id != current_user.id %>
                           <% if membership.admin? %>
-                            <button class="text-blue-400 hover:text-blue-300 transition-colors demote-admin-btn" data-user-id="<%= membership.user_id %>">
+                            <button class="text-blue-400 hover:text-blue-300 transition-colors demote-admin-btn" data-user-id="<%= membership.user&.id %>">
                               <i class="fas fa-arrow-down"></i>
                             </button>
                           <% else %>
-                            <button class="text-slate-400 hover:text-white transition-colors promote-admin-btn" data-user-id="<%= membership.user_id %>">
+                            <button class="text-slate-400 hover:text-white transition-colors promote-admin-btn" data-user-id="<%= membership.user&.id %>">
                               <i class="fas fa-arrow-up"></i>
                             </button>
                           <% end %>
 
-                          <button class="text-red-400 hover:text-red-300 transition-colors remove-member-btn" data-user-id="<%= membership.user_id %>">
+                          <button class="text-red-400 hover:text-red-300 transition-colors remove-member-btn" data-user-id="<%= membership.user&.id %>">
                             <i class="fas fa-user-minus"></i>
                           </button>
                         <% end %>
@@ -707,7 +711,7 @@
                 <h2 class="text-xl font-bold text-white">Pending Requests</h2>
               </div>
 
-              <% pending_requests = @organization.organization_memberships.where(status: :pending).includes(:user) %>
+              <% pending_requests = @organization.organization_memberships.where(status: :pending).includes(profile: :user) %>
 
               <% if pending_requests.any? %>
                 <div class="divide-y divide-slate-700">
@@ -726,7 +730,7 @@
                       </div>
 
                       <div class="flex space-x-2">
-                        <%= link_to approve_member_organization_path(@organization, user_id: request.user_id), method: :patch, class: "px-2 py-1 rounded bg-green-400/20 text-green-400 hover:bg-green-400/30 transition-colors" do %>
+                        <%= link_to approve_member_organization_path(@organization, user_id: request.user&.id), method: :patch, class: "px-2 py-1 rounded bg-green-400/20 text-green-400 hover:bg-green-400/30 transition-colors" do %>
                           <i class="fas fa-check mr-1"></i> Approve
                         <% end %>
 

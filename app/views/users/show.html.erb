@@ -56,7 +56,7 @@
 
       <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
         <div class="text-sm text-slate-400">Total Matches</div>
-        <div class="text-2xl font-bold text-white mt-1"><%= Match.where("user1_id = ? OR opponent_id = ?", @user.id, @user.id).count %></div>
+        <div class="text-2xl font-bold text-white mt-1"><%= @user.matches.count %></div>
         <div class="mt-2 text-xs text-purple-400">
           <i class="fas fa-trophy mr-1"></i> All time
         </div>
@@ -64,7 +64,7 @@
 
       <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
         <div class="text-sm text-slate-400">Win Rate</div>
-        <% total_matches = Match.where("user1_id = ? OR opponent_id = ?", @user.id, @user.id).count %>
+        <% total_matches = @user.matches.count %>
         <% wins = Match.where(winner_id: @user.id).count %>
         <% win_rate = total_matches > 0 ? (wins.to_f / total_matches * 100).round : 0 %>
         <div class="text-2xl font-bold text-white mt-1"><%= win_rate %>%</div>
@@ -134,7 +134,7 @@
           <% end %>
         </div>
 
-        <% recent_matches = Match.where("user1_id = ? OR opponent_id = ?", @user.id, @user.id).order(created_at: :desc).limit(5) %>
+        <% recent_matches = @user.matches.order(created_at: :desc).limit(5) %>
         <% if recent_matches.any? %>
           <div class="divide-y divide-slate-700">
             <% recent_matches.each do |match| %>
@@ -195,6 +195,7 @@
         <% if @user.organizations.any? %>
           <div class="divide-y divide-slate-700">
             <% @user.organizations.each do |org| %>
+              <% profile = @user.profile_for(org) %>
               <div class="p-4 hover:bg-slate-700/50 transition-colors">
                 <div class="flex items-center">
                   <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
@@ -227,7 +228,7 @@
                 <% if org.leaderboards.any? %>
                   <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <% org.leaderboards.first(4).each do |leaderboard| %>
-                      <% user_rating = leaderboard.leaderboard_ratings.find_by(user: @user) %>
+                      <% user_rating = profile ? leaderboard.leaderboard_ratings.find_by(profile: profile) : nil %>
                       <div class="flex justify-between items-center p-2 rounded bg-slate-700/50">
                         <span class="text-sm text-slate-300"><%= leaderboard.name %></span>
                         <span class="text-sm font-medium text-purple-400"><%= user_rating&.rating || 1500 %> Elo</span>
@@ -288,7 +289,7 @@
   <span class="px-2 py-1 text-xs font-medium rounded-md bg-slate-700 text-slate-300">
     Rank #<%= rating.leaderboard.leaderboard_ratings.where('rating > ?', rating.rating).count + 1 %>
   </span>
-                  <% if rating.leaderboard.organization.user_id == current_user.id || rating.leaderboard.organization.organization_memberships.find_by(user: current_user)&.admin? %>
+                  <% if rating.leaderboard.organization.admin?(current_user) %>
                     <%= link_to organization_leaderboard_path(rating.leaderboard.organization, rating.leaderboard), class: "ml-auto text-xs text-purple-400 hover:text-pink-400 transition-colors" do %>
                       <i class="fas fa-arrow-right ml-1"></i> View Leaderboard
                     <% end %>
@@ -319,7 +320,7 @@
         <h2 class="text-xl font-bold text-white">Match History</h2>
       </div>
 
-      <% user_matches = Match.where("user1_id = ? OR opponent_id = ?", @user.id, @user.id).order(created_at: :desc) %>
+      <% user_matches = @user.matches.order(created_at: :desc) %>
       <% if user_matches.any? %>
         <div class="divide-y divide-slate-700">
           <% user_matches.each do |match| %>
