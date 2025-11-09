@@ -33,18 +33,19 @@ class OrganizationsController < ApplicationController
 
     respond_to do |format|
       if @organization.save
-        # Auto-add creator as an admin member
-        membership = @organization.organization_memberships.create(
-          user: current_user,
-          status: :approved,
-          admin: true
-        )
-
-        format.html {
-          flash[:notice] = "#{@organization.name} was successfully created!"
-          redirect_to @organization
-        }
-        format.json { render json: @organization, status: :created }
+        if ensure_owner_membership(@organization, current_user)
+          format.html do
+            flash[:notice] = "#{@organization.name} was successfully created!"
+            redirect_to @organization
+          end
+          format.json { render json: @organization, status: :created }
+        else
+          format.html do
+            flash.now[:alert] = @organization.errors.full_messages.to_sentence.presence || "Unable to finalize organization setup."
+            render :new, status: :unprocessable_entity
+          end
+          format.json { render json: { errors: @organization.errors.full_messages }, status: :unprocessable_entity }
+        end
       else
         format.html { render :new, status: :unprocessable_entity }
         format.json { render json: @organization.errors, status: :unprocessable_entity }
@@ -116,7 +117,29 @@ class OrganizationsController < ApplicationController
   # POST /organizations/:id/join
   # Handles joining an organization (Auto-joins public, Requests private)
   def join
-    membership = @organization.organization_memberships.find_or_initialize_by(user: current_user)
+    profile = current_user.profile_for(@organization)
+
+    unless profile
+      profile = current_user.profiles.build(
+        organization: @organization,
+        username: current_user.username,
+        first_name: current_user.first_name,
+        last_name: current_user.last_name
+      )
+
+      unless profile.save
+        respond_to do |format|
+          format.html do
+            flash[:alert] = "Unable to create profile for this organization: #{profile.errors.full_messages.to_sentence}"
+            redirect_to @organization
+          end
+          format.json { render json: { error: profile.errors.full_messages.to_sentence }, status: :unprocessable_entity }
+        end
+        return
+      end
+    end
+
+    membership = @organization.organization_memberships.find_or_initialize_by(profile: profile)
 
     respond_to do |format|
       if membership.persisted?
@@ -156,7 +179,7 @@ class OrganizationsController < ApplicationController
 
   # PATCH /organizations/:id/approve_member
   def approve_member
-    membership = @organization.organization_memberships.find_by(user_id: params[:user_id], status: :pending)
+    membership = membership_for_user(params[:user_id], status: :pending)
 
     respond_to do |format|
       if membership&.update(status: :approved)
@@ -180,7 +203,7 @@ class OrganizationsController < ApplicationController
 
   # DELETE /organizations/:id/leave
   def leave
-    membership = @organization.organization_memberships.find_by(user: current_user)
+    membership = membership_for_user(current_user.id)
 
     respond_to do |format|
       if !membership
@@ -216,7 +239,7 @@ class OrganizationsController < ApplicationController
 
   # PATCH /organizations/:id/make_admin
   def make_admin
-    membership = @organization.organization_memberships.find_by(user_id: params[:user_id], status: :approved)
+    membership = membership_for_user(params[:user_id], status: :approved)
 
     respond_to do |format|
       if membership&.update(admin: true)
@@ -237,10 +260,10 @@ class OrganizationsController < ApplicationController
 
   # PATCH /organizations/:id/remove_admin
   def remove_admin
-    membership = @organization.organization_memberships.find_by(user_id: params[:user_id], admin: true)
+    membership = membership_for_user(params[:user_id], admin: true)
 
     respond_to do |format|
-      if membership&.user_id == @organization.user_id
+      if membership&.user&.id == @organization.user_id
         format.html {
           flash[:alert] = "Cannot remove admin status from the organization owner."
           redirect_to members_organization_path(@organization)
@@ -264,7 +287,7 @@ class OrganizationsController < ApplicationController
 
   # DELETE /organizations/:id/remove_member
   def remove_member
-    membership = @organization.organization_memberships.find_by(user_id: params[:user_id])
+    membership = membership_for_user(params[:user_id])
 
     respond_to do |format|
       if !membership
@@ -273,7 +296,7 @@ class OrganizationsController < ApplicationController
           redirect_to members_organization_path(@organization)
         }
         format.json { render json: { error: "Not a member" }, status: :not_found }
-      elsif membership.user_id == @organization.user_id
+      elsif membership.user&.id == @organization.user_id
         format.html {
           flash[:alert] = "Cannot remove the organization owner."
           redirect_to members_organization_path(@organization)
@@ -315,7 +338,9 @@ class OrganizationsController < ApplicationController
 
   def authorize_admin!
     unless current_user.id == @organization.user_id ||
-      @organization.organization_memberships.exists?(user: current_user, admin: true, status: :approved)
+      @organization.organization_memberships.joins(:profile)
+                     .where(profiles: { user_id: current_user.id }, admin: true, status: :approved)
+                     .exists?
       flash[:alert] = "You don't have permission to perform this action."
       redirect_to @organization
     end
@@ -323,8 +348,11 @@ class OrganizationsController < ApplicationController
 
   # Helper method to add a user to all leaderboards in an organization
   def add_user_to_leaderboards(user, organization)
+    profile = user.profile_for(organization)
+    return unless profile
+
     organization.leaderboards.each do |leaderboard|
-      leaderboard.leaderboard_ratings.find_or_create_by(user: user) do |rating|
+      leaderboard.leaderboard_ratings.find_or_create_by(profile: profile) do |rating|
         rating.rating = 1500 # Default ELO rating
         rating.wins = 0
         rating.losses = 0
@@ -335,15 +363,49 @@ class OrganizationsController < ApplicationController
   # Helper method to remove a user from all leaderboards in an organization
   def remove_user_from_leaderboards(user, organization)
     # Find all leaderboard ratings for this user in this organization
+    profile = user.profile_for(organization)
+    return unless profile
+
     ratings = LeaderboardRating.joins(:leaderboard)
-                               .where(user_id: user.id, leaderboards: { organization_id: organization.id })
+                               .where(profile_id: profile.id, leaderboards: { organization_id: organization.id })
 
     # Delete all the ratings
     ratings.destroy_all
 
     # Note: We're not deleting match history to preserve historical data
     # If you want to delete match history too, uncomment the following:
-    # Match.where("(user1_id = ? OR opponent_id = ?) AND leaderboard_id IN (?)",
-    #             user.id, user.id, organization.leaderboard_ids).destroy_all
+    # Match.where("(profile1_id = ? OR opponent_profile_id = ?) AND leaderboard_id IN (?)",
+    #             profile.id, profile.id, organization.leaderboard_ids).destroy_all
+  end
+
+  def membership_for_user(user_id, conditions = {})
+    return nil if user_id.blank?
+
+    scope = @organization.organization_memberships.joins(:profile)
+                                .where(profiles: { user_id: user_id })
+    scope = scope.where(conditions) if conditions.present?
+    scope.first
+  end
+
+  def ensure_owner_membership(organization, user)
+    ActiveRecord::Base.transaction do
+      profile = user.profiles.find_or_initialize_by(organization: organization)
+      profile.username ||= user.username
+      profile.first_name ||= user.first_name
+      profile.last_name ||= user.last_name
+      profile.save!
+
+      membership = organization.organization_memberships.find_or_initialize_by(profile: profile)
+      membership.status = :approved
+      membership.admin = true
+      membership.save!
+    end
+
+    true
+  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+    organization.destroy if organization.persisted?
+    error_message = e.respond_to?(:record) && e.record ? e.record.errors.full_messages.to_sentence : e.message
+    organization.errors.add(:base, "Unable to add #{user.username} to the organization: #{error_message}")
+    false
   end
 end

@@ -15,7 +15,7 @@ class LeaderboardsController < ApplicationController
   # GET /organizations/:organization_id/leaderboards/:id
   # Shows a single leaderboard
   def show
-    @rankings = @leaderboard.leaderboard_ratings.includes(:user).order(rating: :desc)
+    @rankings = @leaderboard.leaderboard_ratings.includes(profile: :user).order(rating: :desc)
   end
 
   # GET /organizations/:organization_id/leaderboards/new
@@ -72,7 +72,7 @@ class LeaderboardsController < ApplicationController
   def rankings
     @leaderboard = Leaderboard.find(params[:id])
     @organization = @leaderboard.organization
-    @rankings = @leaderboard.leaderboard_ratings.includes(:user).order(rating: :desc)
+    @rankings = @leaderboard.leaderboard_ratings.includes(profile: :user).order(rating: :desc)
 
     respond_to do |format|
       format.html do
