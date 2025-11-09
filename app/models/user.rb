@@ -7,6 +7,7 @@ class User < ApplicationRecord
   has_one_attached :avatar
 
   # == Associations ==
+  has_many :profiles
   has_many :organization_memberships, dependent: :destroy
   has_many :organizations, through: :organization_memberships
 
