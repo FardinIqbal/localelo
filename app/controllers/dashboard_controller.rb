@@ -26,10 +26,6 @@ class DashboardController < ApplicationController
                              .order(match_time: :desc)
                              .limit(5)
 
-    @pending_matches = Match.where("(user1_id = :id OR opponent_id = :id) AND verified = false", id: current_user.id)
-                            .order(created_at: :desc)
-                            .limit(10)
-
     # == Elo History for Visualization (used by Stimulus or Turbo frame refreshes) ==
     @time_period = params[:period] || '30'
     period_days = @time_period == 'all' ? 365 : @time_period.to_i
@@ -116,11 +112,6 @@ class DashboardController < ApplicationController
       tips << "Join more gyms to expand your network and find new opponents."
     end
 
-    unverified_matches = Match.where("(user1_id = ? OR opponent_id = ?) AND verified = false", @user.id, @user.id).count
-    if unverified_matches > 0
-      tips << "You have #{unverified_matches} unverified matches. Verify them to ensure accurate rankings."
-    end
-
     tips.sample || "Play consistently to improve your Elo rating. Your highest rating is currently #{@highest_elo}."
   end
 
@@ -138,17 +129,4 @@ class DashboardController < ApplicationController
     render partial: "dashboard/performance_stats", layout: false
   end
 
-  def matches_to_verify
-    @pending_matches = Match.where(opponent_id: current_user.id, verified: false)
-
-    respond_to do |format|
-      format.turbo_stream do
-        render turbo_stream: turbo_stream.replace(
-          "verify_matches",
-          partial: "dashboard/match_verifications",
-          locals: { matches: @pending_matches }
-        )
-      end
-    end
-  end
 end

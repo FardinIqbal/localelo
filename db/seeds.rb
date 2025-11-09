@@ -74,48 +74,20 @@ leaderboards.each do |leaderboard|
       user1: players[0],
       opponent: players[1],
       leaderboard: leaderboard,
-      verified: true,
       match_time: Faker::Time.between(from: 30.days.ago, to: Time.now)
     }
 
     if is_draw
       # For draw matches, we need to handle winner differently based on your Match model
-      match = FactoryBot.build(:match, :verified, match_attributes)
+      match = FactoryBot.build(:match, match_attributes)
       match.is_draw = true
-      # Set a temporary winner to pass validation but mark as draw
-      match.winner = match.user1
+      match.winner = nil
       match.save!
     else
-      match = FactoryBot.create(:match, :verified, :with_winner, match_attributes)
+      match = FactoryBot.create(:match, :with_winner, match_attributes)
     end
   end
 end
-
-puts "Creating test matches to verify for user1..."
-
-user1 = User.find_by(username: "user1")
-
-# Make sure user1 has at least one leaderboard they're a part of
-eligible_leaderboards = Leaderboard.joins(:organization)
-                                   .where(organizations: { id: user1.organizations.pluck(:id) })
-
-3.times do
-  opponent = users.reject { |u| u == user1 }.sample
-  leaderboard = eligible_leaderboards.sample
-
-  Match.create!(
-    user1: opponent,
-    opponent: user1,
-    winner: opponent,
-    leaderboard: leaderboard,
-    verified: false,
-    is_draw: false,
-    match_time: Faker::Time.between(from: 3.days.ago, to: Time.now)
-  )
-end
-
-puts "Created 3 unverified matches where user1 must verify."
-
 
 puts "Seed completed! You now have:"
 puts "- 1 Admin + 20 Users"

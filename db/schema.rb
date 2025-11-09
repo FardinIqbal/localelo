@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_03_21_165956) do
+ActiveRecord::Schema[7.1].define(version: 2025_03_21_170000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -86,7 +86,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_21_165956) do
     t.integer "elo_at_time", default: 1500, null: false
     t.bigint "leaderboard_id", null: false
     t.boolean "is_draw", default: false, null: false
-    t.boolean "verified", default: false, null: false
     t.index ["leaderboard_id"], name: "index_matches_on_leaderboard_id"
     t.index ["match_time"], name: "index_matches_on_match_time"
     t.index ["opponent_id"], name: "index_matches_on_opponent_id"

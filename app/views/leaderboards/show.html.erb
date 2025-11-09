@@ -210,9 +210,6 @@
                   <% end %>
                   <div class="ml-3 text-xs text-slate-400">
                     <%= match.created_at.strftime("%b %d, %Y") %>
-                    <% unless match.verified %>
-                      <span class="ml-1 text-yellow-400"><i class="fas fa-exclamation-circle" title="Unverified"></i></span>
-                    <% end %>
                   </div>
                 </div>
               </div>

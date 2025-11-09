@@ -32,8 +32,6 @@ class Match < ApplicationRecord
   scope :lost_by, ->(user_id) {
     where("(user1_id = ? AND winner_id = opponent_id) OR (opponent_id = ? AND winner_id = user1_id)", user_id, user_id)
   }
-  scope :verified, -> { where(verified: true) }
-  scope :unverified, -> { where(verified: false) }
   scope :recent_by_user, ->(user_id) { involving_user(user_id).recent.limit(10) }
   scope :by_date_range, ->(start_date, end_date) { where(created_at: start_date..end_date) }
 
@@ -48,12 +46,12 @@ class Match < ApplicationRecord
     by_leaderboard(leaderboard_id).count
   end
 
-  # Calculates verified win rate (%) for a user
+  # Calculates win rate (%) for a user
   def self.win_rate(user_id)
-    total = involving_user(user_id).verified.count
+    total = involving_user(user_id).count
     return 0 if total.zero?
 
-    wins = won_by(user_id).verified.count
+    wins = won_by(user_id).count
     (wins.to_f / total * 100).round(2)
   end
 
@@ -75,11 +73,6 @@ class Match < ApplicationRecord
     winner_id == user_id
   end
 
-  # Marks a match as verified
-  def verify!
-    update!(verified: true)
-  end
-
   private
 
   # Validates that both players are members of the leaderboard's organization
@@ -93,10 +86,8 @@ class Match < ApplicationRecord
     end
   end
 
-  # Performs Elo adjustments for verified matches
+  # Performs Elo adjustments for each match
   def adjust_ratings
-    return unless verified
-
     player1 = user1
     player2 = opponent
 
@@ -209,10 +200,8 @@ class Match < ApplicationRecord
     Rails.logger.info "MATCH_RESULT: #{log_data.to_json}"
   end
 
-  # Records point-in-time Elo snapshot after verified match
+  # Records point-in-time Elo snapshot after each match
   def record_elo_history
-    return unless verified
-
     EloHistory.create!(
       user_id: user1.id,
       leaderboard_id: leaderboard_id,
