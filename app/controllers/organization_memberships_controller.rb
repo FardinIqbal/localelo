@@ -5,7 +5,23 @@ class OrganizationMembershipsController < ApplicationController
   # POST /organization_memberships
   # Sends a join request for an organization
   def create
-    membership = @organization.organization_memberships.find_or_initialize_by(user: current_user)
+    profile = current_user.profile_for(@organization)
+
+    unless profile
+      profile = current_user.profiles.build(
+        organization: @organization,
+        username: current_user.username,
+        first_name: current_user.first_name,
+        last_name: current_user.last_name
+      )
+
+      unless profile.save
+        flash[:alert] = "Unable to create profile for this organization: #{profile.errors.full_messages.to_sentence}"
+        redirect_to organizations_path and return
+      end
+    end
+
+    membership = @organization.organization_memberships.find_or_initialize_by(profile: profile)
 
     if membership.persisted?
       flash[:alert] = "You are already a member of this organization."
