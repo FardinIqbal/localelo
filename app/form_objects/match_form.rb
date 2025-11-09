@@ -2,6 +2,7 @@ class MatchForm
   include ActiveModel::Model
 
   attr_accessor :leaderboard_id, :opponent_id, :winner_id, :user1_id, :is_draw
+  attr_reader :match
 
   validates :leaderboard_id, :opponent_id, :user1_id, presence: true
   validate :winner_or_draw_must_be_present
@@ -11,13 +12,14 @@ class MatchForm
   def save
     return false unless valid?
 
-    match = Match.new(attributes)
+    @match = Match.new(attributes)
 
-    if match.save
-      EloCalculatorService.adjust_ratings(match) unless is_draw.to_s == "1"
-      true
+    if @match.save
+      EloCalculatorService.adjust_ratings(@match) unless is_draw.to_s == "1"
+      @match
     else
-      errors.merge!(match.errors)
+      errors.merge!(@match.errors)
+      @match = nil
       false
     end
   end

@@ -85,11 +85,11 @@ class MatchesController < ApplicationController
   def create
     @match_form = MatchForm.new(match_params.merge(user1_id: current_user.id))
 
-    if @match_form.save
-      logger.info "[MATCH] Logged match #{@match_form.match.id} by user #{current_user.id}"
+    if (match = @match_form.save)
+      logger.info "[MATCH] Logged match #{match.id} by user #{current_user.id}"
       respond_to do |format|
         format.html { redirect_to matches_path, notice: "Match successfully logged!" }
-        format.json { render json: @match_form.match, status: :created }
+        format.json { render json: match, status: :created }
       end
     else
       respond_to do |format|
