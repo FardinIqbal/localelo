@@ -6,6 +6,8 @@ class DashboardController < ApplicationController
   # performance summaries, gym affiliations, rankings, and more — all personalized.
   def show
     @user = current_user
+    profile_ids = @user.profile_ids
+    @profile_ids = profile_ids
 
     # == Organizations and Leaderboards ==
     @organizations = current_user.organizations
@@ -13,30 +15,31 @@ class DashboardController < ApplicationController
                                  .order(created_at: :desc)
 
     # == Match History (Recent Activity Partial) ==
+    org_ids = current_user.profiles.select(:organization_id)
     @recent_matches_all = Match
                             .joins(:leaderboard)
-                            .where(leaderboards: { organization_id: current_user.organization_ids })
-                            .includes(:user1, :opponent, leaderboard: :organization)
+                            .where(leaderboards: { organization_id: org_ids })
+                            .includes(profile1: :user, opponent_profile: :user, leaderboard: :organization)
                             .order(match_time: :desc)
                             .limit(5)
 
-    @recent_matches_mine = Match
-                             .where("user1_id = :id OR opponent_id = :id", id: current_user.id)
-                             .includes(:user1, :opponent, leaderboard: :organization)
-                             .order(match_time: :desc)
-                             .limit(5)
+    @recent_matches_mine = current_user.matches
+                                          .includes(profile1: :user, opponent_profile: :user, leaderboard: :organization)
+                                          .order(match_time: :desc)
+                                          .limit(5)
 
     # == Elo History for Visualization (used by Stimulus or Turbo frame refreshes) ==
     @time_period = params[:period] || '30'
     period_days = @time_period == 'all' ? 365 : @time_period.to_i
 
-    @elo_history = EloHistory.where(user_id: @user.id)
+    @elo_history = EloHistory.where(profile_id: profile_ids)
                              .where("recorded_at >= ?", period_days.days.ago)
                              .order(:recorded_at)
                              .pluck(:recorded_at, :elo)
 
     # == Rankings Across All Leaderboards ==
-    @user_rankings = LeaderboardRating.where(user: @user)
+    @user_rankings = LeaderboardRating.joins(:profile)
+                                      .where(profiles: { user_id: @user.id })
                                       .includes(leaderboard: :organization)
                                       .order(rating: :desc)
 
@@ -51,26 +54,30 @@ class DashboardController < ApplicationController
     @win_loss_ratio = @total_losses > 0 ? (@total_wins.to_f / @total_losses).round(2) : (@total_wins > 0 ? "∞" : "0.0")
 
     # == Match Activity Trend (30d vs previous 30d) ==
-    current_period_matches = Match.where("(user1_id = ? OR opponent_id = ?) AND match_time >= ?", @user.id, @user.id, 30.days.ago).count
-    previous_period_matches = Match.where("(user1_id = ? OR opponent_id = ?) AND match_time >= ? AND match_time < ?", @user.id, @user.id, 60.days.ago, 30.days.ago).count
+    current_period_matches = Match.involving_profiles(profile_ids)
+                                  .where("match_time >= ?", 30.days.ago)
+                                  .count
+    previous_period_matches = Match.involving_profiles(profile_ids)
+                                    .where(match_time: 60.days.ago...30.days.ago)
+                                    .count
 
     @match_trend = previous_period_matches > 0 ?
                      ((current_period_matches - previous_period_matches).to_f / previous_period_matches * 100).round :
                      (current_period_matches > 0 ? 100 : 0)
 
     # == Most Active Leaderboard ==
-    @most_active_leaderboard = Leaderboard.joins(:matches)
-                                          .where(matches: { user1_id: @user.id })
-                                          .or(Leaderboard.joins(:matches).where(matches: { opponent_id: @user.id }))
-                                          .group("leaderboards.id")
-                                          .order(Arel.sql("COUNT(matches.id) DESC"))
-                                          .limit(1)
-                                          .first
+    @most_active_leaderboard = current_user.matches
+                                        .group(:leaderboard_id)
+                                        .order(Arel.sql("COUNT(*) DESC"))
+                                        .limit(1)
+                                        .map(&:leaderboard)
+                                        .first
 
     @organization = @most_active_leaderboard&.organization
 
     # == Optional: Upcoming Matches ==
-    @upcoming_matches = Match.where("(user1_id = ? OR opponent_id = ?) AND match_time > ?", @user.id, @user.id, Time.now)
+    @upcoming_matches = Match.involving_profiles(profile_ids)
+                             .where("match_time > ?", Time.now)
                              .order(match_time: :asc)
                              .limit(3)
 
@@ -99,7 +106,7 @@ class DashboardController < ApplicationController
       tips << "Log your first match to start building your Elo rating and track your progress."
     end
 
-    if Match.where("(user1_id = ? OR opponent_id = ?) AND match_time >= ?", @user.id, @user.id, 30.days.ago).count == 0
+    if Match.involving_profiles(@profile_ids).where("match_time >= ?", 30.days.ago).count == 0
       tips << "You haven't played any matches in the last 30 days. Stay active to maintain your skills!"
     end
 

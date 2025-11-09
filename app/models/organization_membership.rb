@@ -1,8 +1,9 @@
 # app/models/organization_membership.rb
 class OrganizationMembership < ApplicationRecord
   # == Associations ==
-  belongs_to :user
+  belongs_to :profile
   belongs_to :organization
+  has_one :user, through: :profile
 
   # == Enums ==
   # Define status values with meaningful names
@@ -13,7 +14,7 @@ class OrganizationMembership < ApplicationRecord
 
   # == Validations ==
   validates :status, inclusion: { in: statuses.keys }
-  validates :user_id, uniqueness: {
+  validates :profile_id, uniqueness: {
     scope: :organization_id,
     message: "User is already a member of this organization"
   }
@@ -25,7 +26,10 @@ class OrganizationMembership < ApplicationRecord
   scope :banned_users, -> { where(status: :banned) }
   scope :active, -> { where(status: :approved) }
   scope :by_organization, ->(org_id) { where(organization_id: org_id) }
-  scope :by_user, ->(user_id) { where(user_id: user_id) }
+  scope :by_profile, ->(profile_id) { where(profile_id: profile_id) }
+  scope :by_user, ->(user_id) {
+    joins(:profile).where(profiles: { user_id: user_id })
+  }
 
   # == Instance Methods ==
   # Predicate methods for checking membership status
