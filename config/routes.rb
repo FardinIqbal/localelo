@@ -20,9 +20,6 @@ Rails.application.routes.draw do
   get "/account/my-organizations", to: "account_organizations#index", as: :account_organizations
   get "dashboard/performance", to: "dashboard#performance", as: :dashboard_performance
 
-  # Turbo polling endpoints for dashboard widgets
-  get "dashboard/matches_to_verify", to: "dashboard#matches_to_verify"
-
   # Core organization routes with nested leaderboards
   resources :organizations do
     member do
@@ -46,14 +43,11 @@ Rails.application.routes.draw do
   resources :leaderboard_ratings, only: [:index, :show, :update]
   resources :elo_history, only: [:index, :show]
 
-  # Match system (includes verify and dynamic opponent updates)
+  # Match system (includes dynamic opponent updates)
   resources :matches do
     collection do
       get :recent                      # Recent match activity (for dashboard)
       get :update_opponents           # Dynamic Turbo update when changing leaderboard
-    end
-    member do
-      patch :verify                   # Opponent verifies the match (trigger Elo calc)
     end
   end
 
@@ -83,9 +77,6 @@ Rails.application.routes.draw do
         collection do
           get :recent
           get :update_opponents
-        end
-        member do
-          patch :verify
         end
       end
 

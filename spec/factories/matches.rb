@@ -8,12 +8,6 @@ FactoryBot.define do
     elo_change { rand(5..25) }
     elo_at_time { 1500 }
     is_draw { false }
-    verified { false }
-
-    trait :verified do
-      verified { true }
-    end
-
     trait :with_winner do
       after(:build) do |match|
         match.winner = [match.user1, match.opponent].sample

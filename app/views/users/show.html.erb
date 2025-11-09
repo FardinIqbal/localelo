@@ -64,8 +64,8 @@
 
       <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
         <div class="text-sm text-slate-400">Win Rate</div>
-        <% total_matches = Match.where("user1_id = ? OR opponent_id = ?", @user.id, @user.id).where(verified: true).count %>
-        <% wins = Match.where(winner_id: @user.id, verified: true).count %>
+        <% total_matches = Match.where("user1_id = ? OR opponent_id = ?", @user.id, @user.id).count %>
+        <% wins = Match.where(winner_id: @user.id).count %>
         <% win_rate = total_matches > 0 ? (wins.to_f / total_matches * 100).round : 0 %>
         <div class="text-2xl font-bold text-white mt-1"><%= win_rate %>%</div>
         <div class="mt-2 text-xs text-pink-400">
@@ -149,9 +149,6 @@
                       <div class="text-white font-medium"><%= opponent.username %></div>
                       <div class="text-xs text-slate-400 mt-0.5">
                         <%= match.leaderboard.organization.name %> • <%= match.created_at.strftime("%b %d, %Y") %>
-                        <% unless match.verified %>
-                          <span class="ml-1 text-yellow-400"><i class="fas fa-exclamation-circle" title="Unverified"></i></span>
-                        <% end %>
                       </div>
                     </div>
                   </div>
@@ -340,9 +337,6 @@
                     </div>
                     <div class="text-xs text-slate-400 mt-0.5">
                       <%= match.leaderboard.organization.name %> • <%= match.created_at.strftime("%b %d, %Y") %>
-                      <% unless match.verified %>
-                        <span class="ml-1 text-yellow-400"><i class="fas fa-exclamation-circle" title="Unverified"></i></span>
-                      <% end %>
                     </div>
                   </div>
                 </div>

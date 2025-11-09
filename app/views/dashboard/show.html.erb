@@ -21,11 +21,6 @@
     <!-- Stat Cards Row -->
     <%= render "dashboard/performance_stats" %>
 
-    <!-- Match Verifications -->
-    <div class="bg-slate-800/70 rounded-xl border border-slate-700">
-      <%= render "dashboard/match_verifications", matches: @pending_matches %>
-    </div>
-
     <!-- My Organizations -->
     <div class="bg-slate-800/70 rounded-xl border border-slate-700">
       <%= render "dashboard/my_organizations" %>
@@ -49,7 +44,6 @@
   </div>
 
   <!-- Turbo Stream Channels -->
-  <%= turbo_stream_from "user_#{current_user.id}verifications" %>
   <%= turbo_stream_from "user#{current_user.id}activity" %>
   <%= turbo_stream_from "user#{current_user.id}_organizations" %>
 

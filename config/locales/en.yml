@@ -1,19 +1,5 @@
 en:
   dashboard:
-    matches_to_verify:
-      title: "Matches to Verify"
-      empty: "No matches to verify. You’re all caught up!"
-      logged_by: "Match logged by %{user} on %{time}"
-      claimed_winner: "They claimed the winner is"
-      leaderboard: "Leaderboard"
-      you: "You"
-
-    actions:
-      verify: "Verify"
-      deny: "Deny"
-      confirm_verify: "Are you sure you want to verify this match?"
-      confirm_deny: "Are you sure you want to deny and delete this match?"
-
     recent_activity: "Recent Activity"
 
     recent_match:

@@ -1,8 +1,8 @@
 class MatchesController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_match, only: [:show, :verify, :destroy]
+  before_action :set_match, only: [:show, :destroy]
   before_action :load_leaderboards_and_users, only: [:new, :create]
-  before_action :authorize_match_verification!, only: [:verify, :destroy]
+  before_action :authorize_match_management!, only: [:destroy]
 
   # GET /matches
   # Lists matches the current user has participated in
@@ -81,7 +81,7 @@ class MatchesController < ApplicationController
   end
 
   # POST /matches
-  # Creates a match and queues it for verification
+  # Creates a match and immediately records the result
   def create
     @match_form = MatchForm.new(match_params.merge(user1_id: current_user.id))
 
@@ -111,49 +111,15 @@ class MatchesController < ApplicationController
     end
   end
 
-  # PATCH /matches/:id/verify
-  # Confirms the match (if you are the opponent)
-  def verify
-    if @match.update(verified: true)
-      @match.send(:adjust_ratings)
-
-      logger.info "[MATCH] Verified match #{@match.id} by opponent #{current_user.id}"
-
-      # Broadcast to all subscribers (Turbo auto-removes the match from list)
-      Turbo::StreamsChannel.broadcast_remove_to(
-        "user_#{@match.opponent_id}_verifications",
-        target: "verify_match_#{@match.id}"
-      )
-
-      respond_to do |format|
-        format.turbo_stream { render turbo_stream: turbo_stream.remove("verify_match_#{@match.id}") }
-        format.html { redirect_to dashboard_path, notice: "Match verified!" }
-        format.json { render json: @match, status: :ok }
-      end
-    else
-      logger.error "[MATCH] Failed to verify match #{@match.id}"
-      respond_to do |format|
-        format.html { redirect_to @match, alert: "Failed to verify match." }
-        format.json { render json: @match.errors, status: :unprocessable_entity }
-      end
-    end
-  end
-
   # DELETE /matches/:id
-  # Opponent denies the match (permanently deletes it)
+  # Allows either participant (or an admin) to remove an incorrect match
   def destroy
-    logger.info "[MATCH] Match #{@match.id} denied and deleted by user #{current_user.id}"
+    logger.info "[MATCH] Match #{@match.id} removed by user #{current_user.id}"
     @match.destroy
 
-    # Broadcast removal to everyone viewing their dashboard
-    Turbo::StreamsChannel.broadcast_remove_to(
-      "user_#{@match.opponent_id}_verifications",
-      target: "verify_match_#{@match.id}"
-    )
-
     respond_to do |format|
-      format.turbo_stream { render turbo_stream: turbo_stream.remove("verify_match_#{@match.id}") }
-      format.html { redirect_to dashboard_path, notice: "Match denied and deleted." }
+      format.turbo_stream { head :ok }
+      format.html { redirect_to matches_path, notice: "Match removed." }
       format.json { head :no_content }
     end
   end
@@ -161,7 +127,7 @@ class MatchesController < ApplicationController
   private
 
   def match_params
-    params.require(:match).permit(:leaderboard_id, :opponent_id, :winner_id)
+    params.require(:match).permit(:leaderboard_id, :opponent_id, :winner_id, :is_draw)
   end
 
   def set_match
@@ -189,16 +155,19 @@ class MatchesController < ApplicationController
     end
   end
 
-  def authorize_match_verification!
-    unless @match.opponent_id == current_user.id || @match.leaderboard.organization.admin?(current_user)
-      logger.warn "[MATCH] Unauthorized verification attempt on match #{@match.id} by user #{current_user.id}"
-      respond_to do |format|
-        format.html do
-          flash[:error] = "You don't have permission to verify this match."
-          redirect_to @match
-        end
-        format.json { render json: { error: "Unauthorized" }, status: :unauthorized }
+  def authorize_match_management!
+    return if [@match.user1_id, @match.opponent_id].include?(current_user.id)
+    return if @match.leaderboard.organization.admin?(current_user)
+
+    logger.warn "[MATCH] Unauthorized match removal attempt on match #{@match.id} by user #{current_user.id}"
+    respond_to do |format|
+      format.html do
+        flash[:error] = "You don't have permission to manage this match."
+        redirect_to @match
       end
+      format.turbo_stream { head :unauthorized }
+      format.json { render json: { error: "Unauthorized" }, status: :unauthorized }
     end
+    false
   end
 end

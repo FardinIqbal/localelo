@@ -29,10 +29,10 @@ class User < ApplicationRecord
 
   # Define a method to get win rate
   def win_rate
-    total = matches.where(verified: true).count
+    total = matches.count
     return 0 if total == 0
 
-    wins = matches_won.where(verified: true).count
+    wins = matches_won.count
     (wins.to_f / total * 100).round(2)
   end
 

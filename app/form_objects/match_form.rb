@@ -15,7 +15,6 @@ class MatchForm
     @match = Match.new(attributes)
 
     if @match.save
-      EloCalculatorService.adjust_ratings(@match) unless is_draw.to_s == "1"
       @match
     else
       errors.merge!(@match.errors)
