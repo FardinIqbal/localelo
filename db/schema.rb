@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_03_21_170000) do
+ActiveRecord::Schema[7.1].define(version: 2025_03_21_170001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -122,6 +122,20 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_21_170000) do
     t.index ["visibility"], name: "index_organizations_on_visibility"
   end
 
+  create_table "profiles", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "organization_id", null: false
+    t.string "username", null: false
+    t.string "first_name"
+    t.string "last_name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["organization_id", "user_id"], name: "index_profiles_on_organization_id_and_user_id", unique: true
+    t.index ["organization_id", "username"], name: "index_profiles_on_organization_id_and_username", unique: true
+    t.index ["organization_id"], name: "index_profiles_on_organization_id"
+    t.index ["user_id"], name: "index_profiles_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -152,4 +166,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_21_170000) do
   add_foreign_key "organization_memberships", "organizations"
   add_foreign_key "organization_memberships", "users"
   add_foreign_key "organizations", "users"
+  add_foreign_key "profiles", "organizations"
+  add_foreign_key "profiles", "users"
 end
