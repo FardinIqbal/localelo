@@ -38,8 +38,9 @@ class DashboardController < ApplicationController
                              .pluck(:recorded_at, :elo)
 
     # == Rankings Across All Leaderboards ==
-    @user_rankings = LeaderboardRating.includes(leaderboard: :organization, profile: :user)
-                                      .where(profile_id: profile_ids)
+    @user_rankings = LeaderboardRating.joins(:profile)
+                                      .where(profiles: { user_id: @user.id })
+                                      .includes(leaderboard: :organization)
                                       .order(rating: :desc)
 
     # == Basic Elo Stats ==

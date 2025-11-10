@@ -29,9 +29,9 @@ class MatchForm
   def attributes
     {
       leaderboard_id: leaderboard_id,
-      opponent_profile_id: opponent_profile_id.presence,
-      winner_profile_id: draw? ? nil : winner_profile_id.presence,
-      profile1_id: profile1_id.presence,
+      opponent_profile_id: profile_for_user(opponent_id)&.id,
+      winner_profile_id: draw? ? nil : profile_for_user(winner_id)&.id,
+      profile1_id: profile_for_user(user1_id)&.id,
       is_draw: draw?
     }
   end
@@ -41,13 +41,13 @@ class MatchForm
   end
 
   def winner_or_draw_must_be_present
-    if winner_profile_id.blank? && !draw?
+    if winner_id.blank? && !draw?
       errors.add(:base, "Either a winner must be selected or the match must be a draw")
     end
   end
 
   def winner_must_be_player
-    return if winner_profile_id.blank? || profile1_id.blank? || opponent_profile_id.blank? || draw?
+    return if winner_id.blank? || user1_id.blank? || opponent_id.blank? || draw?
 
     unless [profile1_id.to_i, opponent_profile_id.to_i].include?(winner_profile_id.to_i)
       errors.add(:winner_profile_id, "must be either Player 1 or Opponent")
@@ -62,10 +62,8 @@ class MatchForm
     end
   end
 
-  def profiles_must_exist
-    if leaderboard.nil?
-      errors.add(:leaderboard_id, "is not valid")
-      return
+    unless profile_for_user(opponent_id)
+      errors.add(:opponent_id, "must be a member of the selected leaderboard")
     end
 
     errors.add(:profile1_id, "does not have a profile in this organization") unless profile1&.organization_id == leaderboard.organization_id
@@ -90,5 +88,30 @@ class MatchForm
 
   def winner_profile
     @winner_profile ||= Profile.find_by(id: winner_profile_id)
+  end
+
+  def profiles_must_exist
+    unless leaderboard
+      errors.add(:leaderboard_id, "is not valid")
+      return
+    end
+
+    errors.add(:user1_id, "does not have a profile in this organization") unless profile_for_user(user1_id)
+
+    return if draw? || winner_id.blank?
+
+    errors.add(:winner_id, "must have a profile in this organization") unless profile_for_user(winner_id)
+  end
+
+  def leaderboard
+    @leaderboard ||= Leaderboard.find_by(id: leaderboard_id)
+  end
+
+  def profile_for_user(user_id)
+    return nil if user_id.blank? || leaderboard.nil?
+
+    @profile_cache ||= {}
+    cache_key = user_id.to_i
+    @profile_cache[cache_key] ||= Profile.find_by(user_id: cache_key, organization_id: leaderboard.organization_id)
   end
 end
