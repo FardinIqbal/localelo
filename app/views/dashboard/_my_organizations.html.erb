@@ -10,10 +10,11 @@
     <% end %>
   </div>
 
-  <% if @organizations.any? %>
+  <% profiles ||= [] %>
+  <% if profiles.any? %>
     <div class="space-y-3">
-      <% @organizations.each do |org| %>
-        <% profile = current_user.profile_for(org) %>
+      <% profiles.each do |profile| %>
+        <% org = profile.organization %>
         <div class="bg-slate-700/50 rounded-lg p-4 border border-slate-600 hover:border-purple-500/50 transition-all">
           <div class="flex items-center">
             <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold shadow-lg shadow-purple-500/20">
@@ -48,7 +49,7 @@
           <% if org.leaderboards.any? %>
             <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
               <% org.leaderboards.first(4).each do |leaderboard| %>
-                <% user_rating = profile ? leaderboard.leaderboard_ratings.find_by(profile: profile) : nil %>
+                <% user_rating = profile.leaderboard_ratings.find { |rating| rating.leaderboard_id == leaderboard.id } %>
                 <div class="flex justify-between items-center p-2 rounded-lg bg-slate-800/70 border border-slate-700 hover:border-purple-400/30 transition-all">
                   <div class="flex items-center">
                     <i class="fas fa-trophy text-purple-400 mr-2"></i>

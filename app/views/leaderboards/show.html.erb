@@ -107,7 +107,7 @@
             </thead>
             <tbody class="divide-y divide-slate-700">
             <% @leaderboard.leaderboard_ratings.order(rating: :desc).each_with_index do |rating, index| %>
-              <tr class="hover:bg-slate-700/50 transition-colors <%= rating.user == current_user ? 'bg-purple-900/20' : '' %>">
+              <tr class="hover:bg-slate-700/50 transition-colors <%= rating.profile.user == current_user ? 'bg-purple-900/20' : '' %>">
                 <td class="p-4 text-center">
                   <% if index < 3 %>
                     <div class="w-8 h-8 rounded-full mx-auto flex items-center justify-center
@@ -125,12 +125,12 @@
                 <td class="p-4">
                   <div class="flex items-center">
                     <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold mr-3">
-                      <%= rating.user.username[0..1].upcase %>
+                      <%= rating.profile.username[0..1].upcase %>
                     </div>
                     <div>
-                      <div class="font-medium text-white"><%= rating.user.username %></div>
+                      <div class="font-medium text-white"><%= link_to rating.profile.username, profile_path(rating.profile), class: "hover:text-purple-300 transition-colors" %></div>
                       <div class="text-xs text-slate-400">
-                        <% if rating.user == current_user %>
+                        <% if rating.profile.user == current_user %>
                           <span class="text-purple-400">You</span>
                         <% end %>
                       </div>
@@ -147,8 +147,8 @@
                   </span>
                 </td>
                 <td class="p-4 text-center">
-                  <% if current_user && current_user != rating.user && @organization.organization_memberships.approved.exists?(user: current_user) %>
-                    <%= link_to new_match_path(opponent_id: rating.user.id, leaderboard_id: @leaderboard.id), class: "text-purple-400 hover:text-pink-400 transition-colors" do %>
+                  <% if current_user && rating.profile.user != current_user && @organization.organization_memberships.approved.exists?(user: current_user) %>
+                    <%= link_to new_match_path(opponent_profile_id: rating.profile.id, leaderboard_id: @leaderboard.id), class: "text-purple-400 hover:text-pink-400 transition-colors" do %>
                       <i class="fas fa-gamepad"></i>
                     <% end %>
                   <% end %>

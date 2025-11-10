@@ -41,18 +41,19 @@ class MatchesController < ApplicationController
   # Form for logging a new match
   def new
     @match = Match.new(leaderboard_id: params[:leaderboard_id])
-    @selected_opponent_id = params[:opponent_id]
+    @selected_opponent_profile_id = params[:opponent_profile_id] || params.dig(:match, :opponent_profile_id)
 
     # Recently faced opponents for quick selection
-    @recent_opponents = recent_opponent_users
+    @recent_opponents = recent_opponent_profiles
 
     # Preload users from leaderboard (if selected)
     if params[:leaderboard_id].present?
       @leaderboard = Leaderboard.find_by(id: params[:leaderboard_id])
-      @users = available_users_for_leaderboard(@leaderboard)
+      @opponents = available_profiles_for_leaderboard(@leaderboard)
+      @current_profile = current_user.profile_for(@leaderboard.organization_id) if @leaderboard
     end
 
-    @users ||= []
+    @opponents ||= []
   end
 
   # GET /matches/update_opponents
@@ -65,7 +66,7 @@ class MatchesController < ApplicationController
       return
     end
 
-    @opponents = available_users_for_leaderboard(@leaderboard)
+    @opponents = available_profiles_for_leaderboard(@leaderboard)
 
     if @opponents.empty?
       render turbo_stream: turbo_stream.replace("opponent_selection", "<p class='text-yellow-500'>⚠️ No opponents available.</p>")
@@ -105,10 +106,11 @@ class MatchesController < ApplicationController
     else
       form_attributes = match_params
       @match = Match.new(leaderboard_id: form_attributes[:leaderboard_id])
-      @selected_opponent_id = form_attributes[:opponent_id]
+      @selected_opponent_profile_id = form_attributes[:opponent_profile_id]
       @leaderboard = Leaderboard.find_by(id: form_attributes[:leaderboard_id])
-      @recent_opponents = recent_opponent_users
-      @users = available_users_for_leaderboard(@leaderboard)
+      @recent_opponents = recent_opponent_profiles
+      @opponents = available_profiles_for_leaderboard(@leaderboard)
+      @current_profile = current_user.profile_for(@leaderboard.organization_id) if @leaderboard
 
       respond_to do |format|
         format.html do
@@ -163,14 +165,19 @@ class MatchesController < ApplicationController
 
   def load_leaderboards_and_profiles
     @leaderboards = current_user.organizations.includes(:leaderboards).flat_map(&:leaderboards).uniq
-    @user_profiles_by_org = current_user.profiles.map { |profile| [profile.organization_id, profile.id] }.to_h
+    @user_profiles_by_org = current_user.profiles.map { |profile| [profile.organization_id.to_s, profile.id] }.to_h
+    @current_profile = current_user.profiles.find_by(id: params[:profile_id]) || current_user.profiles.first
 
     if params[:match] && params[:match][:leaderboard_id].present?
-      @users = available_users_for_leaderboard(Leaderboard.find_by(id: params[:match][:leaderboard_id]))
+      leaderboard = Leaderboard.find_by(id: params[:match][:leaderboard_id])
+      @opponents = available_profiles_for_leaderboard(leaderboard)
+      @current_profile = current_user.profile_for(leaderboard.organization_id) if leaderboard
     elsif params[:leaderboard_id].present?
-      @users = available_users_for_leaderboard(Leaderboard.find_by(id: params[:leaderboard_id]))
+      leaderboard = Leaderboard.find_by(id: params[:leaderboard_id])
+      @opponents = available_profiles_for_leaderboard(leaderboard)
+      @current_profile = current_user.profile_for(leaderboard.organization_id) if leaderboard
     else
-      @profiles = []
+      @opponents = []
     end
 
     @user_profiles_by_org ||= {}
@@ -193,7 +200,7 @@ class MatchesController < ApplicationController
     false
   end
 
-  def recent_opponent_users
+  def recent_opponent_profiles
     profiles = current_user.profiles.includes(:organization)
     return [] if profiles.empty?
 
@@ -205,18 +212,40 @@ class MatchesController < ApplicationController
          .limit(5)
          .map do |match|
            if profile_ids.include?(match.profile1_id)
-             match.opponent
+             match.opponent_profile
            else
-             match.user1
+             match.profile1
            end
          end
          .compact
-         .uniq { |user| user.id }
+         .uniq { |profile| profile.id }
   end
 
-  def available_users_for_leaderboard(leaderboard)
+  def available_profiles_for_leaderboard(leaderboard)
     return [] unless leaderboard
 
-    leaderboard.users.where.not(id: current_user.id).distinct
+    leaderboard.profiles.includes(:user).where.not(user_id: current_user.id).distinct
+  end
+
+  def handle_missing_leaderboard
+    respond_to do |format|
+      format.html do
+        flash[:error] = "Leaderboard not found."
+        redirect_to new_match_path
+      end
+      format.json { render json: { error: "Leaderboard not found" }, status: :not_found }
+    end
+    false
+  end
+
+  def handle_missing_profile
+    respond_to do |format|
+      format.html do
+        flash[:error] = "You do not have a profile for this organization."
+        redirect_to new_match_path
+      end
+      format.json { render json: { error: "Profile not found" }, status: :unprocessable_entity }
+    end
+    false
   end
 end

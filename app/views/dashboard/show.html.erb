@@ -13,22 +13,22 @@
   <div class="relative z-10 max-w-7xl mx-auto px-4 py-6 space-y-8">
 
     <!-- Welcome Header -->
-    <%= render "dashboard/welcome_header" %>
+    <%= render "dashboard/welcome_header", profile: @profile %>
 
     <!-- Quick Actions -->
-    <%= render "dashboard/quick_actions" %>
+    <%= render "dashboard/quick_actions", profile: @profile %>
 
     <!-- Stat Cards Row -->
-    <%= render "dashboard/performance_stats" %>
+    <%= render "dashboard/performance_stats", profile: @profile, stats: @profile_stats %>
 
     <!-- My Organizations -->
     <div class="bg-slate-800/70 rounded-xl border border-slate-700">
-      <%= render "dashboard/my_organizations" %>
+      <%= render "dashboard/my_organizations", profiles: @profiles %>
     </div>
 
     <!-- Recent Activity Toggle + Match Feed -->
     <div class="bg-slate-800/70 rounded-xl border border-slate-700">
-      <%= render "dashboard/recent_activity" %>
+      <%= render "dashboard/recent_activity", profile: @profile, matches_all: @recent_matches_all, matches_mine: @recent_matches_mine %>
     </div>
 
     <!-- Leaderboard Spotlight -->

@@ -47,10 +47,12 @@
                extra_classes: nav_active_class(account_organizations_path) %>
 
     <%# User Profile navigation link %>
+    <% primary_profile = current_user.profiles.first %>
+    <% profile_path_link = primary_profile ? profile_path(primary_profile) : authenticated_root_path %>
     <%= render 'shared/navigation/bottom_nav_link',
                text: 'Profile',
-               path: user_path(current_user),
+               path: profile_path_link,
                icon: 'fa-user',
-               extra_classes: nav_active_class(user_path(current_user)) %>
+               extra_classes: nav_active_class(profile_path_link) %>
   </div>
 </div>
