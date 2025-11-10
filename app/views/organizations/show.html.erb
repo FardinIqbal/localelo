@@ -186,18 +186,18 @@
                         <div class="flex items-center">
                           <div class="flex items-center">
                             <div class="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400">
-                              <%= match.user1.username[0..1].upcase %>
+                              <%= match.profile1.username[0..1].upcase %>
                             </div>
                             <span class="mx-2 text-slate-500">vs</span>
                             <div class="w-8 h-8 rounded-full bg-pink-500/20 flex items-center justify-center text-pink-400">
-                              <%= match.opponent.username[0..1].upcase %>
+                              <%= match.opponent_profile.username[0..1].upcase %>
                             </div>
                           </div>
                           <div class="ml-3">
                             <div class="text-white font-medium">
-                              <%= link_to match.user1.username, user_path(match.user1), class: "hover:text-purple-400" %>
+                              <%= link_to match.profile1.username, profile_path(match.profile1), class: "hover:text-purple-400" %>
                               vs
-                              <%= link_to match.opponent.username, user_path(match.opponent), class: "hover:text-purple-400" %>
+                              <%= link_to match.opponent_profile.username, profile_path(match.opponent_profile), class: "hover:text-purple-400" %>
                             </div>
                             <div class="text-xs text-slate-400 mt-0.5">
                               <%= match.leaderboard.name %> • <%= match.created_at.strftime("%b %d, %Y") %>
@@ -209,7 +209,7 @@
                           <% if match.is_draw %>
                             <span class="text-yellow-400 font-medium">Draw</span>
                           <% else %>
-                            <span class="text-green-400 font-medium"><%= match.winner.username %> won</span>
+                            <span class="text-green-400 font-medium"><%= match.winner_profile&.username %> won</span>
                           <% end %>
                         </div>
                       </div>
@@ -232,31 +232,32 @@
                 <h2 class="text-xl font-bold text-white">Top Players</h2>
               </div>
 
-              <% top_players = User.joins(leaderboard_ratings: :leaderboard)
-                                   .where(leaderboards: { organization_id: @organization.id })
-                                   .select("users.*, MAX(leaderboard_ratings.rating) as highest_rating")
-                                   .group("users.id")
-                                   .order("highest_rating DESC")
-                                   .limit(5) %>
+              <% top_ratings = LeaderboardRating
+                                 .joins(:leaderboard)
+                                 .where(leaderboards: { organization_id: @organization.id })
+                                 .includes(:profile)
+                                 .order(rating: :desc)
+                                 .limit(5) %>
 
-              <% if top_players.any? %>
+              <% if top_ratings.any? %>
                 <div class="divide-y divide-slate-700">
-                  <% top_players.each_with_index do |player, index| %>
+                  <% top_ratings.each_with_index do |rating, index| %>
+                    <% profile = rating.profile %>
                     <div class="flex items-center justify-between p-3 hover:bg-slate-700/50 transition-colors">
                       <div class="flex items-center">
                         <div class="w-8 h-8 flex items-center justify-center rounded-full <%= index < 3 ? 'bg-gradient-to-r from-purple-500 to-pink-500' : 'bg-slate-700' %> text-white font-bold text-sm">
                           <%= index + 1 %>
                         </div>
                         <div class="ml-3">
-                          <div class="text-white font-medium"><%= player.username %></div>
+                          <div class="text-white font-medium"><%= link_to profile.username, profile_path(profile), class: "hover:text-purple-300 transition-colors" %></div>
                           <div class="text-xs text-slate-400">
                             <%= LeaderboardRating.joins(:leaderboard)
-                                                 .where(user_id: player.id, leaderboards: { organization_id: @organization.id })
+                                                 .where(profile_id: profile.id, leaderboards: { organization_id: @organization.id })
                                                  .sum(:wins) %> wins
                           </div>
                         </div>
                       </div>
-                      <div class="text-lg font-bold text-purple-400"><%= player.highest_rating.to_i %></div>
+                      <div class="text-lg font-bold text-purple-400"><%= rating.rating.to_i %></div>
                     </div>
                   <% end %>
                 </div>
@@ -274,8 +275,13 @@
                   <h2 class="text-xl font-bold text-white">Your Ratings</h2>
                 </div>
 
-                <% user_ratings = LeaderboardRating.joins(:leaderboard)
-                                                   .where(user_id: current_user.id, leaderboards: { organization_id: @organization.id }) %>
+                <% current_profile ||= current_user.profile_for(@organization) %>
+                <% user_ratings = if current_profile
+                                    LeaderboardRating.joins(:leaderboard)
+                                                     .where(profile_id: current_profile.id, leaderboards: { organization_id: @organization.id })
+                                  else
+                                    LeaderboardRating.none
+                                  end %>
 
                 <% if user_ratings.any? %>
                   <div class="divide-y divide-slate-700">
@@ -447,7 +453,7 @@
                           <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold <%= index == 0 ? 'bg-yellow-400/20 text-yellow-400' : (index == 1 ? 'bg-slate-400/20 text-slate-400' : 'bg-amber-700/20 text-amber-700') %>">
                             <%= index + 1 %>
                           </div>
-                          <span class="ml-2 text-sm text-white"><%= rating.user.username %></span>
+                          <span class="ml-2 text-sm text-white"><%= link_to rating.profile.username, profile_path(rating.profile), class: "hover:text-purple-300 transition-colors" %></span>
                         </div>
                         <span class="text-sm font-medium text-purple-400"><%= rating.rating %></span>
                       </div>
@@ -525,7 +531,7 @@
                         <%= membership.profile.username.to_s[0..1].upcase %>
                       </div>
                       <div class="ml-3">
-                        <div class="text-white font-medium"><%= membership.profile.username %></div>
+                        <div class="text-white font-medium"><%= link_to membership.profile.username, profile_path(membership.profile), class: "hover:text-purple-300 transition-colors" %></div>
                         <div class="text-xs text-slate-400"><%= membership.profile.user.email %></div>
                       </div>
                     </div>
@@ -636,21 +642,21 @@
                   <td class="px-4 py-3">
                     <div class="flex items-center">
                       <div class="flex items-center">
-                        <div class="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 text-xs"> <%= match.user1.username[0..1].upcase %> </div>
+                        <div class="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 text-xs"> <%= match.profile1.username[0..1].upcase %> </div>
                         <span class="mx-1 text-slate-500">vs</span>
-                        <div class="w-8 h-8 rounded-full bg-pink-500/20 flex items-center justify-center text-pink-400 text-xs"> <%= match.opponent.username[0..1].upcase %> </div>
+                        <div class="w-8 h-8 rounded-full bg-pink-500/20 flex items-center justify-center text-pink-400 text-xs"> <%= match.opponent_profile.username[0..1].upcase %> </div>
                       </div>
                       <div class="ml-3">
-                        <div class="text-white font-medium"> <%= link_to match.user1.username, user_path(match.user1), class: "hover:text-purple-400" %>
-                          vs <%= link_to match.opponent.username, user_path(match.opponent), class: "hover:text-purple-400" %> </div>
+                        <div class="text-white font-medium"> <%= link_to match.profile1.username, profile_path(match.profile1), class: "hover:text-purple-400" %>
+                          vs <%= link_to match.opponent_profile.username, profile_path(match.opponent_profile), class: "hover:text-purple-400" %> </div>
                       </div>
                     </div>
                   </td>
                   <td class="px-4 py-3 text-slate-300"> <%= match.leaderboard.name %> </td>
                   <td class="px-4 py-3">
                     <% if match.is_draw %> <span class="text-yellow-400">Draw</span>
-                    <% elsif match.winner_id.present? %>
-                      <span class="text-green-400"><%= match.winner.username %> won</span>
+                    <% elsif match.winner_profile_id.present? %>
+                      <span class="text-green-400"><%= match.winner_profile&.username %> won</span>
                     <% else %> <span class="text-slate-400">No result</span>
                     <% end %> </td>
                   <td class="px-4 py-3">
@@ -719,10 +725,10 @@
                     <div class="p-4 flex justify-between items-center">
                       <div class="flex items-center">
                         <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-white font-bold">
-                          <%= request.user.username[0..1].upcase %>
+                          <%= request.profile.username[0..1].upcase %>
                         </div>
                         <div class="ml-3">
-                          <div class="text-white font-medium"><%= request.user.username %></div>
+                          <div class="text-white font-medium"><%= request.profile.username %></div>
                           <div class="text-xs text-slate-400">Requested <%= time_ago_in_words(request.created_at) %>
                             ago
                           </div>
