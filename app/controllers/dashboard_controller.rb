@@ -111,11 +111,11 @@ class DashboardController < ApplicationController
     # == Most Active Leaderboard ==
     @most_active_leaderboard = if profile_ids.any?
                                  Match.involving_profiles(profile_ids)
+                                      .select("matches.leaderboard_id, COUNT(*) AS matches_count")
                                       .group(:leaderboard_id)
-                                      .order(Arel.sql("COUNT(*) DESC"))
+                                      .order(Arel.sql("matches_count DESC"))
                                       .limit(1)
-                                      .map(&:leaderboard)
-                                      .first
+                                      .first&.leaderboard
                                end
 
     @organization = @most_active_leaderboard&.organization
