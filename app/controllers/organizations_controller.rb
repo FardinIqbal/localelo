@@ -189,7 +189,7 @@ class OrganizationsController < ApplicationController
 
   # PATCH /organizations/:id/approve_member
   def approve_member
-    user = User.find_by(id: params[:user_id])
+    membership = membership_for_user(params[:user_id], status: :pending)
 
     unless user
       respond_to do |format|
