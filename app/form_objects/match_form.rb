@@ -15,11 +15,11 @@ class MatchForm
 
     @match = Match.new(
       leaderboard_id: leaderboard_id,
-      opponent_profile_id: opponent_profile_id,
-      winner_profile_id: draw? ? nil : winner_profile_id,
-      profile1_id: profile1_id,
+      winner_profile: draw? ? nil : winner_profile,
       is_draw: draw?
     )
+
+    build_participants
 
     if @match.save
       @match
@@ -89,5 +89,17 @@ class MatchForm
 
   def winner_profile
     @winner_profile ||= Profile.find_by(id: winner_profile_id)
+  end
+
+  def build_participants
+    @match.match_participants.build(
+      profile: profile1,
+      is_winner: !draw? && winner_profile_id.to_i == profile1_id.to_i
+    )
+
+    @match.match_participants.build(
+      profile: opponent_profile,
+      is_winner: !draw? && winner_profile_id.to_i == opponent_profile_id.to_i
+    )
   end
 end

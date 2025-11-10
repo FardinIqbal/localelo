@@ -2,8 +2,8 @@ module HasMatches
   extend ActiveSupport::Concern
   
   included do
-    has_many :matches_as_player1, class_name: 'Match', foreign_key: 'profile1_id'
-    has_many :matches_as_opponent, class_name: 'Match', foreign_key: 'opponent_profile_id'
+    has_many :match_participants, dependent: :destroy
+    has_many :matches, through: :match_participants
     has_many :matches_won, class_name: 'Match', foreign_key: 'winner_profile_id'
   end
 
