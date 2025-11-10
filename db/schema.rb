@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_03_21_170001) do
+ActiveRecord::Schema[7.1].define(version: 2025_03_21_170006) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -43,24 +43,25 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_21_170001) do
   end
 
   create_table "elo_histories", force: :cascade do |t|
-    t.bigint "profile_id", null: false
     t.bigint "leaderboard_id", null: false
     t.integer "elo", null: false
     t.datetime "recorded_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.bigint "profile_id", null: false
     t.index ["profile_id", "leaderboard_id", "recorded_at"], name: "index_elo_history_on_profile_and_leaderboard"
+    t.index ["profile_id"], name: "index_elo_histories_on_profile_id"
   end
 
   create_table "leaderboard_ratings", force: :cascade do |t|
-    t.bigint "profile_id", null: false
     t.bigint "leaderboard_id", null: false
     t.integer "rating", default: 1500, null: false
     t.integer "wins", default: 0
     t.integer "losses", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "profile_id", null: false
     t.index ["leaderboard_id", "rating"], name: "index_leaderboard_ratings_on_leaderboard_id_and_rating"
     t.index ["leaderboard_id"], name: "index_leaderboard_ratings_on_leaderboard_id"
-    t.index ["profile_id", "leaderboard_id"], name: "index_leaderboard_ratings_on_profile_and_leaderboard", unique: true
+    t.index ["profile_id", "leaderboard_id"], name: "index_leaderboard_ratings_on_profile_id_and_leaderboard_id", unique: true
     t.index ["profile_id"], name: "index_leaderboard_ratings_on_profile_id"
   end
 
@@ -76,9 +77,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_21_170001) do
   end
 
   create_table "matches", force: :cascade do |t|
-    t.bigint "profile1_id", null: false
-    t.bigint "opponent_profile_id", null: false
-    t.bigint "winner_profile_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "match_time"
@@ -86,6 +84,9 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_21_170001) do
     t.integer "elo_at_time", default: 1500, null: false
     t.bigint "leaderboard_id", null: false
     t.boolean "is_draw", default: false, null: false
+    t.bigint "profile1_id", null: false
+    t.bigint "opponent_profile_id", null: false
+    t.bigint "winner_profile_id"
     t.index ["leaderboard_id"], name: "index_matches_on_leaderboard_id"
     t.index ["match_time"], name: "index_matches_on_match_time"
     t.index ["opponent_profile_id"], name: "index_matches_on_opponent_profile_id"
@@ -95,12 +96,12 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_21_170001) do
   end
 
   create_table "organization_memberships", force: :cascade do |t|
-    t.bigint "profile_id", null: false
     t.bigint "organization_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "status", default: 0, null: false
     t.boolean "admin", default: false, null: false
+    t.bigint "profile_id", null: false
     t.index ["organization_id"], name: "index_organization_memberships_on_organization_id"
     t.index ["profile_id"], name: "index_organization_memberships_on_profile_id"
   end
