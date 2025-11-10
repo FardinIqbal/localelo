@@ -2,6 +2,8 @@ class Profile < ApplicationRecord
   belongs_to :user
   belongs_to :organization
 
+  has_many :organization_memberships, dependent: :destroy
+
   has_many :leaderboard_ratings, dependent: :destroy
   has_many :leaderboards, through: :leaderboard_ratings
   has_many :matches_as_profile1, class_name: "Match", foreign_key: :profile1_id, inverse_of: :profile1
