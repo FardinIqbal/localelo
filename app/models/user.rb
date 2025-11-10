@@ -118,16 +118,18 @@ class User < ApplicationRecord
 
     match_ids = MatchParticipant.where(profile_id: ids).select(:match_id)
 
-    opponent_participant = MatchParticipant
-                             .joins(:match)
-                             .merge(Match.active)
-                             .where(match_id: match_ids)
-                             .where.not(profile_id: ids)
-                             .group(:profile_id)
-                             .order(Arel.sql("COUNT(*) DESC"))
-                             .first
+    opponent_profile_id = MatchParticipant
+                            .joins(:match)
+                            .merge(Match.active)
+                            .where(match_id: match_ids)
+                            .where.not(profile_id: ids)
+                            .group(:profile_id)
+                            .order(Arel.sql("COUNT(*) DESC"))
+                            .limit(1)
+                            .pluck(:profile_id)
+                            .first
 
-    opponent_participant&.profile&.user
+    Profile.find_by(id: opponent_profile_id)&.user
   end
 
   # Returns the Elo rating for the user on the provided leaderboard.
