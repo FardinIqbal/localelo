@@ -249,7 +249,7 @@ class OrganizationsController < ApplicationController
           redirect_to @organization
         }
         format.json { render json: { error: "Not a member" }, status: :not_found }
-      elsif @organization.user_id == current_user.id
+      elsif @organization.owner?(current_user)
         format.html {
           flash[:alert] = "As the owner, you cannot leave this organization. You must delete it or transfer ownership first."
           redirect_to @organization
@@ -300,7 +300,7 @@ class OrganizationsController < ApplicationController
     membership = membership_for_user(params[:user_id], admin: true)
 
     respond_to do |format|
-      if membership&.user&.id == @organization.user_id
+      if membership&.user && @organization.owner?(membership.user)
         format.html {
           flash[:alert] = "Cannot remove admin status from the organization owner."
           redirect_to members_organization_path(@organization)
@@ -333,7 +333,7 @@ class OrganizationsController < ApplicationController
           redirect_to members_organization_path(@organization)
         }
         format.json { render json: { error: "Not a member" }, status: :not_found }
-      elsif membership.user&.id == @organization.user_id
+      elsif membership.user && @organization.owner?(membership.user)
         format.html {
           flash[:alert] = "Cannot remove the organization owner."
           redirect_to members_organization_path(@organization)
@@ -374,10 +374,7 @@ class OrganizationsController < ApplicationController
   end
 
   def authorize_admin!
-    unless current_user.id == @organization.user_id ||
-      @organization.organization_memberships.joins(:profile)
-                     .where(profiles: { user_id: current_user.id }, admin: true, status: :approved)
-                     .exists?
+    unless @organization.admin?(current_user)
       flash[:alert] = "You don't have permission to perform this action."
       redirect_to @organization
     end
@@ -435,6 +432,7 @@ class OrganizationsController < ApplicationController
       membership = organization.organization_memberships.find_or_initialize_by(profile: profile)
       membership.status = :approved
       membership.admin = true
+      membership.is_owner = true
       membership.save!
     end
 
