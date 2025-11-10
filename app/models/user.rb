@@ -2,6 +2,7 @@ class User < ApplicationRecord
   include Discard::Model
 
   default_scope { kept }
+  before_discard :anonymize_user
 
   # Include Devise modules for authentication functionality
   devise :database_authenticatable, :registerable,
@@ -40,14 +41,44 @@ class User < ApplicationRecord
     profile_username.presence || email&.split("@").first
   end
 
+  def username=(value)
+    update_all_profiles(username: value)
+  end
+
   def first_name
     primary_profile&.first_name
+  end
+
+  def first_name=(value)
+    update_all_profiles(first_name: value)
   end
 
   def last_name
     primary_profile&.last_name
   end
 
+  def last_name=(value)
+    update_all_profiles(last_name: value)
+  end
+
   # == Validations ==
-  validates :email, presence: true, uniqueness: true
+  validates :email, presence: true, uniqueness: { scope: :discarded_at }
+
+  private
+
+  def anonymize_user
+    identifier = id || SecureRandom.hex(4)
+
+    self.email = "anonymized_#{identifier}@localelo.com"
+    self.username = "Deleted User #{identifier}"
+    self.first_name = "Deleted"
+    self.last_name = "User"
+    self.encrypted_password = SecureRandom.hex(32)
+  end
+
+  def update_all_profiles(attributes)
+    return unless profiles.exists?
+
+    profiles.update_all(attributes.merge(updated_at: Time.current))
+  end
 end
