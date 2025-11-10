@@ -13,35 +13,41 @@
   </div>
 
   <!-- Win/Loss Ratio -->
-  <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
-    <div class="text-sm text-slate-400">Win/Loss Ratio</div>
-    <div class="text-2xl font-bold text-white mt-1">
-      <%= stats[:win_loss_ratio] || "0.0" %>
+  <% if @scoped_organization %>
+    <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
+      <div class="text-sm text-slate-400">Win/Loss Ratio</div>
+      <div class="text-2xl font-bold text-white mt-1">
+        <%= stats[:win_loss_ratio] || "0.0" %>
+      </div>
+      <div class="mt-2 text-xs text-pink-400">
+        <i class="fas fa-trophy mr-1"></i> <%= stats[:total_wins] || 0 %> W / <%= stats[:total_losses] || 0 %> L
+      </div>
     </div>
-    <div class="mt-2 text-xs text-pink-400">
-      <i class="fas fa-trophy mr-1"></i> <%= stats[:total_wins] || 0 %> W / <%= stats[:total_losses] || 0 %> L
-    </div>
-  </div>
+  <% end %>
 
   <!-- Highest Elo -->
-  <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
-    <div class="text-sm text-slate-400">Highest Elo</div>
-    <div class="text-2xl font-bold text-white mt-1">
-      <%= stats[:highest_elo] || 1500 %>
+  <% if @scoped_organization %>
+    <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
+      <div class="text-sm text-slate-400">Highest Elo</div>
+      <div class="text-2xl font-bold text-white mt-1">
+        <%= stats[:highest_elo] || 1500 %>
+      </div>
+      <div class="mt-2 text-xs text-purple-400">
+        <i class="fas fa-medal mr-1"></i> Peak rating
+      </div>
     </div>
-    <div class="mt-2 text-xs text-purple-400">
-      <i class="fas fa-medal mr-1"></i> Peak rating
-    </div>
-  </div>
+  <% end %>
 
   <!-- Average Elo -->
-  <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
-    <div class="text-sm text-slate-400">Average Elo</div>
-    <div class="text-2xl font-bold text-white mt-1">
-      <%= stats[:average_elo] || 1500 %>
+  <% if @scoped_organization %>
+    <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
+      <div class="text-sm text-slate-400">Average Elo</div>
+      <div class="text-2xl font-bold text-white mt-1">
+        <%= stats[:average_elo] || 1500 %>
+      </div>
+      <div class="mt-2 text-xs text-pink-400">
+        <i class="fas fa-calculator mr-1"></i> Across all gyms
+      </div>
     </div>
-    <div class="mt-2 text-xs text-pink-400">
-      <i class="fas fa-calculator mr-1"></i> Across all gyms
-    </div>
-  </div>
+  <% end %>
 </div>
