@@ -32,6 +32,28 @@ class User < ApplicationRecord
          .distinct
   end
 
+  def total_matches
+    matches.count
+  end
+
+  def total_wins
+    wins_count
+  end
+
+  def total_losses
+    ids = profile_ids
+    return 0 if ids.empty?
+
+    Match.active
+         .where("(profile1_id IN (:ids) OR opponent_profile_id IN (:ids)) AND winner_profile_id IS NOT NULL", ids: ids)
+         .where.not(winner_profile_id: ids)
+         .count
+  end
+
+  def draws_count
+    matches.where(is_draw: true).count
+  end
+
   def wins_count
     profile_scope = profiles.select(:id)
 
@@ -43,6 +65,76 @@ class User < ApplicationRecord
     return 0 if total.zero?
 
     (wins_count.to_f / total * 100).round(1)
+  end
+
+  def win_loss_ratio
+    losses = total_losses
+    return total_wins if losses.zero?
+
+    (total_wins.to_f / losses).round(2)
+  end
+
+  def highest_elo
+    leaderboard_ratings.maximum(:rating) || Match::DEFAULT_RATING
+  end
+
+  def win_ratio_trend(limit: 10)
+    ids = profile_ids
+    return [] if ids.empty?
+
+    recent_matches = Match.active
+                           .where("profile1_id IN (:ids) OR opponent_profile_id IN (:ids)", ids: ids)
+                           .order(created_at: :desc)
+                           .limit(limit)
+                           .includes(:profile1, :opponent_profile)
+                           .to_a
+                           .reverse
+    return [] if recent_matches.empty?
+
+    wins = 0
+    total = 0
+
+    recent_matches.map do |match|
+      total += 1
+      wins += 1 if match.winner_profile_id.present? && ids.include?(match.winner_profile_id)
+      {
+        match_id: match.id,
+        occurred_at: match.created_at,
+        win_rate: total.zero? ? 0 : (wins.to_f / total * 100).round(1)
+      }
+    end
+  end
+
+  def most_frequent_opponent
+    ids = profile_ids
+    return nil if ids.empty?
+
+    opponent_counts = Hash.new(0)
+
+    Match.active
+         .where(profile1_id: ids)
+         .group(:opponent_profile_id)
+         .count
+         .each do |opponent_profile_id, count|
+           next if opponent_profile_id.nil?
+
+           opponent_counts[opponent_profile_id] += count
+         end
+
+    Match.active
+         .where(opponent_profile_id: ids)
+         .group(:profile1_id)
+         .count
+         .each do |opponent_profile_id, count|
+           next if opponent_profile_id.nil?
+
+           opponent_counts[opponent_profile_id] += count
+         end
+
+    most_played_profile_id, = opponent_counts.max_by { |_, count| count }
+    return nil unless most_played_profile_id
+
+    Profile.find_by(id: most_played_profile_id)&.user
   end
 
   # Returns the Elo rating for the user on the provided leaderboard.
@@ -96,6 +188,10 @@ class User < ApplicationRecord
   validates :email, presence: true, uniqueness: { scope: :discarded_at }
 
   private
+
+  def profile_ids
+    @profile_ids ||= profiles.ids
+  end
 
   def anonymize_user
     identifier = id
