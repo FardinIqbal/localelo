@@ -28,6 +28,7 @@ class DashboardController < ApplicationController
     @organizations = current_user.organizations
                                  .includes(leaderboards: :leaderboard_ratings)
                                  .order(created_at: :desc)
+    @selectable_organizations = current_user.organizations.order(:name)
 
     # == Match History (Recent Activity Partial) ==
     @recent_matches_all = if organization_ids.any?
