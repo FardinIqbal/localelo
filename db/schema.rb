@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_11_10_153231) do
+ActiveRecord::Schema[7.1].define(version: 2025_11_10_220001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -107,6 +107,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_11_10_153231) do
     t.integer "status", default: 0, null: false
     t.boolean "admin", default: false, null: false
     t.bigint "profile_id", null: false
+    t.boolean "is_owner", default: false, null: false
+    t.index ["organization_id", "is_owner"], name: "index_organization_memberships_on_organization_id_and_is_owner", unique: true, where: "(is_owner = true)"
     t.index ["organization_id"], name: "index_organization_memberships_on_organization_id"
     t.index ["profile_id"], name: "index_organization_memberships_on_profile_id"
   end
@@ -115,7 +117,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_11_10_153231) do
     t.string "name", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.bigint "user_id"
     t.text "description"
     t.string "location"
     t.string "website"
@@ -124,7 +125,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_11_10_153231) do
     t.string "subdomain"
     t.index ["name"], name: "index_organizations_on_name"
     t.index ["subdomain"], name: "index_organizations_on_subdomain", unique: true
-    t.index ["user_id"], name: "index_organizations_on_user_id"
     t.index ["visibility"], name: "index_organizations_on_visibility"
   end
 
@@ -170,7 +170,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_11_10_153231) do
   add_foreign_key "matches", "profiles", column: "winner_profile_id"
   add_foreign_key "organization_memberships", "organizations"
   add_foreign_key "organization_memberships", "profiles"
-  add_foreign_key "organizations", "users"
   add_foreign_key "profiles", "organizations"
   add_foreign_key "profiles", "users"
 end
