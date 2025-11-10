@@ -135,7 +135,7 @@ class Organization < ApplicationRecord
 
   # Get active users (users who have played matches)
   def active_users
-    profile_ids = matches.pluck(:profile1_id, :opponent_profile_id).flatten.compact.uniq
+    profile_ids = matches.joins(:match_participants).pluck('match_participants.profile_id').uniq
     Profile.where(id: profile_ids).includes(:user).map(&:user).compact
   end
 

@@ -8,7 +8,7 @@ class MatchesController < ApplicationController
   # Lists matches the current user has participated in
   def index
     @matches = current_user.matches
-                           .includes(profile1: :user, opponent_profile: :user, leaderboard: :organization)
+                           .includes(match_participants: { profile: :user }, leaderboard: :organization)
                            .recent
                            .page(params[:page])
                            .per(20)
@@ -23,7 +23,13 @@ class MatchesController < ApplicationController
   # Returns recent activity for polling (for dashboard)
   def recent
     scope = params[:scope] == "mine" ? :mine : :all
-    @recent_matches = scope == :mine ? current_user.matches.recent.limit(10) : Match.recent.limit(10)
+    @recent_matches = if scope == :mine
+                        current_user.matches.recent.limit(10)
+                      else
+                        Match.recent
+                             .includes(match_participants: { profile: :user }, leaderboard: :organization)
+                             .limit(10)
+                      end
 
     respond_to do |format|
       format.turbo_stream do
@@ -151,7 +157,7 @@ class MatchesController < ApplicationController
   end
 
   def set_match
-    @match = Match.includes(:user1, :opponent, leaderboard: :organization).find(params[:id])
+    @match = Match.includes(match_participants: { profile: :user }, leaderboard: :organization).find(params[:id])
   rescue ActiveRecord::RecordNotFound
     logger.warn "[MATCH] Match not found: #{params[:id]}"
     respond_to do |format|
@@ -198,7 +204,7 @@ class MatchesController < ApplicationController
     end
 
     profile_ids = current_user.profile_ids
-    return if profile_ids.include?(@match.profile1_id) || profile_ids.include?(@match.opponent_profile_id)
+    return if (@match.participant_profile_ids & profile_ids).any?
     return if @match.leaderboard.organization.admin?(current_user)
 
     logger.warn "[MATCH] Unauthorized match removal attempt on match #{@match.id} by user #{current_user.id}"
@@ -220,15 +226,12 @@ class MatchesController < ApplicationController
     profile_ids = profiles.map(&:id)
 
     Match.involving_profiles(profile_ids)
-         .includes(profile1: :user, opponent_profile: :user)
+         .includes(match_participants: { profile: :user })
          .order(created_at: :desc)
          .limit(5)
          .map do |match|
-           if profile_ids.include?(match.profile1_id)
-             match.opponent_profile
-           else
-             match.profile1
-           end
+           participant = match.match_participants.find { |participant| !profile_ids.include?(participant.profile_id) }
+           participant&.profile
          end
          .compact
          .uniq { |profile| profile.id }

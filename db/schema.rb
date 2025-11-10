@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_11_10_220001) do
+ActiveRecord::Schema[7.1].define(version: 2025_12_01_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -83,21 +83,27 @@ ActiveRecord::Schema[7.1].define(version: 2025_11_10_220001) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "match_time"
-    t.integer "elo_change"
-    t.integer "elo_at_time", default: 1500, null: false
     t.bigint "leaderboard_id", null: false
     t.boolean "is_draw", default: false, null: false
-    t.bigint "profile1_id", null: false
-    t.bigint "opponent_profile_id", null: false
     t.bigint "winner_profile_id"
     t.integer "status", default: 0, null: false
     t.index ["leaderboard_id"], name: "index_matches_on_leaderboard_id"
     t.index ["match_time"], name: "index_matches_on_match_time"
-    t.index ["opponent_profile_id"], name: "index_matches_on_opponent_profile_id"
-    t.index ["profile1_id", "opponent_profile_id", "leaderboard_id"], name: "index_matches_on_profile1_and_opponent_profile_and_leaderboard"
-    t.index ["profile1_id"], name: "index_matches_on_profile1_id"
     t.index ["status"], name: "index_matches_on_status"
     t.index ["winner_profile_id"], name: "index_matches_on_winner_profile_id"
+  end
+
+  create_table "match_participants", force: :cascade do |t|
+    t.bigint "match_id", null: false
+    t.bigint "profile_id", null: false
+    t.integer "elo_before_match"
+    t.integer "elo_after_match"
+    t.boolean "is_winner", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["match_id", "profile_id"], name: "index_match_participants_on_match_id_and_profile_id", unique: true
+    t.index ["match_id"], name: "index_match_participants_on_match_id"
+    t.index ["profile_id"], name: "index_match_participants_on_profile_id"
   end
 
   create_table "organization_memberships", force: :cascade do |t|
@@ -165,9 +171,9 @@ ActiveRecord::Schema[7.1].define(version: 2025_11_10_220001) do
   add_foreign_key "leaderboard_ratings", "profiles"
   add_foreign_key "leaderboards", "organizations"
   add_foreign_key "matches", "leaderboards"
-  add_foreign_key "matches", "profiles", column: "opponent_profile_id"
-  add_foreign_key "matches", "profiles", column: "profile1_id"
   add_foreign_key "matches", "profiles", column: "winner_profile_id"
+  add_foreign_key "match_participants", "matches"
+  add_foreign_key "match_participants", "profiles"
   add_foreign_key "organization_memberships", "organizations"
   add_foreign_key "organization_memberships", "profiles"
   add_foreign_key "profiles", "organizations"

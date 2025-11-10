@@ -547,9 +547,10 @@
                     <%= membership.created_at.strftime("%b %d, %Y") %>
                   </td>
                   <td class="px-4 py-3 text-slate-400 text-sm">
-                    <%= Match.joins(:leaderboard)
+                    <%= Match.joins(:leaderboard, :match_participants)
                              .where(leaderboards: { organization_id: @organization.id })
-                             .where("profile1_id = :id OR opponent_profile_id = :id", id: membership.profile_id)
+                             .where(match_participants: { profile_id: membership.profile_id })
+                             .distinct
                              .count %>
                   </td>
                   <td class="px-4 py-3 text-purple-400 font-medium">
