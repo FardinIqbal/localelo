@@ -6,14 +6,6 @@ class DashboardController < ApplicationController
   # performance summaries, gym affiliations, rankings, and more — all personalized.
   def show
     @user = current_user
-    @profiles = current_user.profiles
-                             .includes(organization: :leaderboards,
-                                       leaderboard_ratings: :leaderboard)
-                             .order(created_at: :desc)
-    @profile = if params[:profile_id].present?
-                 @profiles.find { |profile| profile.id == params[:profile_id].to_i }
-               end
-    @profile ||= @profiles.first
 
     if params[:organization_id].present? && params[:organization_id] != "all"
       @scoped_organization = current_user.organizations.find_by(id: params[:organization_id])
@@ -25,14 +17,36 @@ class DashboardController < ApplicationController
       @scoped_organization = nil
     end
 
-    profile_ids = @profile ? [@profile.id] : @user.profile_ids
+    @profiles = current_user.profiles
+                             .includes(organization: :leaderboards,
+                                       leaderboard_ratings: :leaderboard)
+                             .order(created_at: :desc)
+    @profiles = @profiles.where(organization_id: @scoped_organization.id) if @scoped_organization
+
+    @profile = if params[:profile_id].present?
+                 @profiles.find_by(id: params[:profile_id])
+               end
+    @profile ||= @profiles.first
+
+    profile_ids = if @profile
+                     [@profile.id]
+                   else
+                     @profiles.ids
+                   end
+    profile_ids = Array(profile_ids)
     @profile_ids = profile_ids
 
-    organization_ids = if @profile
+    organization_ids = if @scoped_organization
+                         [@scoped_organization.id]
+                       elsif @profile
                          [@profile.organization_id]
-                       else
+                       elsif @profiles.any?
                          @profiles.pluck(:organization_id)
+                       else
+                         []
                        end
+
+    scoped_leaderboard_ids = Array(@scoped_organization&.leaderboard_ids)
 
     # == Organizations and Leaderboards ==
     @organizations = current_user.organizations
@@ -41,7 +55,14 @@ class DashboardController < ApplicationController
     @selectable_organizations = current_user.organizations.order(:name)
 
     # == Match History (Recent Activity Partial) ==
-    @recent_matches_all = if organization_ids.any?
+    @recent_matches_all = if @scoped_organization
+                             Match
+                               .joins(:leaderboard)
+                               .where(leaderboards: { organization_id: @scoped_organization.id })
+                               .includes(profile1: :user, opponent_profile: :user, leaderboard: :organization)
+                               .order(match_time: :desc)
+                               .limit(5)
+                           elsif organization_ids.any?
                              Match
                                .joins(:leaderboard)
                                .where(leaderboards: { organization_id: organization_ids })
@@ -53,10 +74,12 @@ class DashboardController < ApplicationController
                            end
 
     @recent_matches_mine = if profile_ids.any?
-                              Match.involving_profiles(profile_ids)
-                                   .includes(profile1: :user, opponent_profile: :user, leaderboard: :organization)
-                                   .order(match_time: :desc)
-                                   .limit(5)
+                              scope = Match.involving_profiles(profile_ids)
+                                           .includes(profile1: :user, opponent_profile: :user, leaderboard: :organization)
+                                           .order(match_time: :desc)
+                                           .limit(5)
+                              scope = scope.where(leaderboard_id: scoped_leaderboard_ids) if @scoped_organization
+                              scope
                             else
                               Match.none
                             end
@@ -75,20 +98,27 @@ class DashboardController < ApplicationController
                    end
 
     # == Rankings Across All Leaderboards ==
-    @user_rankings = LeaderboardRating.joins(:profile)
-                                      .where(profiles: { id: profile_ids.presence || @user.profile_ids })
-                                      .includes(leaderboard: :organization)
-                                      .order(rating: :desc)
+    ranking_profile_ids = if @scoped_organization
+                            profile_ids
+                          else
+                            profile_ids.presence || @user.profile_ids
+                          end
+
+    @user_rankings = LeaderboardRating.joins(:profile, :leaderboard)
+                                      .where(profiles: { id: ranking_profile_ids })
+    @user_rankings = @user_rankings.where(leaderboards: { organization_id: @scoped_organization.id }) if @scoped_organization
+    @user_rankings = @user_rankings.includes(leaderboard: :organization)
+                                     .order(rating: :desc)
 
     # == Basic Elo Stats ==
     ratings = user_leaderboard_ratings(@profile)
-    elo_ratings = ratings.map(&:rating)
+    elo_ratings = ratings.pluck(:rating)
     @highest_elo = elo_ratings.max || 1500
     @average_elo = elo_ratings.any? ? (elo_ratings.sum / elo_ratings.size).round : 1500
 
     # == Win/Loss Summary ==
-    @total_wins = ratings.sum(&:wins)
-    @total_losses = ratings.sum(&:losses)
+    @total_wins = ratings.sum(:wins)
+    @total_losses = ratings.sum(:losses)
     @win_loss_ratio = @total_losses > 0 ? (@total_wins.to_f / @total_losses).round(2) : (@total_wins > 0 ? "∞" : "0.0")
     @profile_stats = {
       total_matches: @total_wins + @total_losses,
@@ -100,20 +130,15 @@ class DashboardController < ApplicationController
     }
 
     # == Match Activity Trend (30d vs previous 30d) ==
-    current_period_matches = if profile_ids.any?
-                               Match.involving_profiles(profile_ids)
-                                    .where("match_time >= ?", 30.days.ago)
-                                    .count
-                             else
-                               0
-                             end
-    previous_period_matches = if profile_ids.any?
-                                Match.involving_profiles(profile_ids)
-                                     .where(match_time: 60.days.ago...30.days.ago)
-                                     .count
-                              else
-                                0
-                              end
+    matches_scope = if profile_ids.any?
+                      Match.involving_profiles(profile_ids)
+                    else
+                      Match.none
+                    end
+    matches_scope = matches_scope.where(leaderboard_id: scoped_leaderboard_ids) if @scoped_organization
+
+    current_period_matches = matches_scope.where("match_time >= ?", 30.days.ago).count
+    previous_period_matches = matches_scope.where(match_time: 60.days.ago...30.days.ago).count
 
     @match_trend = previous_period_matches > 0 ?
                      ((current_period_matches - previous_period_matches).to_f / previous_period_matches * 100).round :
@@ -121,22 +146,26 @@ class DashboardController < ApplicationController
 
     # == Most Active Leaderboard ==
     @most_active_leaderboard = if profile_ids.any?
-                                 Match.involving_profiles(profile_ids)
-                                      .select("matches.leaderboard_id, COUNT(*) AS matches_count")
-                                      .group(:leaderboard_id)
-                                      .order(Arel.sql("matches_count DESC"))
-                                      .limit(1)
-                                      .first&.leaderboard
+                                 scope = Match.involving_profiles(profile_ids)
+                                 scope = scope.where(leaderboard_id: scoped_leaderboard_ids) if @scoped_organization
+                                 scope
+                                   .select("matches.leaderboard_id, COUNT(*) AS matches_count")
+                                   .group(:leaderboard_id)
+                                   .order(Arel.sql("matches_count DESC"))
+                                   .limit(1)
+                                   .first&.leaderboard
                                end
 
     @organization = @most_active_leaderboard&.organization
 
     # == Optional: Upcoming Matches ==
     @upcoming_matches = if profile_ids.any?
-                          Match.involving_profiles(profile_ids)
-                               .where("match_time > ?", Time.now)
-                               .order(match_time: :asc)
-                               .limit(3)
+                          scope = Match.involving_profiles(profile_ids)
+                          scope = scope.where(leaderboard_id: scoped_leaderboard_ids) if @scoped_organization
+                          scope
+                            .where("match_time > ?", Time.current)
+                            .order(match_time: :asc)
+                            .limit(3)
                         else
                           Match.none
                         end
@@ -145,11 +174,12 @@ class DashboardController < ApplicationController
     @tips = generate_personalized_tips
 
     # == Optional: Top 5 Users Globally ==
-    @top_players = User.joins(:leaderboard_ratings)
+    @top_players = User.joins(leaderboard_ratings: :leaderboard)
                        .select("users.*, MAX(leaderboard_ratings.rating) as highest_rating")
-                       .group("users.id")
-                       .order("highest_rating DESC")
-                       .limit(5)
+    @top_players = @top_players.where(leaderboards: { organization_id: @scoped_organization.id }) if @scoped_organization
+    @top_players = @top_players.group("users.id")
+                               .order("highest_rating DESC")
+                               .limit(5)
 
     respond_to do |format|
       format.html
@@ -164,11 +194,14 @@ class DashboardController < ApplicationController
 
     ratings = user_leaderboard_ratings(@profile)
 
-    if ratings.sum(&:wins) + ratings.sum(&:losses) == 0
+    if ratings.sum(:wins) + ratings.sum(:losses) == 0
       tips << "Log your first match to start building your Elo rating and track your progress."
     end
 
-    if Match.involving_profiles(@profile_ids).where("match_time >= ?", 30.days.ago).count == 0
+    matches_scope = Match.involving_profiles(Array(@profile_ids))
+    matches_scope = matches_scope.where(leaderboard_id: Array(@scoped_organization&.leaderboard_ids)) if @scoped_organization
+
+    if matches_scope.where("match_time >= ?", 30.days.ago).count == 0
       tips << "You haven't played any matches in the last 30 days. Stay active to maintain your skills!"
     end
 
@@ -189,23 +222,27 @@ class DashboardController < ApplicationController
     profile = current_user.profiles.find_by(id: params[:profile_id])
 
     ratings = user_leaderboard_ratings(profile)
-    elo_ratings = ratings.map(&:rating)
+    elo_ratings = ratings.pluck(:rating)
     @highest_elo = elo_ratings.max || 1500
     @average_elo = elo_ratings.any? ? (elo_ratings.sum / elo_ratings.size).round : 1500
 
-    @total_wins = ratings.sum(&:wins)
-    @total_losses = ratings.sum(&:losses)
+    @total_wins = ratings.sum(:wins)
+    @total_losses = ratings.sum(:losses)
     @win_loss_ratio = @total_losses > 0 ? (@total_wins.to_f / @total_losses).round(2) : (@total_wins > 0 ? "∞" : "0.0")
 
     render partial: "dashboard/performance_stats", layout: false
   end
 
   def user_leaderboard_ratings(profile = nil)
-    return profile.leaderboard_ratings.includes(:leaderboard) if profile
+    scope = if profile
+              profile.leaderboard_ratings
+            else
+              LeaderboardRating.where(profile_id: current_user.profile_ids)
+            end
 
-    @user_leaderboard_ratings ||= current_user.profiles
-                                            .includes(leaderboard_ratings: :leaderboard)
-                                            .flat_map(&:leaderboard_ratings)
+    scope = scope.includes(:leaderboard)
+    scope = scope.joins(:leaderboard).where(leaderboards: { organization_id: @scoped_organization.id }) if @scoped_organization
+    scope
   end
 
 end
