@@ -13,16 +13,18 @@ class Organization < ApplicationRecord
 
   # Check if a user is the owner
   def owner?(user)
-    user_id == user&.id
+    return false unless user
+
+    organization_memberships.exists?(user_id: user.id, is_owner: true)
   end
 
   # Check if a user is an admin (either the owner or an admin via membership)
   def admin?(user)
     return false unless user
 
-    owner?(user) || organization_memberships.joins(:profile)
-                                               .where(profiles: { user_id: user.id }, admin: true, status: :approved)
-                                               .exists?
+    # The owner should ALWAYS be an admin. We can enforce this with a validation.
+    # For now, the check is simpler:
+    organization_memberships.exists?(user_id: user.id, admin: true, status: :approved)
   end
 
   # Get the membership status of a user (nil, pending, approved)
@@ -54,8 +56,11 @@ class Organization < ApplicationRecord
     return false unless admin?(new_owner) # Ensure new owner is an admin
 
     if update(user_id: new_owner.id)
+      current_owner_membership = organization_memberships.find_by(is_owner: true)
+      current_owner_membership&.update(is_owner: false)
+
       membership = membership_for(new_owner) || build_membership_for(new_owner)
-      membership.update(admin: true, status: :approved)
+      membership.update(admin: true, status: :approved, is_owner: true)
       true
     else
       false
