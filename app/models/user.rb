@@ -67,7 +67,7 @@ class User < ApplicationRecord
   private
 
   def anonymize_user
-    identifier = id || SecureRandom.hex(4)
+    identifier = id
 
     self.email = "anonymized_#{identifier}@localelo.com"
     self.username = "Deleted User #{identifier}"
