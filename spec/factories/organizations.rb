@@ -7,14 +7,5 @@ FactoryBot.define do
     visibility { 0 } # 0 = public, 1 = restricted
     subdomain { Faker::Internet.unique.domain_word }
 
-    # The user association is for the 'user_id' or 'created_by' field in the schema
-    # If your Organization model `belongs_to :user`, or if you have a `created_by` foreign key,
-    # match that logic as needed.
-
-    association :user
-
-    after(:build) do |org|
-      org.created_by = org.user_id if org.respond_to?(:created_by=)
-    end
   end
 end

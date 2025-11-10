@@ -33,7 +33,6 @@ class OrganizationsController < ApplicationController
   # POST /organizations
   def create
     @organization = Organization.new(organization_params)
-    @organization.user = current_user
     @organization.created_by = current_user.id
 
     respond_to do |format|
