@@ -91,6 +91,49 @@ class Match < ApplicationRecord
     winner_profile_id == profile_id
   end
 
+  def invalidate!
+    raise StandardError, "Match #{id} is already invalidated" if invalidated?
+
+    ActiveRecord::Base.transaction do
+      player1_rating = leaderboard.leaderboard_ratings.find_by!(profile: profile1)
+      opponent_rating = leaderboard.leaderboard_ratings.find_by!(profile: opponent_profile)
+
+      [player1_rating, opponent_rating].each(&:lock!)
+
+      if is_draw?
+        ensure_draws_can_be_reverted!(player1_rating, opponent_rating)
+
+        player1_rating.update!(draws: player1_rating.draws - 1)
+        opponent_rating.update!(draws: opponent_rating.draws - 1)
+      else
+        change = elo_change
+        raise StandardError, "Match #{id} has no elo_change to revert" if change.nil?
+
+        winner_rating, loser_rating = ratings_for_outcome(player1_rating, opponent_rating)
+
+        raise StandardError, "Winner rating wins cannot be negative" if winner_rating.wins <= 0
+        raise StandardError, "Loser rating losses cannot be negative" if loser_rating.losses <= 0
+
+        winner_rating.update!(
+          rating: winner_rating.rating - change,
+          wins: winner_rating.wins - 1
+        )
+        loser_rating.update!(
+          rating: loser_rating.rating + change,
+          losses: loser_rating.losses - 1
+        )
+      end
+
+      EloHistory.where(match_id: id).destroy_all
+
+      update!(status: :invalidated)
+    end
+  rescue => e
+    Rails.logger.error "Failed to invalidate match #{id}: #{e.message}"
+    Rails.logger.error e.backtrace.join("\n")
+    raise
+  end
+
   # Convenience methods for compatibility with legacy user-based checks
   def user1_id
     profile1&.user_id
@@ -105,6 +148,24 @@ class Match < ApplicationRecord
   end
 
   private
+
+  def ratings_for_outcome(player1_rating, opponent_rating)
+    raise StandardError, "Match #{id} is missing a winner" if winner_profile_id.blank?
+
+    if winner_profile_id == profile1_id
+      [player1_rating, opponent_rating]
+    else
+      [opponent_rating, player1_rating]
+    end
+  end
+
+  def ensure_draws_can_be_reverted!(*ratings)
+    ratings.each do |rating|
+      next if rating.draws.positive?
+
+      raise StandardError, "Cannot invalidate draw match because draws are already zero for rating ##{rating.id}"
+    end
+  end
 
   # Validates that both players belong to the leaderboard's organization
   def validate_profiles_in_leaderboard
@@ -127,16 +188,22 @@ class Match < ApplicationRecord
       r.rating = DEFAULT_RATING
       r.wins = 0
       r.losses = 0
+      r.draws = 0
     end
 
     player2_rating = leaderboard.leaderboard_ratings.find_or_create_by(profile: opponent_profile) do |r|
       r.rating = DEFAULT_RATING
       r.wins = 0
       r.losses = 0
+      r.draws = 0
     end
 
     # For draw matches, no rating change
-    if is_draw
+    if is_draw?
+      ActiveRecord::Base.transaction do
+        player1_rating.increment!(:draws)
+        player2_rating.increment!(:draws)
+      end
       log_draw_match(player1_rating, player2_rating)
       return
     end
@@ -241,6 +308,7 @@ class Match < ApplicationRecord
     EloHistory.create!(
       profile: profile1,
       leaderboard: leaderboard,
+      match: self,
       elo: leaderboard.leaderboard_ratings.find_by(profile: profile1)&.rating || DEFAULT_RATING,
       recorded_at: created_at
     )
@@ -248,6 +316,7 @@ class Match < ApplicationRecord
     EloHistory.create!(
       profile: opponent_profile,
       leaderboard: leaderboard,
+      match: self,
       elo: leaderboard.leaderboard_ratings.find_by(profile: opponent_profile)&.rating || DEFAULT_RATING,
       recorded_at: created_at
     )
