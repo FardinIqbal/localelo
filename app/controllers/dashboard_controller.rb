@@ -15,6 +15,16 @@ class DashboardController < ApplicationController
                end
     @profile ||= @profiles.first
 
+    if params[:organization_id].present? && params[:organization_id] != "all"
+      @scoped_organization = current_user.organizations.find_by(id: params[:organization_id])
+
+      unless @scoped_organization
+        redirect_to dashboard_path(organization_id: "all"), alert: "Organization not found." and return
+      end
+    else
+      @scoped_organization = nil
+    end
+
     profile_ids = @profile ? [@profile.id] : @user.profile_ids
     @profile_ids = profile_ids
 
