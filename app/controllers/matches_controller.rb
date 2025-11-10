@@ -134,12 +134,12 @@ class MatchesController < ApplicationController
   # DELETE /matches/:id
   # Allows either participant (or an admin) to remove an incorrect match
   def destroy
-    logger.info "[MATCH] Match #{@match.id} removed by user #{current_user.id}"
-    @match.destroy
+    logger.info "[MATCH] Match #{@match.id} invalidated by user #{current_user.id}"
+    @match.invalidate!
 
     respond_to do |format|
       format.turbo_stream { head :ok }
-      format.html { redirect_to matches_path, notice: "Match removed." }
+      format.html { redirect_to matches_path, notice: "Match invalidated and ratings reversed." }
       format.json { head :no_content }
     end
   end
@@ -184,6 +184,19 @@ class MatchesController < ApplicationController
   end
 
   def authorize_match_management!
+    if @match.invalidated?
+      logger.warn "[MATCH] Attempt to invalidate already invalidated match #{@match.id} by user #{current_user.id}"
+      respond_to do |format|
+        format.html do
+          flash[:error] = "This match has already been invalidated."
+          redirect_to matches_path
+        end
+        format.turbo_stream { head :unprocessable_entity }
+        format.json { render json: { error: "Match already invalidated" }, status: :unprocessable_entity }
+      end
+      return false
+    end
+
     profile_ids = current_user.profile_ids
     return if profile_ids.include?(@match.profile1_id) || profile_ids.include?(@match.opponent_profile_id)
     return if @match.leaderboard.organization.admin?(current_user)
