@@ -8,7 +8,7 @@ class ProfilesController < ApplicationController
     @organization = @profile.organization
     @leaderboard_ratings = @profile.leaderboard_ratings.includes(leaderboard: :organization)
     @matches = Match.involving_profile(@profile.id)
-                     .includes(:profile1, :opponent_profile, leaderboard: :organization)
+                     .includes(match_participants: { profile: :user }, leaderboard: :organization)
                      .order(match_time: :desc)
                      .limit(5)
     @elo_history = EloHistory.where(profile_id: @profile.id)
