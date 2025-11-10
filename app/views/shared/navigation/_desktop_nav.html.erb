@@ -37,7 +37,7 @@
             <div class="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center mr-2 border border-white/10">
               <i class="fas fa-user text-white/70"></i>
             </div>
-            <span><%= current_user.username || 'Profile' %></span>
+            <span><%= current_user.email.presence || 'My Account' %></span>
             <i class="fas fa-chevron-down ml-1.5 text-xs"></i>
           </button>
 
@@ -45,7 +45,9 @@
             class="absolute right-0 mt-2 w-48 bg-slate-800/90 backdrop-blur-xl rounded-lg shadow-lg overflow-hidden border border-white/10 transform transition-all duration-300 z-50 hidden"
             data-profile-dropdown-target="menu"
           >
-            <%= link_to user_path(current_user), class: "block px-4 py-2 text-sm w-full text-left transition-colors duration-300 text-white hover:bg-slate-700/50 hover:text-pink-500" do %>
+            <% primary_profile = current_user.profiles.first %>
+            <%= link_to(primary_profile ? profile_path(primary_profile) : authenticated_root_path,
+                        class: "block px-4 py-2 text-sm w-full text-left transition-colors duration-300 text-white hover:bg-slate-700/50 hover:text-pink-500") do %>
               <i class="fas fa-user mr-2"></i> My Profile
             <% end %>
 
