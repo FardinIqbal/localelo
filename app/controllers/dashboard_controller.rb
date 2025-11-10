@@ -44,13 +44,14 @@ class DashboardController < ApplicationController
                                       .order(rating: :desc)
 
     # == Basic Elo Stats ==
-    elo_ratings = @user.leaderboard_ratings.pluck(:rating)
+    ratings = user_leaderboard_ratings
+    elo_ratings = ratings.map(&:rating)
     @highest_elo = elo_ratings.max || 1500
     @average_elo = elo_ratings.any? ? (elo_ratings.sum / elo_ratings.size).round : 1500
 
     # == Win/Loss Summary ==
-    @total_wins = @user.leaderboard_ratings.sum(:wins)
-    @total_losses = @user.leaderboard_ratings.sum(:losses)
+    @total_wins = ratings.sum(&:wins)
+    @total_losses = ratings.sum(&:losses)
     @win_loss_ratio = @total_losses > 0 ? (@total_wins.to_f / @total_losses).round(2) : (@total_wins > 0 ? "∞" : "0.0")
 
     # == Match Activity Trend (30d vs previous 30d) ==
@@ -102,7 +103,9 @@ class DashboardController < ApplicationController
   def generate_personalized_tips
     tips = []
 
-    if @user.leaderboard_ratings.sum(:wins) + @user.leaderboard_ratings.sum(:losses) == 0
+    ratings = user_leaderboard_ratings
+
+    if ratings.sum(&:wins) + ratings.sum(&:losses) == 0
       tips << "Log your first match to start building your Elo rating and track your progress."
     end
 
@@ -125,15 +128,20 @@ class DashboardController < ApplicationController
   def performance
     @user = current_user
 
-    elo_ratings = @user.leaderboard_ratings.pluck(:rating)
+    ratings = user_leaderboard_ratings
+    elo_ratings = ratings.map(&:rating)
     @highest_elo = elo_ratings.max || 1500
     @average_elo = elo_ratings.any? ? (elo_ratings.sum / elo_ratings.size).round : 1500
 
-    @total_wins = @user.leaderboard_ratings.sum(:wins)
-    @total_losses = @user.leaderboard_ratings.sum(:losses)
+    @total_wins = ratings.sum(&:wins)
+    @total_losses = ratings.sum(&:losses)
     @win_loss_ratio = @total_losses > 0 ? (@total_wins.to_f / @total_losses).round(2) : (@total_wins > 0 ? "∞" : "0.0")
 
     render partial: "dashboard/performance_stats", layout: false
+  end
+
+  def user_leaderboard_ratings
+    @user_leaderboard_ratings ||= current_user.profiles.includes(:leaderboard_ratings).flat_map(&:leaderboard_ratings)
   end
 
 end

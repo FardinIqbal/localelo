@@ -21,7 +21,7 @@
             <% @recent_opponents.each do |opponent| %>
               <button type="button"
                       class="quick-opponent px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-sm flex items-center"
-                      data-opponent-id="<%= opponent.id %>"
+                      data-opponent-profile-id="<%= opponent.id %>"
                       data-opponent-name="<%= opponent.username %>">
                 <div class="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center text-white font-bold text-xs mr-2">
                   <%= opponent.username[0..1].upcase %>
@@ -40,10 +40,11 @@
           <div>
             <label class="text-sm text-slate-400 mb-1 block">Leaderboard <span class="text-pink-400">*</span></label>
             <%= f.select :leaderboard_id,
-                         options_from_collection_for_select(@leaderboards, :id, :name, params[:leaderboard_id]),
+                         options_for_select(@leaderboards.map { |leaderboard| [leaderboard.name, leaderboard.id, { 'data-organization-id': leaderboard.organization_id }] }, params[:leaderboard_id]),
                          { include_blank: "Select leaderboard" },
                          { class: "w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white",
-                           required: true } %>
+                           required: true,
+                           data: { user_profiles: @user_profiles_by_org.to_json } } %>
             <div class="text-xs text-red-400 hidden mt-1" id="leaderboard-error">Please select a leaderboard</div>
           </div>
 
@@ -55,13 +56,13 @@
                          { include_blank: "Select opponent" },
                          { class: "w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white",
                            required: true,
-                           name: "match[opponent_id]" } %>
+                           id: "match_opponent_profile_id" } %>
             <div class="text-xs text-red-400 hidden mt-1" id="opponent-error">Please select an opponent</div>
           </div>
         </div>
 
         <!-- Match Preview -->
-        <div id="match-preview" class="<%= params[:opponent_id].present? ? '' : 'hidden' %> mb-6 p-4 rounded-lg bg-slate-700/50 border border-slate-600">
+        <div id="match-preview" class="<%= params[:opponent_profile_id].present? ? '' : 'hidden' %> mb-6 p-4 rounded-lg bg-slate-700/50 border border-slate-600">
           <h3 class="text-sm font-medium text-slate-300 mb-3">Match Preview</h3>
           <div class="flex items-center justify-between">
             <div class="flex flex-col items-center">
@@ -103,7 +104,7 @@
           <div class="grid grid-cols-2 gap-3">
             <!-- I Won -->
             <label class="cursor-pointer">
-              <%= f.radio_button :winner_id, current_user.id, class: "hidden result-radio" %>
+              <%= f.radio_button :winner_profile_id, @current_profile&.id, class: "hidden result-radio", id: "player-winner-radio" %>
               <div class="p-3 rounded-lg border border-slate-700 hover:border-green-500/50 transition-all duration-300 bg-slate-800/50 text-center result-option">
                 <div class="text-green-400 text-lg mb-1"><i class="fas fa-trophy"></i></div>
                 <div class="text-white text-sm">I Won</div>
@@ -115,7 +116,7 @@
 
             <!-- I Lost -->
             <label class="cursor-pointer">
-              <%= f.radio_button :winner_id, nil, class: "hidden result-radio", id: "opponent-winner-radio" %>
+              <%= f.radio_button :winner_profile_id, @selected_opponent_profile_id, class: "hidden result-radio", id: "opponent-winner-radio" %>
               <div class="p-3 rounded-lg border border-slate-700 hover:border-red-500/50 transition-all duration-300 bg-slate-800/50 text-center result-option">
                 <div class="text-red-400 text-lg mb-1"><i class="fas fa-times"></i></div>
                 <div class="text-white text-sm">I Lost</div>
@@ -158,14 +159,44 @@
         console.log("✅ DOM Loaded! JavaScript is running.");
 
         const leaderboardSelect = document.getElementById("match_leaderboard_id");
-        const opponentSelect = document.getElementById("match_opponent_id");
+        let opponentSelect = document.getElementById("match_opponent_profile_id");
         const opponentWinnerRadio = document.getElementById("opponent-winner-radio");
+        const playerWinnerRadio = document.getElementById("player-winner-radio");
         const matchForm = document.getElementById("match-form");
         const submitButton = document.getElementById("submit-button");
         const spinner = document.getElementById("spinner");
+        const previewContainer = document.getElementById("match-preview");
+        const opponentNameDisplay = document.getElementById("opponent-name");
+        const opponentInitialsDisplay = document.getElementById("opponent-initials");
+        let userProfilesByOrg = {};
+
+        try {
+            userProfilesByOrg = JSON.parse(leaderboardSelect.dataset.userProfiles || '{}');
+        } catch (error) {
+            console.error("Unable to parse user profiles dataset", error);
+        }
 
         // Handle leaderboard change
-        leaderboardSelect.addEventListener("change", updateOpponents);
+        leaderboardSelect.addEventListener("change", () => {
+            updatePlayerWinnerValue();
+            updateOpponents();
+        });
+
+        updatePlayerWinnerValue();
+        updateWinnerOpponent();
+        updatePreviewFromSelection();
+
+        document.querySelectorAll(".quick-opponent").forEach(button => {
+            button.addEventListener("click", function() {
+                const opponentId = this.dataset.opponentProfileId;
+                if (opponentSelect) {
+                    opponentSelect.value = opponentId;
+                    opponentSelect.dispatchEvent(new Event("change"));
+                }
+                updateWinnerOpponent();
+                updatePreviewFromSelection();
+            });
+        });
 
         // Handle match result selection
         const resultRadios = document.querySelectorAll(".result-radio");
@@ -230,7 +261,7 @@
                 }
             }
 
-            const winnerSelected = document.querySelector('input[name="match[winner_id]"]:checked');
+            const winnerSelected = document.querySelector('input[name="match[winner_profile_id]"]:checked');
 
             if (!winnerSelected) {
                 const resultError = document.getElementById("result-error");
@@ -276,6 +307,10 @@
 
             if (!leaderboardId) {
                 console.warn("⚠️ No leaderboard selected. Exiting.");
+                if (opponentSelect) {
+                    opponentSelect.innerHTML = '';
+                }
+                updatePreviewFromSelection();
                 return;
             }
 
@@ -326,11 +361,12 @@
                       opponentSelection.innerHTML = html;
                   }
                   // Re-initialize the opponent select reference
-                  const newOpponentSelect = document.getElementById("match_opponent_id");
-                  if (newOpponentSelect) {
-                      newOpponentSelect.addEventListener("change", function() {
+                  opponentSelect = document.getElementById("match_opponent_profile_id");
+                  if (opponentSelect) {
+                      opponentSelect.addEventListener("change", function() {
                           updateWinnerOpponent();
                       });
+                      updateWinnerOpponent();
                   }
               })
               .catch(error => {
@@ -345,8 +381,51 @@
         }
 
         function updateWinnerOpponent() {
+            if (!opponentSelect) return;
+
             const opponentId = opponentSelect.value;
-            opponentWinnerRadio.value = opponentId;
+            opponentWinnerRadio.value = opponentId || '';
+            updatePreviewFromSelection();
+        }
+
+        function updatePlayerWinnerValue() {
+            if (!leaderboardSelect || !playerWinnerRadio) {
+                return;
+            }
+
+            const selectedOption = leaderboardSelect.options[leaderboardSelect.selectedIndex];
+            if (!selectedOption) {
+                playerWinnerRadio.value = '';
+                return;
+            }
+
+            const organizationId = selectedOption.dataset.organizationId;
+            const profileId = organizationId ? userProfilesByOrg[organizationId] : null;
+            playerWinnerRadio.value = profileId || '';
+        }
+
+        function updatePreviewFromSelection() {
+            if (!opponentSelect || !previewContainer) {
+                return;
+            }
+
+            const selectedOption = opponentSelect.options[opponentSelect.selectedIndex];
+
+            if (!selectedOption || !selectedOption.value) {
+                previewContainer.classList.add("hidden");
+                return;
+            }
+
+            const name = selectedOption.textContent.trim();
+            if (opponentNameDisplay) {
+                opponentNameDisplay.textContent = name;
+            }
+
+            if (opponentInitialsDisplay) {
+                opponentInitialsDisplay.textContent = name.slice(0, 2).toUpperCase();
+            }
+
+            previewContainer.classList.remove("hidden");
         }
 
         function showToast(title, message, type) {
