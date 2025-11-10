@@ -12,9 +12,8 @@ Rails.application.routes.draw do
     root to: "dashboard#show", as: :authenticated_root
   end
 
-  # User profile routes
-  resources :users, only: [:show, :edit, :update]
-  get "profile", to: "users#show", as: "user_profile"
+  # Profile routes
+  resources :profiles, only: [:show, :edit, :update]
 
   # Account-level pages (e.g., organization membership overview)
   get "/account/my-organizations", to: "account_organizations#index", as: :account_organizations
