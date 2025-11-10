@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_03_21_170007) do
+ActiveRecord::Schema[7.1].define(version: 2025_05_01_120500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -47,8 +47,10 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_21_170007) do
     t.integer "elo", null: false
     t.datetime "recorded_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.bigint "profile_id", null: false
+    t.bigint "match_id"
     t.index ["profile_id", "leaderboard_id", "recorded_at"], name: "index_elo_history_on_profile_and_leaderboard"
     t.index ["profile_id"], name: "index_elo_histories_on_profile_id"
+    t.index ["match_id"], name: "index_elo_histories_on_match_id"
   end
 
   create_table "leaderboard_ratings", force: :cascade do |t|
@@ -56,6 +58,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_21_170007) do
     t.integer "rating", default: 1500, null: false
     t.integer "wins", default: 0
     t.integer "losses", default: 0
+    t.integer "draws", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "profile_id", null: false
@@ -152,6 +155,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_21_170007) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "elo_histories", "leaderboards"
+  add_foreign_key "elo_histories", "matches"
   add_foreign_key "elo_histories", "profiles"
   add_foreign_key "leaderboard_ratings", "leaderboards"
   add_foreign_key "leaderboard_ratings", "profiles"
