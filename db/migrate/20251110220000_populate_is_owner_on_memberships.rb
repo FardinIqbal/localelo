@@ -7,15 +7,24 @@ class PopulateIsOwnerOnMemberships < ActiveRecord::Migration[7.1]
 
     say_with_time "Populating is_owner on organization memberships" do
       Organization.find_each do |org|
-        next unless org.user_id.present?
+        # Prefer explicit owner_profile_id if available
+        owner_profile =
+          if org.respond_to?(:owner_profile_id) && org.owner_profile_id.present?
+            Profile.find_by(id: org.owner_profile_id)
+          else
+            org.profiles.first
+          end
 
-        membership = org.organization_memberships.find_by(user_id: org.user_id)
+        next unless owner_profile
+
+        membership = org.organization_memberships.find_by(profile_id: owner_profile.id)
 
         if membership
           membership.update_column(:is_owner, true)
         else
+          # Create membership if missing
           org.organization_memberships.create!(
-            user_id: org.user_id,
+            profile_id: owner_profile.id,
             status: :approved,
             admin: true,
             is_owner: true
