@@ -1,12 +1,19 @@
 <div class="p-6">
   <div class="flex justify-between items-center mb-4">
     <h2 class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-      Your Organizations
+      <%= @scoped_organization ? @scoped_organization.name : "Your Organizations" %>
     </h2>
 
-    <%= link_to organizations_path,
-                class: "px-3 py-1 rounded-lg bg-slate-700 text-purple-400 text-sm hover:bg-slate-600 transition-all transform hover:-translate-y-0.5" do %>
-      View All <i class="fas fa-arrow-right ml-1"></i>
+    <% if @scoped_organization %>
+      <%= link_to organization_path(@scoped_organization),
+                  class: "px-3 py-1 rounded-lg bg-slate-700 text-purple-400 text-sm hover:bg-slate-600 transition-all transform hover:-translate-y-0.5" do %>
+        View <%= @scoped_organization.name %> <i class="fas fa-arrow-right ml-1"></i>
+      <% end %>
+    <% else %>
+      <%= link_to organizations_path,
+                  class: "px-3 py-1 rounded-lg bg-slate-700 text-purple-400 text-sm hover:bg-slate-600 transition-all transform hover:-translate-y-0.5" do %>
+        View All <i class="fas fa-arrow-right ml-1"></i>
+      <% end %>
     <% end %>
   </div>
 
