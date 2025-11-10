@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_05_01_120500) do
+ActiveRecord::Schema[7.1].define(version: 2025_11_10_150932) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -48,9 +48,9 @@ ActiveRecord::Schema[7.1].define(version: 2025_05_01_120500) do
     t.datetime "recorded_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.bigint "profile_id", null: false
     t.bigint "match_id"
+    t.index ["match_id"], name: "index_elo_histories_on_match_id"
     t.index ["profile_id", "leaderboard_id", "recorded_at"], name: "index_elo_history_on_profile_and_leaderboard"
     t.index ["profile_id"], name: "index_elo_histories_on_profile_id"
-    t.index ["match_id"], name: "index_elo_histories_on_match_id"
   end
 
   create_table "leaderboard_ratings", force: :cascade do |t|
@@ -58,10 +58,10 @@ ActiveRecord::Schema[7.1].define(version: 2025_05_01_120500) do
     t.integer "rating", default: 1500, null: false
     t.integer "wins", default: 0
     t.integer "losses", default: 0
-    t.integer "draws", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "profile_id", null: false
+    t.integer "draws", default: 0, null: false
     t.index ["leaderboard_id", "rating"], name: "index_leaderboard_ratings_on_leaderboard_id_and_rating"
     t.index ["leaderboard_id"], name: "index_leaderboard_ratings_on_leaderboard_id"
     t.index ["profile_id", "leaderboard_id"], name: "index_leaderboard_ratings_on_profile_id_and_leaderboard_id", unique: true
@@ -90,11 +90,13 @@ ActiveRecord::Schema[7.1].define(version: 2025_05_01_120500) do
     t.bigint "profile1_id", null: false
     t.bigint "opponent_profile_id", null: false
     t.bigint "winner_profile_id"
+    t.integer "status", default: 0, null: false
     t.index ["leaderboard_id"], name: "index_matches_on_leaderboard_id"
     t.index ["match_time"], name: "index_matches_on_match_time"
     t.index ["opponent_profile_id"], name: "index_matches_on_opponent_profile_id"
     t.index ["profile1_id", "opponent_profile_id", "leaderboard_id"], name: "index_matches_on_profile1_and_opponent_profile_and_leaderboard"
     t.index ["profile1_id"], name: "index_matches_on_profile1_id"
+    t.index ["status"], name: "index_matches_on_status"
     t.index ["winner_profile_id"], name: "index_matches_on_winner_profile_id"
   end
 
