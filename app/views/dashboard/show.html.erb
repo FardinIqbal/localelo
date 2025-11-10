@@ -18,6 +18,19 @@
     <!-- Quick Actions -->
     <%= render "dashboard/quick_actions", profile: @profile %>
 
+    <!-- Context Switcher -->
+    <div class="bg-slate-800/70 rounded-xl border border-slate-700 px-6 py-4 space-y-2">
+      <label for="dashboard-organization-selector" class="block text-sm font-semibold text-slate-300 uppercase tracking-wide">
+        Viewing Dashboard For:
+      </label>
+      <select id="dashboard-organization-selector" name="organization" class="w-full bg-slate-900/70 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+        <option value="all">All Organizations</option>
+        <% @selectable_organizations.each do |org| %>
+          <option value="<%= org.id %>"><%= org.name %></option>
+        <% end %>
+      </select>
+    </div>
+
     <!-- Stat Cards Row -->
     <%= render "dashboard/performance_stats", profile: @profile, stats: @profile_stats %>
 
