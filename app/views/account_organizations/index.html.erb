@@ -15,6 +15,7 @@
   <% if @organizations.any? %>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <% @organizations.each do |organization| %>
+        <% is_admin = organization.admin?(current_user) %>
         <div class="bg-slate-800/60 backdrop-blur-sm rounded-xl border border-white/10 shadow-xl overflow-hidden hover:shadow-purple-500/10 transition-all duration-300 hover:-translate-y-1 group">
           <div class="h-32 bg-gradient-to-r from-indigo-900/50 to-purple-900/50 flex items-center justify-center relative overflow-hidden">
             <% if organization.name.present? %>
@@ -36,7 +37,7 @@
                 <%= link_to organization.name, organization_path(organization) %>
               </h3>
               <div class="flex space-x-1">
-                <% if organization.organization_memberships.find_by(user: current_user)&.admin? %>
+                <% if is_admin %>
                   <span class="bg-purple-900/50 text-purple-300 text-xs px-2 py-1 rounded-md">Admin</span>
                 <% end %>
               </div>
@@ -64,7 +65,7 @@
                 View
               <% end %>
 
-              <% if organization.organization_memberships.find_by(user: current_user)&.admin? %>
+              <% if is_admin %>
                 <%= link_to edit_organization_path(organization), class: "text-sm text-indigo-400 hover:text-pink-500 transition-colors duration-300 flex items-center" do %>
                   <i class="fas fa-edit mr-1.5"></i>
                   Edit
