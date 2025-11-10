@@ -22,6 +22,16 @@ class User < ApplicationRecord
 
   # == Instance Methods ==
 
+  # Returns all matches the user has participated in (as player 1 or opponent)
+  def matches
+    profile_scope = profiles.select(:id)
+
+    Match.active
+         .where(profile1_id: profile_scope)
+         .or(Match.active.where(opponent_profile_id: profile_scope))
+         .distinct
+  end
+
   # Returns the first profile for the user (used as a sensible default)
   def primary_profile
     profiles.order(:created_at).first
