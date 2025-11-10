@@ -27,24 +27,29 @@ class Match < ApplicationRecord
   }
   validate :validate_profiles_in_leaderboard
 
+  enum status: { active: 0, invalidated: 1 }, _default: :active
+
   # == Callbacks ==
   after_create :adjust_ratings
   after_create :record_elo_history
 
   # == Scopes ==
-  scope :recent, -> { order(created_at: :desc) }
-  scope :by_leaderboard, ->(leaderboard_id) { where(leaderboard_id: leaderboard_id) }
-  scope :involving_profile, ->(profile_id) { where("profile1_id = :id OR opponent_profile_id = :id", id: profile_id) }
+  scope :recent, -> { active.order(created_at: :desc) }
+  scope :by_leaderboard, ->(leaderboard_id) { active.where(leaderboard_id: leaderboard_id) }
+  scope :involving_profile, ->(profile_id) { active.where("profile1_id = :id OR opponent_profile_id = :id", id: profile_id) }
   scope :involving_profiles, lambda { |profile_ids|
     ids = Array(profile_ids).compact
-    ids.empty? ? none : where(profile1_id: ids).or(where(opponent_profile_id: ids))
+    ids.empty? ? active.none : active.where(profile1_id: ids).or(active.where(opponent_profile_id: ids))
   }
-  scope :won_by_profile, ->(profile_id) { where(winner_profile_id: profile_id) }
+  scope :won_by_profile, ->(profile_id) { active.where(winner_profile_id: profile_id) }
   scope :lost_by_profile, lambda { |profile_id|
-    where("(profile1_id = :id AND winner_profile_id = opponent_profile_id) OR (opponent_profile_id = :id AND winner_profile_id = profile1_id)", id: profile_id)
+    active.where(
+      "(profile1_id = :id AND winner_profile_id = opponent_profile_id) OR (opponent_profile_id = :id AND winner_profile_id = profile1_id)",
+      id: profile_id
+    )
   }
   scope :recent_by_profile, ->(profile_id) { involving_profile(profile_id).recent.limit(10) }
-  scope :by_date_range, ->(start_date, end_date) { where(created_at: start_date..end_date) }
+  scope :by_date_range, ->(start_date, end_date) { active.where(created_at: start_date..end_date) }
 
   # == Constants ==
   K_FACTOR = 32
