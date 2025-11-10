@@ -59,14 +59,14 @@ class DashboardController < ApplicationController
                              Match
                                .joins(:leaderboard)
                                .where(leaderboards: { organization_id: @scoped_organization.id })
-                               .includes(profile1: :user, opponent_profile: :user, leaderboard: :organization)
+                               .includes(match_participants: { profile: :user }, leaderboard: :organization)
                                .order(match_time: :desc)
                                .limit(5)
                            elsif organization_ids.any?
                              Match
                                .joins(:leaderboard)
                                .where(leaderboards: { organization_id: organization_ids })
-                               .includes(profile1: :user, opponent_profile: :user, leaderboard: :organization)
+                               .includes(match_participants: { profile: :user }, leaderboard: :organization)
                                .order(match_time: :desc)
                                .limit(5)
                            else
@@ -75,7 +75,7 @@ class DashboardController < ApplicationController
 
     @recent_matches_mine = if profile_ids.any?
                               scope = Match.involving_profiles(profile_ids)
-                                           .includes(profile1: :user, opponent_profile: :user, leaderboard: :organization)
+                                           .includes(match_participants: { profile: :user }, leaderboard: :organization)
                                            .order(match_time: :desc)
                                            .limit(5)
                               scope = scope.where(leaderboard_id: scoped_leaderboard_ids) if @scoped_organization

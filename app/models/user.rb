@@ -16,19 +16,20 @@ class User < ApplicationRecord
   has_many :leaderboard_ratings, through: :profiles
   has_many :leaderboards, -> { distinct }, through: :leaderboard_ratings
 
-  has_many :matches_as_user1, through: :profiles, source: :matches_as_profile1
-  has_many :matches_as_opponent, through: :profiles, source: :matches_as_opponent_profile
+  has_many :match_participants, through: :profiles
+  has_many :participated_matches, -> { distinct }, through: :match_participants, source: :match
   has_many :matches_won, through: :profiles, source: :matches_won_as_profile
 
   # == Instance Methods ==
 
   # Returns all matches the user has participated in (as player 1 or opponent)
   def matches
-    profile_scope = profiles.select(:id)
+    ids = profile_ids
+    return Match.none if ids.empty?
 
-    Match.active
-         .where(profile1_id: profile_scope)
-         .or(Match.active.where(opponent_profile_id: profile_scope))
+    Match.active.joins(:match_participants)
+         .where(match_participants: { profile_id: ids })
+         .includes(match_participants: { profile: :user }, leaderboard: :organization)
          .distinct
   end
 
@@ -45,8 +46,11 @@ class User < ApplicationRecord
     return 0 if ids.empty?
 
     Match.active
-         .where("(profile1_id IN (:ids) OR opponent_profile_id IN (:ids)) AND winner_profile_id IS NOT NULL", ids: ids)
+         .joins(:match_participants)
+         .where(match_participants: { profile_id: ids })
          .where.not(winner_profile_id: ids)
+         .where.not(winner_profile_id: nil)
+         .distinct
          .count
   end
 
@@ -55,9 +59,10 @@ class User < ApplicationRecord
   end
 
   def wins_count
-    profile_scope = profiles.select(:id)
+    ids = profile_ids
+    return 0 if ids.empty?
 
-    Match.active.where(winner_profile_id: profile_scope).count
+    Match.active.where(winner_profile_id: ids).count
   end
 
   def win_percentage
@@ -83,10 +88,12 @@ class User < ApplicationRecord
     return [] if ids.empty?
 
     recent_matches = Match.active
-                           .where("profile1_id IN (:ids) OR opponent_profile_id IN (:ids)", ids: ids)
+                           .joins(:match_participants)
+                           .where(match_participants: { profile_id: ids })
                            .order(created_at: :desc)
                            .limit(limit)
-                           .includes(:profile1, :opponent_profile)
+                           .includes(match_participants: { profile: :user })
+                           .distinct
                            .to_a
                            .reverse
     return [] if recent_matches.empty?
@@ -109,32 +116,18 @@ class User < ApplicationRecord
     ids = profile_ids
     return nil if ids.empty?
 
-    opponent_counts = Hash.new(0)
+    match_ids = MatchParticipant.where(profile_id: ids).select(:match_id)
 
-    Match.active
-         .where(profile1_id: ids)
-         .group(:opponent_profile_id)
-         .count
-         .each do |opponent_profile_id, count|
-           next if opponent_profile_id.nil?
+    opponent_participant = MatchParticipant
+                             .joins(:match)
+                             .merge(Match.active)
+                             .where(match_id: match_ids)
+                             .where.not(profile_id: ids)
+                             .group(:profile_id)
+                             .order(Arel.sql("COUNT(*) DESC"))
+                             .first
 
-           opponent_counts[opponent_profile_id] += count
-         end
-
-    Match.active
-         .where(opponent_profile_id: ids)
-         .group(:profile1_id)
-         .count
-         .each do |opponent_profile_id, count|
-           next if opponent_profile_id.nil?
-
-           opponent_counts[opponent_profile_id] += count
-         end
-
-    most_played_profile_id, = opponent_counts.max_by { |_, count| count }
-    return nil unless most_played_profile_id
-
-    Profile.find_by(id: most_played_profile_id)&.user
+    opponent_participant&.profile&.user
   end
 
   # Returns the Elo rating for the user on the provided leaderboard.
