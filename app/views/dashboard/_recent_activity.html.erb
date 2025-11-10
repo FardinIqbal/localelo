@@ -2,7 +2,7 @@
 <div class="p-6" data-controller="toggle">
   <div class="flex justify-between items-center mb-6">
     <h2 class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-      Recent Activity
+      <%= @scoped_organization ? "Recent Activity for #{@scoped_organization.name}" : "Recent Activity" %>
     </h2>
 
     <!-- Toggle Buttons -->
@@ -45,7 +45,7 @@
         </div>
         <p class="text-lg"><%= t("dashboard.empty_states.no_matches") %></p>
 
-        <%= link_to new_match_path,
+        <%= link_to (@scoped_organization ? new_match_path(organization_id: @scoped_organization.id) : new_match_path),
                     class: "mt-4 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:shadow-lg hover:shadow-purple-500/20 transition-all transform hover:-translate-y-0.5" do %>
           <i class="fas fa-plus mr-2"></i> Log Your First Match
         <% end %>
