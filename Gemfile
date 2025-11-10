@@ -75,3 +75,5 @@ gem "tailwindcss-rails", "~> 4.1"
 
 # Pagination
 gem "kaminari", "~> 1.2"
+# Soft delete
+gem "discard"

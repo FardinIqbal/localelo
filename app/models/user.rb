@@ -1,4 +1,8 @@
 class User < ApplicationRecord
+  include Discard::Model
+
+  default_scope { kept }
+
   # Include Devise modules for authentication functionality
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
