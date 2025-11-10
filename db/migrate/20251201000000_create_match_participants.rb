@@ -12,19 +12,23 @@ class CreateMatchParticipants < ActiveRecord::Migration[7.1]
   end
 
   def up
-    create_table :match_participants do |t|
-      t.references :match, null: false, foreign_key: true
-      t.references :profile, null: false, foreign_key: true
-      t.integer :elo_before_match
-      t.integer :elo_after_match
-      t.boolean :is_winner, null: false, default: false
-
-      t.timestamps
+    unless table_exists?(:match_participants)
+      create_table :match_participants do |t|
+        t.references :match, null: false, foreign_key: true, index: false
+        t.references :profile, null: false, foreign_key: true, index: false
+        t.integer :elo_before_match
+        t.integer :elo_after_match
+        t.boolean :is_winner, null: false, default: false
+        t.timestamps
+      end
     end
 
-    add_index :match_participants, [:match_id, :profile_id], unique: true, algorithm: :concurrently
-    add_index :match_participants, :match_id, algorithm: :concurrently
-    add_index :match_participants, :profile_id, algorithm: :concurrently
+    unless index_exists?(:match_participants, [:match_id, :profile_id])
+      add_index :match_participants,
+                %i[match_id profile_id],
+                unique: true,
+                algorithm: :concurrently
+    end
 
     say_with_time "Backfilling match participants" do
       LegacyMatch.reset_column_information
@@ -33,42 +37,52 @@ class CreateMatchParticipants < ActiveRecord::Migration[7.1]
         participants = []
 
         if match.respond_to?(:profile1_id) && match.profile1_id.present?
-          participants << { profile_id: match.profile1_id, is_winner: match.winner_profile_id == match.profile1_id }
+          participants << {
+            profile_id: match.profile1_id,
+            is_winner: match.winner_profile_id == match.profile1_id
+          }
         end
 
         if match.respond_to?(:opponent_profile_id) && match.opponent_profile_id.present?
-          participants << { profile_id: match.opponent_profile_id, is_winner: match.winner_profile_id == match.opponent_profile_id }
+          participants << {
+            profile_id: match.opponent_profile_id,
+            is_winner: match.winner_profile_id == match.opponent_profile_id
+          }
         end
 
         participants.each do |attrs|
-          LegacyMatchParticipant.create!(attrs.merge(match_id: match.id))
+          LegacyMatchParticipant.find_or_create_by!(
+            match_id: match.id,
+            profile_id: attrs[:profile_id]
+          ) do |mp|
+            mp.is_winner = attrs[:is_winner]
+          end
         end
       end
     end
 
-    safety_assured do
-      remove_index :matches, name: "index_matches_on_profile1_and_opponent_profile_and_leaderboard", if_exists: true
-      remove_index :matches, :profile1_id, if_exists: true
-      remove_index :matches, :opponent_profile_id, if_exists: true
+    remove_index :matches, name: "index_matches_on_profile1_and_opponent_profile_and_leaderboard", if_exists: true
+    remove_index :matches, :profile1_id, if_exists: true
+    remove_index :matches, :opponent_profile_id, if_exists: true
 
-      remove_reference :matches, :profile1, foreign_key: { to_table: :profiles }, index: false
-      remove_reference :matches, :opponent_profile, foreign_key: { to_table: :profiles }, index: false
-      remove_column :matches, :elo_change, :integer
-      remove_column :matches, :elo_at_time, :integer
-    end
+    remove_reference :matches, :profile1, foreign_key: { to_table: :profiles }, index: false, if_exists: true
+    remove_reference :matches, :opponent_profile, foreign_key: { to_table: :profiles }, index: false, if_exists: true
+
+    remove_column :matches, :elo_change, :integer, if_exists: true
+    remove_column :matches, :elo_at_time, :integer, if_exists: true
   end
 
   def down
-    safety_assured do
-      add_column :matches, :elo_change, :integer
-      add_column :matches, :elo_at_time, :integer, null: false, default: 1500
+    add_column :matches, :elo_change, :integer
+    add_column :matches, :elo_at_time, :integer, null: false, default: 1500
 
-      add_reference :matches, :profile1, null: false, index: true, foreign_key: { to_table: :profiles }
-      add_reference :matches, :opponent_profile, null: false, index: true, foreign_key: { to_table: :profiles }
+    add_reference :matches, :profile1, null: false, index: true, foreign_key: { to_table: :profiles }
+    add_reference :matches, :opponent_profile, null: false, index: true, foreign_key: { to_table: :profiles }
 
-      add_index :matches, [:profile1_id, :opponent_profile_id, :leaderboard_id], name: "index_matches_on_profile1_and_opponent_profile_and_leaderboard"
-    end
+    add_index :matches,
+              %i[profile1_id opponent_profile_id leaderboard_id],
+              name: "index_matches_on_profile1_and_opponent_profile_and_leaderboard"
 
-    drop_table :match_participants
+    drop_table :match_participants, if_exists: true
   end
 end

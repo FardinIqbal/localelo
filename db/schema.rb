@@ -79,6 +79,19 @@ ActiveRecord::Schema[7.1].define(version: 2025_12_01_000000) do
     t.index ["organization_id"], name: "index_leaderboards_on_organization_id"
   end
 
+  create_table "match_participants", force: :cascade do |t|
+    t.bigint "match_id", null: false
+    t.bigint "profile_id", null: false
+    t.integer "elo_before_match"
+    t.integer "elo_after_match"
+    t.boolean "is_winner", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["match_id", "profile_id"], name: "index_match_participants_on_match_id_and_profile_id", unique: true
+    t.index ["match_id"], name: "index_match_participants_on_match_id"
+    t.index ["profile_id"], name: "index_match_participants_on_profile_id"
+  end
+
   create_table "matches", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -91,19 +104,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_12_01_000000) do
     t.index ["match_time"], name: "index_matches_on_match_time"
     t.index ["status"], name: "index_matches_on_status"
     t.index ["winner_profile_id"], name: "index_matches_on_winner_profile_id"
-  end
-
-  create_table "match_participants", force: :cascade do |t|
-    t.bigint "match_id", null: false
-    t.bigint "profile_id", null: false
-    t.integer "elo_before_match"
-    t.integer "elo_after_match"
-    t.boolean "is_winner", default: false, null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["match_id", "profile_id"], name: "index_match_participants_on_match_id_and_profile_id", unique: true
-    t.index ["match_id"], name: "index_match_participants_on_match_id"
-    t.index ["profile_id"], name: "index_match_participants_on_profile_id"
   end
 
   create_table "organization_memberships", force: :cascade do |t|
@@ -170,10 +170,10 @@ ActiveRecord::Schema[7.1].define(version: 2025_12_01_000000) do
   add_foreign_key "leaderboard_ratings", "leaderboards"
   add_foreign_key "leaderboard_ratings", "profiles"
   add_foreign_key "leaderboards", "organizations"
-  add_foreign_key "matches", "leaderboards"
-  add_foreign_key "matches", "profiles", column: "winner_profile_id"
   add_foreign_key "match_participants", "matches"
   add_foreign_key "match_participants", "profiles"
+  add_foreign_key "matches", "leaderboards"
+  add_foreign_key "matches", "profiles", column: "winner_profile_id"
   add_foreign_key "organization_memberships", "organizations"
   add_foreign_key "organization_memberships", "profiles"
   add_foreign_key "profiles", "organizations"
