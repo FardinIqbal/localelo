@@ -32,6 +32,19 @@ class User < ApplicationRecord
          .distinct
   end
 
+  def wins_count
+    profile_scope = profiles.select(:id)
+
+    Match.active.where(winner_profile_id: profile_scope).count
+  end
+
+  def win_percentage
+    total = matches.count
+    return 0 if total.zero?
+
+    (wins_count.to_f / total * 100).round(1)
+  end
+
   # Returns the Elo rating for the user on the provided leaderboard.
   # Accepts either a leaderboard object or its ID. If the user hasn't
   # played on the leaderboard yet, returns the default rating.
