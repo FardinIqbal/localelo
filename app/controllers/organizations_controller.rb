@@ -12,12 +12,17 @@ class OrganizationsController < ApplicationController
   # GET /organizations/:id
   def show
     @leaderboards = @organization.leaderboards.includes(:leaderboard_ratings)
-    @members = @organization.users.includes(:organization_memberships)
-                            .where(organization_memberships: { status: :approved })
-                            .order(created_at: :desc)
-    @pending_members = @organization.users.includes(:organization_memberships)
-                                    .where(organization_memberships: { status: :pending })
-                                    .order(created_at: :desc)
+    approved_memberships = @organization.organization_memberships.includes(profile: :user)
+                                             .approved
+                                             .order(created_at: :desc)
+    pending_memberships = @organization.organization_memberships.includes(profile: :user)
+                                            .pending
+                                            .order(created_at: :desc)
+
+    @member_memberships = approved_memberships
+    @pending_member_memberships = pending_memberships
+    @members = approved_memberships.map(&:profile)
+    @pending_members = pending_memberships.map(&:profile)
   end
 
   # GET /organizations/new
@@ -106,12 +111,17 @@ class OrganizationsController < ApplicationController
 
   # GET /organizations/:id/members
   def members
-    @members = @organization.users.includes(:organization_memberships)
-                            .where(organization_memberships: { status: :approved })
-                            .order(created_at: :desc)
-    @pending_members = @organization.users.includes(:organization_memberships)
-                                    .where(organization_memberships: { status: :pending })
-                                    .order(created_at: :desc)
+    approved_memberships = @organization.organization_memberships.includes(profile: :user)
+                                             .approved
+                                             .order(created_at: :desc)
+    pending_memberships = @organization.organization_memberships.includes(profile: :user)
+                                            .pending
+                                            .order(created_at: :desc)
+
+    @member_memberships = approved_memberships
+    @pending_member_memberships = pending_memberships
+    @members = approved_memberships.map(&:profile)
+    @pending_members = pending_memberships.map(&:profile)
   end
 
   # POST /organizations/:id/join
@@ -181,22 +191,49 @@ class OrganizationsController < ApplicationController
   def approve_member
     membership = membership_for_user(params[:user_id], status: :pending)
 
-    respond_to do |format|
-      if membership&.update(status: :approved)
-        # Add user to all leaderboards in the organization
-        add_user_to_leaderboards(membership.user, @organization)
+    unless user
+      respond_to do |format|
+        format.html {
+          flash[:alert] = "User not found."
+          redirect_to members_organization_path(@organization)
+        }
+        format.json { render json: { error: "User not found" }, status: :not_found }
+      end
+      return
+    end
 
+    profile = nil
+    membership = nil
+
+    begin
+      ActiveRecord::Base.transaction do
+        profile = user.profiles.find_or_initialize_by(organization: @organization)
+        profile.username ||= user.username
+        profile.first_name ||= user.first_name
+        profile.last_name ||= user.last_name
+        profile.save!
+
+        membership = @organization.organization_memberships.find_or_initialize_by(profile: profile)
+        membership.status = :approved
+        membership.save!
+
+        add_user_to_leaderboards(user, @organization)
+      end
+
+      respond_to do |format|
         format.html {
-          flash[:notice] = "#{membership.user.username} has been approved to join #{@organization.name} and added to all leaderboards."
+          flash[:notice] = "#{profile.username} has been approved to join #{@organization.name} and added to all leaderboards."
           redirect_to members_organization_path(@organization)
         }
-        format.json { render json: membership, status: :ok }
-      else
+        format.json { render json: { membership: membership, profile: profile }, status: :ok }
+      end
+    rescue ActiveRecord::RecordInvalid => e
+      respond_to do |format|
         format.html {
-          flash[:alert] = "User not found or already approved."
+          flash[:alert] = e.record.errors.full_messages.to_sentence.presence || "Unable to approve member."
           redirect_to members_organization_path(@organization)
         }
-        format.json { render json: { error: "User not found or already approved" }, status: :not_found }
+        format.json { render json: { error: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity }
       end
     end
   end

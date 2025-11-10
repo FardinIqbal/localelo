@@ -2,11 +2,11 @@
 <turbo-frame id="opponent_selection">
   <div>
     <label class="text-sm text-slate-400 mb-1 block">Opponent *</label>
-    <%= select_tag :opponent_id,
-                   options_from_collection_for_select(opponents, :id, :username, params[:opponent_id]),
+    <%= select_tag :opponent_profile_id,
+                   options_from_collection_for_select(opponents, :id, :username, params[:opponent_profile_id]),
                    include_blank: "Select opponent",
                    class: "w-full p-2 bg-slate-700 border border-slate-600 rounded-lg text-white",
-                   id: "match_opponent_id",
+                   id: "match_opponent_profile_id",
                    required: true %>
   </div>
 </turbo-frame>

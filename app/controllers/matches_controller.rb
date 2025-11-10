@@ -1,14 +1,14 @@
 class MatchesController < ApplicationController
   before_action :authenticate_user!
   before_action :set_match, only: [:show, :destroy]
-  before_action :load_leaderboards_and_users, only: [:new, :create]
+  before_action :load_leaderboards_and_profiles, only: [:new, :create]
   before_action :authorize_match_management!, only: [:destroy]
 
   # GET /matches
   # Lists matches the current user has participated in
   def index
     @matches = current_user.matches
-                           .includes(:user1, :opponent, leaderboard: :organization)
+                           .includes(profile1: :user, opponent_profile: :user, leaderboard: :organization)
                            .recent
                            .page(params[:page])
                            .per(20)
@@ -82,7 +82,19 @@ class MatchesController < ApplicationController
   # POST /matches
   # Creates a match and immediately records the result
   def create
-    @match_form = MatchForm.new(match_params.merge(user1_id: current_user.id))
+    @leaderboard = Leaderboard.find_by(id: match_params[:leaderboard_id])
+
+    unless @leaderboard
+      handle_missing_leaderboard and return
+    end
+
+    profile1 = current_user.profile_for(@leaderboard.organization_id)
+
+    unless profile1
+      handle_missing_profile and return
+    end
+
+    @match_form = MatchForm.new(match_params.merge(profile1_id: profile1.id))
 
     if (match = @match_form.save)
       logger.info "[MATCH] Logged match #{match.id} by user #{current_user.id}"
@@ -133,7 +145,7 @@ class MatchesController < ApplicationController
   private
 
   def match_params
-    params.require(:match).permit(:leaderboard_id, :opponent_id, :winner_id, :is_draw)
+    params.require(:match).permit(:leaderboard_id, :opponent_profile_id, :winner_profile_id, :is_draw)
   end
 
   def set_match
@@ -149,16 +161,19 @@ class MatchesController < ApplicationController
     end
   end
 
-  def load_leaderboards_and_users
+  def load_leaderboards_and_profiles
     @leaderboards = current_user.organizations.includes(:leaderboards).flat_map(&:leaderboards).uniq
+    @user_profiles_by_org = current_user.profiles.map { |profile| [profile.organization_id, profile.id] }.to_h
 
     if params[:match] && params[:match][:leaderboard_id].present?
       @users = available_users_for_leaderboard(Leaderboard.find_by(id: params[:match][:leaderboard_id]))
     elsif params[:leaderboard_id].present?
       @users = available_users_for_leaderboard(Leaderboard.find_by(id: params[:leaderboard_id]))
     else
-      @users = []
+      @profiles = []
     end
+
+    @user_profiles_by_org ||= {}
   end
 
   def authorize_match_management!
