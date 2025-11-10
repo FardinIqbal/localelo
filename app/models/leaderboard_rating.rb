@@ -1,9 +1,11 @@
 class LeaderboardRating < ApplicationRecord
-  belongs_to :user
+  belongs_to :profile
   belongs_to :leaderboard
+  has_one :user, through: :profile
 
-  validates :user, presence: true
+  validates :profile, presence: true
   validates :leaderboard, presence: true
+  validates :profile_id, uniqueness: { scope: :leaderboard_id }
   validates :rating, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :wins, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :losses, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
