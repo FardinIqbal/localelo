@@ -18,6 +18,9 @@ class OrganizationMembership < ApplicationRecord
     scope: :organization_id,
     message: "User is already a member of this organization"
   }
+  validates :admin, inclusion: { in: [true], message: "Owner must be an admin" }, if: :is_owner?
+
+  before_validation :assign_user_from_profile, if: -> { profile.present? && has_attribute?(:user_id) }
 
   # == Scopes ==
   # Convenience scopes for common queries
@@ -68,5 +71,11 @@ class OrganizationMembership < ApplicationRecord
   # Ban a user from the organization
   def ban!
     update!(status: :banned)
+  end
+
+  private
+
+  def assign_user_from_profile
+    self.user_id = profile.user_id
   end
 end
