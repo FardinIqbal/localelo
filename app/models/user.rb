@@ -32,6 +32,14 @@ class User < ApplicationRecord
          .distinct
   end
 
+  # Returns the Elo rating for the user on the provided leaderboard.
+  # Accepts either a leaderboard object or its ID. If the user hasn't
+  # played on the leaderboard yet, returns the default rating.
+  def elo_for(leaderboard)
+    rating = leaderboard_rating_for(leaderboard)
+    rating&.rating || Match::DEFAULT_RATING
+  end
+
   # Returns the first profile for the user (used as a sensible default)
   def primary_profile
     profiles.order(:created_at).first
@@ -90,5 +98,10 @@ class User < ApplicationRecord
     return unless profiles.exists?
 
     profiles.update_all(attributes.merge(updated_at: Time.current))
+  end
+
+  def leaderboard_rating_for(leaderboard)
+    leaderboard_id = leaderboard.respond_to?(:id) ? leaderboard.id : leaderboard
+    leaderboard_ratings.find_by(leaderboard_id: leaderboard_id)
   end
 end
