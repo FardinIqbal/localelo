@@ -1,5 +1,4 @@
 class Organization < ApplicationRecord
-  belongs_to :user, optional: true  # The Owner
   has_many :profiles, dependent: :destroy
   has_many :organization_memberships, dependent: :destroy
   has_many :membership_profiles, through: :organization_memberships, source: :profile
@@ -55,16 +54,29 @@ class Organization < ApplicationRecord
     return false unless new_owner.present?
     return false unless admin?(new_owner) # Ensure new owner is an admin
 
-    if update(user_id: new_owner.id)
+    ActiveRecord::Base.transaction do
       current_owner_membership = organization_memberships.find_by(is_owner: true)
-      current_owner_membership&.update(is_owner: false)
+      current_owner_membership&.update!(is_owner: false)
 
-      membership = membership_for(new_owner) || build_membership_for(new_owner)
-      membership.update(admin: true, status: :approved, is_owner: true)
-      true
-    else
-      false
+      membership = membership_for(new_owner)
+      membership ||= begin
+        profile = profiles.find_or_initialize_by(user_id: new_owner.id)
+        profile.username ||= new_owner.username
+        profile.first_name ||= new_owner.first_name
+        profile.last_name ||= new_owner.last_name
+        profile.save!
+
+        organization_memberships.find_or_initialize_by(profile: profile)
+      end
+
+      membership.update!(admin: true, status: :approved, is_owner: true)
+
+      update!(created_by: new_owner.id) if has_attribute?(:created_by)
     end
+
+    true
+  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved
+    false
   end
 
   # Get all admins of the organization
