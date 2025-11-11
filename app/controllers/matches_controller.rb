@@ -171,8 +171,22 @@ class MatchesController < ApplicationController
 
   def load_leaderboards_and_profiles
     @leaderboards = current_user.organizations.includes(:leaderboards).flat_map(&:leaderboards).uniq
-    @user_profiles_by_org = current_user.profiles.map { |profile| [profile.organization_id.to_s, profile.id] }.to_h
-    @current_profile = current_user.profiles.find_by(id: params[:profile_id]) || current_user.profiles.first
+
+    approved_profiles = current_user.profiles
+                                    .joins(:organization_membership)
+                                    .merge(OrganizationMembership.approved)
+                                    .includes(:organization)
+                                    .to_a
+
+    @user_profiles_by_org = approved_profiles.map { |profile| [profile.organization_id.to_s, profile.id] }.to_h
+
+    selected_profile_id = params[:profile_id]
+    @current_profile = if selected_profile_id.present?
+                         approved_profiles.detect { |profile| profile.id == selected_profile_id.to_i }
+                       else
+                         approved_profiles.first
+                       end
+    @current_profile ||= approved_profiles.first
 
     if params[:match] && params[:match][:leaderboard_id].present?
       leaderboard = Leaderboard.find_by(id: params[:match][:leaderboard_id])
@@ -220,7 +234,10 @@ class MatchesController < ApplicationController
   end
 
   def recent_opponent_profiles
-    profiles = current_user.profiles.includes(:organization)
+    profiles = current_user.profiles
+                           .joins(:organization_membership)
+                           .merge(OrganizationMembership.approved)
+                           .includes(:organization)
     return [] if profiles.empty?
 
     profile_ids = profiles.map(&:id)
@@ -240,7 +257,12 @@ class MatchesController < ApplicationController
   def available_profiles_for_leaderboard(leaderboard)
     return [] unless leaderboard
 
-    leaderboard.profiles.includes(:user).where.not(user_id: current_user.id).distinct
+    leaderboard.leaderboard_ratings
+               .includes(profile: :user)
+               .where.not(profiles: { user_id: current_user.id })
+               .map(&:profile)
+               .compact
+               .uniq { |profile| profile.id }
   end
 
   def handle_missing_leaderboard
