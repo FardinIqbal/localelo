@@ -506,6 +506,10 @@
           </div>
         </div>
 
+        <p class="text-slate-400 text-sm mb-4">
+          Membership status determines access, while admin and owner roles are granted separately once a member is approved.
+        </p>
+
         <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-700 overflow-hidden">
           <div class="overflow-x-auto">
             <table class="w-full text-left">
@@ -523,7 +527,7 @@
               </tr>
               </thead>
               <tbody class="divide-y divide-slate-700" id="members-table-body">
-              <% @organization.organization_memberships.includes(profile: :user).each do |membership| %>
+              <% @organization.organization_memberships.includes(:organization_role, profile: :user).each do |membership| %>
                 <tr class="hover:bg-slate-700/50 transition-colors">
                   <td class="px-4 py-3">
                     <div class="flex items-center">

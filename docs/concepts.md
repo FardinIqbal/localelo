@@ -39,7 +39,7 @@ Each concept below is described using a shared outline:
 | --- | --- |
 | **Name** | Organization |
 | **Purpose** | Represents a gym, club, or community hub that owns leaderboards, memberships, and match activity. |
-| **State** | Name, visibility (`open` or `restricted`), owner/admin flags via memberships, collection of profiles, leaderboards, and matches. |
+| **State** | Name, visibility (`open` or `restricted`), membership roster, role assignments, collection of profiles, leaderboards, and matches. |
 | **Actions** | Create organizations, approve/deny membership, promote/demote admins, transfer ownership, manage leaderboards, review matches, archive if empty. |
 | **Operational Principle** | Organizations mediate every user interaction; access is controlled by membership status and visibility rules, and all leaderboards/matches are scoped to a single organization. |
 
@@ -47,10 +47,19 @@ Each concept below is described using a shared outline:
 | Attribute | Notes |
 | --- | --- |
 | **Name** | Membership |
-| **Purpose** | Governs a profile's relationship to an organization, including approval workflow and admin privileges. |
-| **State** | Status enum (`pending`, `approved`, `banned`), admin boolean, owner flag, timestamps. |
-| **Actions** | Request join, approve, ban, promote/demote admin, transfer ownership, revoke membership. |
-| **Operational Principle** | Ownership implies admin privileges; each profile can have at most one membership per organization and status transitions must respect approval/banning policies. |
+| **Purpose** | Governs a profile's relationship to an organization, including join requests, approval, and bans. |
+| **State** | Status enum (`pending`, `approved`, `banned`), timestamps. |
+| **Actions** | Request join, approve, ban, revoke membership. |
+| **Operational Principle** | Memberships capture access state only; role assignments layer admin/owner capabilities on top of approved memberships. |
+
+### Organization Role
+| Attribute | Notes |
+| --- | --- |
+| **Name** | Role |
+| **Purpose** | Represents elevated capabilities (admin or owner) granted to an approved membership. |
+| **State** | Admin flag, owner flag (unique per organization), timestamps, references to organization and membership. |
+| **Actions** | Promote/demote admins, transfer ownership, inspect role holders. |
+| **Operational Principle** | Roles are only valid for approved memberships; ownership automatically conveys admin privileges and remains unique per organization. |
 
 ### Leaderboard
 | Attribute | Notes |
