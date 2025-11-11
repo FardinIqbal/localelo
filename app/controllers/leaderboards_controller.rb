@@ -4,6 +4,7 @@ class LeaderboardsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_organization
   before_action :set_leaderboard, only: [:show, :edit, :update, :destroy, :rankings]
+  before_action :ensure_approved_membership!, only: [:index, :show, :rankings]
   before_action :authorize_admin!, only: [:new, :create, :edit, :update, :destroy]
 
   # GET /organizations/:organization_id/leaderboards
@@ -122,5 +123,12 @@ class LeaderboardsController < ApplicationController
   # Strong params for creating/updating leaderboards
   def leaderboard_params
     params.require(:leaderboard).permit(:name, :description, :sport)
+  end
+
+  def ensure_approved_membership!
+    return if current_user&.profile_for(@organization)
+
+    flash[:alert] = "You must be an approved member to view this leaderboard."
+    redirect_to organizations_path
   end
 end

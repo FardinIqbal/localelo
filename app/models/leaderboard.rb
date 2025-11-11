@@ -15,14 +15,19 @@ class Leaderboard < ApplicationRecord
   def add_organization_members_to_leaderboard
     Rails.logger.info "=== DEBUG: Adding Organization Members to Leaderboard #{id} ==="
 
-    organization.profiles.find_each do |profile|
-      LeaderboardRating.create!(
+    organization.organization_memberships.approved.includes(:profile).find_each do |membership|
+      profile = membership.profile
+      next unless profile
+
+      LeaderboardRating.find_or_create_by!(
         profile: profile,
-        leaderboard: self,
-        rating: 1500, # Default Elo rating
-        wins: 0,
-        losses: 0
-      )
+        leaderboard: self
+      ) do |rating|
+        rating.rating = 1500
+        rating.wins = 0
+        rating.losses = 0
+        rating.draws = 0
+      end
     end
   end
 end

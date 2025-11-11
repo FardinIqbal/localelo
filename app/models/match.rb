@@ -61,6 +61,7 @@ class Match < ApplicationRecord
   validate :validate_participant_count
   validate :validate_participants_unique
   validate :validate_participants_in_leaderboard
+  validate :validate_participants_are_approved_members
   validate :validate_winner_in_participants
 
   before_validation :sync_winner_from_participants
@@ -208,6 +209,22 @@ class Match < ApplicationRecord
       next if participant.profile.organization_id == expected_organization_id
 
       errors.add(:match_participants, "profile #{participant.profile.username} is not a member of this leaderboard")
+    end
+  end
+
+  def validate_participants_are_approved_members
+    return if leaderboard.nil?
+
+    organization_id = leaderboard.organization_id
+
+    active_participants.each do |participant|
+      profile = participant.profile
+      membership = profile&.organization_membership
+
+      unless membership&.approved? && membership.organization_id == organization_id
+        identifier = profile&.username || "##{participant.profile_id}"
+        errors.add(:match_participants, "profile #{identifier} must be approved to compete on this leaderboard")
+      end
     end
   end
 
