@@ -12,10 +12,10 @@ class OrganizationsController < ApplicationController
   # GET /organizations/:id
   def show
     @leaderboards = @organization.leaderboards.includes(:leaderboard_ratings)
-    approved_memberships = @organization.organization_memberships.includes(profile: :user)
+    approved_memberships = @organization.organization_memberships.includes(:organization_role, profile: :user)
                                              .approved
                                              .order(created_at: :desc)
-    pending_memberships = @organization.organization_memberships.includes(profile: :user)
+    pending_memberships = @organization.organization_memberships.includes(:organization_role, profile: :user)
                                             .pending
                                             .order(created_at: :desc)
 
@@ -110,10 +110,10 @@ class OrganizationsController < ApplicationController
 
   # GET /organizations/:id/members
   def members
-    approved_memberships = @organization.organization_memberships.includes(profile: :user)
+    approved_memberships = @organization.organization_memberships.includes(:organization_role, profile: :user)
                                              .approved
                                              .order(created_at: :desc)
-    pending_memberships = @organization.organization_memberships.includes(profile: :user)
+    pending_memberships = @organization.organization_memberships.includes(:organization_role, profile: :user)
                                             .pending
                                             .order(created_at: :desc)
 
@@ -174,7 +174,9 @@ class OrganizationsController < ApplicationController
             flash[:notice] = message
             redirect_to @organization
           }
-          format.json { render json: membership, status: :created }
+          format.json do
+            render json: membership.as_json(include: { organization_role: { only: [:admin, :owner] } }), status: :created
+          end
         else
           format.html {
             flash[:alert] = "Failed to join: #{membership.errors.full_messages.to_sentence}"
@@ -224,7 +226,12 @@ class OrganizationsController < ApplicationController
           flash[:notice] = "#{profile.username} has been approved to join #{@organization.name} and added to all leaderboards."
           redirect_to members_organization_path(@organization)
         }
-        format.json { render json: { membership: membership, profile: profile }, status: :ok }
+        format.json do
+          render json: {
+            membership: membership.as_json(include: { organization_role: { only: [:admin, :owner] } }),
+            profile: profile
+          }, status: :ok
+        end
       end
     rescue ActiveRecord::RecordInvalid => e
       respond_to do |format|
@@ -278,17 +285,29 @@ class OrganizationsController < ApplicationController
     membership = membership_for_user(params[:user_id], status: :approved)
 
     respond_to do |format|
-      if membership&.update(admin: true)
-        format.html {
-          flash[:notice] = "#{membership.user.username} is now an admin of #{@organization.name}."
-          redirect_to members_organization_path(@organization)
-        }
-        format.json { render json: membership, status: :ok }
+      if membership
+        role = membership.organization_role || membership.build_organization_role(organization: @organization)
+
+        if role.update(admin: true)
+          format.html do
+            flash[:notice] = "#{membership.user.username} is now an admin of #{@organization.name}."
+            redirect_to members_organization_path(@organization)
+          end
+          format.json do
+            render json: membership.as_json(include: { organization_role: { only: [:admin, :owner] } }), status: :ok
+          end
+        else
+          format.html do
+            flash[:alert] = role.errors.full_messages.to_sentence.presence || "Unable to promote user to admin."
+            redirect_to members_organization_path(@organization)
+          end
+          format.json { render json: role.errors, status: :unprocessable_entity }
+        end
       else
-        format.html {
+        format.html do
           flash[:alert] = "User not found or not an approved member."
           redirect_to members_organization_path(@organization)
-        }
+        end
         format.json { render json: { error: "User not found or not approved" }, status: :not_found }
       end
     end
@@ -296,7 +315,8 @@ class OrganizationsController < ApplicationController
 
   # PATCH /organizations/:id/remove_admin
   def remove_admin
-    membership = membership_for_user(params[:user_id], admin: true)
+    membership = membership_for_user(params[:user_id])
+    role = membership&.organization_role
 
     respond_to do |format|
       if membership&.user && @organization.owner?(membership.user)
@@ -305,12 +325,16 @@ class OrganizationsController < ApplicationController
           redirect_to members_organization_path(@organization)
         }
         format.json { render json: { error: "Cannot remove owner's admin status" }, status: :unprocessable_entity }
-      elsif membership&.update(admin: false)
+      elsif role&.admin?
+        role.destroy
+
         format.html {
           flash[:notice] = "#{membership.user.username} is no longer an admin of #{@organization.name}."
           redirect_to members_organization_path(@organization)
         }
-        format.json { render json: membership, status: :ok }
+        format.json do
+          render json: membership.as_json(include: { organization_role: { only: [:admin, :owner] } }), status: :ok
+        end
       else
         format.html {
           flash[:alert] = "User not found or not an admin."
@@ -416,7 +440,14 @@ class OrganizationsController < ApplicationController
 
     scope = @organization.organization_memberships.joins(:profile)
                                 .where(profiles: { user_id: user_id })
-    scope = scope.where(conditions) if conditions.present?
+    if conditions.present?
+      scope = scope.where(status: conditions[:status]) if conditions.key?(:status)
+
+      if conditions[:admin]
+        scope = scope.joins(:organization_role)
+                     .where(organization_roles: { admin: true })
+      end
+    end
     scope.first
   end
 
@@ -430,9 +461,12 @@ class OrganizationsController < ApplicationController
 
       membership = organization.organization_memberships.find_or_initialize_by(profile: profile)
       membership.status = :approved
-      membership.admin = true
-      membership.is_owner = true
       membership.save!
+
+      role = membership.organization_role || membership.build_organization_role(organization: organization)
+      role.owner = true
+      role.admin = true
+      role.save!
     end
 
     true

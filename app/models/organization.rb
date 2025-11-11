@@ -2,6 +2,7 @@ class Organization < ApplicationRecord
   has_many :profiles, dependent: :destroy
   has_many :organization_memberships, dependent: :destroy
   has_many :membership_profiles, through: :organization_memberships, source: :profile
+  has_many :organization_roles, dependent: :destroy
   has_many :users, through: :profiles
   has_many :leaderboards, dependent: :destroy
   has_many :matches, through: :leaderboards
@@ -14,9 +15,9 @@ class Organization < ApplicationRecord
   def owner?(user)
     return false unless user
 
-    organization_memberships
-      .joins(:profile)
-      .where(profiles: { user_id: user.id }, is_owner: true)
+    organization_roles
+      .joins(organization_membership: :profile)
+      .where(owner: true, profiles: { user_id: user.id })
       .exists?
   end
 
@@ -24,11 +25,9 @@ class Organization < ApplicationRecord
   def admin?(user)
     return false unless user
 
-    # The owner should ALWAYS be an admin. We can enforce this with a validation.
-    # For now, the check is simpler:
-    organization_memberships
-      .joins(:profile)
-      .where(profiles: { user_id: user.id }, admin: true, status: :approved)
+    organization_roles
+      .joins(organization_membership: :profile)
+      .where(profiles: { user_id: user.id }, admin: true)
       .exists?
   end
 
@@ -44,7 +43,10 @@ class Organization < ApplicationRecord
     return false unless user && !owner?(user)
 
     membership = membership_for(user, scope: :approved)
-    membership&.update(admin: true)
+    return false unless membership
+
+    role = membership.organization_role || membership.build_organization_role(organization: self)
+    role.update(admin: true)
   end
 
   # Demote an admin to a regular member (Only the owner can do this)
@@ -52,7 +54,12 @@ class Organization < ApplicationRecord
     return false unless user && !owner?(user)
 
     membership = membership_for(user, scope: :approved)
-    membership&.update(admin: false)
+    role = membership&.organization_role
+    return false unless role
+    return false if role.owner?
+
+    role.destroy
+    true
   end
 
   # Transfer ownership to another admin (Only the current owner can do this)
@@ -61,8 +68,8 @@ class Organization < ApplicationRecord
     return false unless admin?(new_owner) # Ensure new owner is an admin
 
     ActiveRecord::Base.transaction do
-      current_owner_membership = organization_memberships.find_by(is_owner: true)
-      current_owner_membership&.update!(is_owner: false)
+      current_owner_role = organization_roles.find_by(owner: true)
+      current_owner_role&.update!(owner: false)
 
       membership = membership_for(new_owner)
       membership ||= begin
@@ -75,7 +82,12 @@ class Organization < ApplicationRecord
         organization_memberships.find_or_initialize_by(profile: profile)
       end
 
-      membership.update!(admin: true, status: :approved, is_owner: true)
+      membership.update!(status: :approved)
+
+      role = membership.organization_role || membership.build_organization_role(organization: self)
+      role.owner = true
+      role.admin = true
+      role.save!
 
       update!(created_by: new_owner.id) if has_attribute?(:created_by)
     end
@@ -87,11 +99,16 @@ class Organization < ApplicationRecord
 
   # Get all admins of the organization
   def admins
-    membership_profiles.joins(:organization_memberships)
-                       .merge(OrganizationMembership.where(organization_id: id, admin: true, status: :approved))
-                       .map(&:user)
-                       .compact
-                       .uniq
+    organization_roles
+      .joins(organization_membership: { profile: :user })
+      .where(admin: true)
+      .map(&:user)
+      .compact
+      .uniq
+  end
+
+  def owner_role
+    organization_roles.find_by(owner: true)
   end
 
   # Check if a user is an approved member of the organization

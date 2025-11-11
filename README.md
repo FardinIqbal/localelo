@@ -95,8 +95,9 @@ The codebase organizes domain logic in POROs and Rails models, keeping controlle
 | Entity | Purpose | Key Relationships |
 | --- | --- | --- |
 | `User` | Authenticated athlete/admin. Stores profile + avatar. | `has_many :organizations` (through memberships), `has_many :leaderboards` (through ratings), `has_many :matches` (as player/opponent/winner). |
-| `Organization` | Represents a gym/club. Tracks owner, visibility, and memberships. | `belongs_to :user` (owner), `has_many :leaderboards`, `has_many :matches` (through leaderboards). |
-| `OrganizationMembership` | Joins users to organizations with admin + status flags. | Validates uniqueness, supports scopes (`pending`, `approved`, `banned`). |
+| `Organization` | Represents a gym/club. Tracks visibility, memberships, and role assignments. | `has_many :leaderboards`, `has_many :matches` (through leaderboards). |
+| `OrganizationMembership` | Joins profiles to organizations and records join status. | Validates uniqueness, supports scopes (`pending`, `approved`, `banned`). |
+| `OrganizationRole` | Links approved memberships to elevated privileges (admin/owner). | `belongs_to :organization`, `belongs_to :organization_membership`; enforces single owner per org. |
 | `Leaderboard` | Defines a ladder or ranking table inside an organization. | `has_many :leaderboard_ratings`, `has_many :matches`. Auto-enrolls existing members. |
 | `LeaderboardRating` | Stores a member's Elo, wins, and losses for a leaderboard. | `belongs_to :user`, `belongs_to :leaderboard`; updated after matches. |
 | `Match` | Records a single contest, winner, draw status, and Elo delta. | Validates both players belong to the leaderboard; triggers Elo adjustments + history logging. |
