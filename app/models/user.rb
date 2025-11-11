@@ -10,8 +10,12 @@ class User < ApplicationRecord
 
   # == Associations ==
   has_many :profiles
-  has_many :organization_memberships, through: :profiles
-  has_many :organizations, -> { distinct }, through: :profiles
+  has_many :organization_memberships, through: :profiles, source: :organization_membership
+  has_many :approved_organization_memberships,
+           -> { OrganizationMembership.approved },
+           through: :profiles,
+           source: :organization_membership
+  has_many :organizations, -> { distinct }, through: :approved_organization_memberships, source: :organization
 
   has_many :leaderboard_ratings, through: :profiles
   has_many :leaderboards, -> { distinct }, through: :leaderboard_ratings
@@ -119,10 +123,13 @@ class User < ApplicationRecord
     match_ids = MatchParticipant.where(profile_id: ids).select(:match_id)
 
     opponent_profile_id = MatchParticipant
-                            .joins(:match)
+                            .joins(match: :leaderboard)
+                            .joins(profile: :organization_membership)
                             .merge(Match.active)
                             .where(match_id: match_ids)
                             .where.not(profile_id: ids)
+                            .where(organization_memberships: { status: OrganizationMembership.statuses[:approved] })
+                            .where("organization_memberships.organization_id = leaderboards.organization_id")
                             .group(:profile_id)
                             .order(Arel.sql("COUNT(*) DESC"))
                             .limit(1)
@@ -148,7 +155,11 @@ class User < ApplicationRecord
   # Fetches the profile for a specific organization (accepts object or id)
   def profile_for(organization)
     organization_id = organization.respond_to?(:id) ? organization.id : organization
-    profiles.find_by(organization_id: organization_id)
+
+    profiles
+      .joins(:organization_membership)
+      .merge(OrganizationMembership.approved)
+      .find_by(organization_id: organization_id)
   end
 
   # Backwards compatible helpers for legacy code that still references user
@@ -185,7 +196,10 @@ class User < ApplicationRecord
   private
 
   def profile_ids
-    @profile_ids ||= profiles.ids
+    @profile_ids ||= profiles
+                       .joins(:organization_membership)
+                       .merge(OrganizationMembership.approved)
+                       .ids
   end
 
   def anonymize_user
