@@ -2,7 +2,7 @@ class Profile < ApplicationRecord
   belongs_to :user
   belongs_to :organization
 
-  has_many :organization_memberships, dependent: :destroy
+  has_one :organization_membership, dependent: :destroy
 
   has_many :leaderboard_ratings, dependent: :destroy
   has_many :leaderboards, through: :leaderboard_ratings
@@ -14,6 +14,8 @@ class Profile < ApplicationRecord
 
   validates :username, presence: true, uniqueness: { scope: :organization_id }
   validates :user_id, uniqueness: { scope: :organization_id, message: "can only have one profile per organization" }
+
+  delegate :status, to: :organization_membership, prefix: true, allow_nil: true
 
   # Compatibility helpers for legacy code
   def matches_as_profile1

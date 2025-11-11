@@ -2,8 +2,8 @@
 FactoryBot.define do
   factory :organization_membership do
     # Associations
-    association :user
-    association :organization
+    association :profile
+    organization { profile.organization }
 
     # Default values
     status { :approved } # Use symbol instead of integer for better readability

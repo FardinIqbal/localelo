@@ -5,7 +5,7 @@ class OrganizationMembershipsController < ApplicationController
   # POST /organization_memberships
   # Sends a join request for an organization
   def create
-    profile = current_user.profile_for(@organization)
+    profile = current_user.profiles.find_by(organization: @organization)
 
     unless profile
       profile = current_user.profiles.build(
@@ -21,12 +21,28 @@ class OrganizationMembershipsController < ApplicationController
       end
     end
 
-    membership = @organization.organization_memberships.find_or_initialize_by(profile: profile)
+    membership = if profile
+                   @organization.organization_memberships.find_or_initialize_by(profile: profile)
+                 else
+                   @organization.organization_memberships.build
+                 end
 
     if membership.persisted?
       flash[:alert] = "You are already a member of this organization."
     else
+      membership.profile ||= profile
       membership.status = @organization.open? ? :approved : :pending
+
+      if membership.profile.blank?
+        membership.build_profile(
+          user: current_user,
+          organization: @organization,
+          username: current_user.username,
+          first_name: current_user.first_name,
+          last_name: current_user.last_name
+        )
+      end
+
       if membership.save
         flash[:notice] = @organization.open? ? "You have joined the organization." : "Join request sent for approval."
       else
