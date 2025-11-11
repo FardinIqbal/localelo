@@ -102,6 +102,8 @@ The codebase organizes domain logic in POROs and Rails models, keeping controlle
 | `Match` | Records a single contest, winner, draw status, and Elo delta. | Validates both players belong to the leaderboard; triggers Elo adjustments + history logging. |
 | `EloHistory` | Snapshots Elo over time for charting and analytics. | `belongs_to :user`, typically appended after each match. |
 
+> **Need the bigger picture?** Review the [Domain Concepts Inventory](docs/concepts.md) for end-to-end definitions, state diagrams, and synchronization rules that keep these entities aligned.
+
 ---
 
 ## Front-End Experience
