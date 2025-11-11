@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_12_01_000000) do
+ActiveRecord::Schema[7.1].define(version: 2025_12_02_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -111,12 +111,22 @@ ActiveRecord::Schema[7.1].define(version: 2025_12_01_000000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "status", default: 0, null: false
-    t.boolean "admin", default: false, null: false
     t.bigint "profile_id", null: false
-    t.boolean "is_owner", default: false, null: false
-    t.index ["organization_id", "is_owner"], name: "index_organization_memberships_on_organization_id_and_is_owner", unique: true, where: "(is_owner = true)"
     t.index ["organization_id"], name: "index_organization_memberships_on_organization_id"
     t.index ["profile_id"], name: "index_organization_memberships_on_profile_id"
+  end
+
+  create_table "organization_roles", force: :cascade do |t|
+    t.bigint "organization_id", null: false
+    t.bigint "organization_membership_id", null: false
+    t.boolean "admin", default: false, null: false
+    t.boolean "owner", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["organization_id", "organization_membership_id"], name: "index_roles_on_org_and_membership", unique: true
+    t.index ["organization_id", "owner"], name: "index_organization_roles_on_org_and_owner", unique: true, where: "(owner = true)"
+    t.index ["organization_id"], name: "index_organization_roles_on_organization_id"
+    t.index ["organization_membership_id"], name: "index_roles_on_membership"
   end
 
   create_table "organizations", force: :cascade do |t|
@@ -176,6 +186,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_12_01_000000) do
   add_foreign_key "matches", "profiles", column: "winner_profile_id"
   add_foreign_key "organization_memberships", "organizations"
   add_foreign_key "organization_memberships", "profiles"
+  add_foreign_key "organization_roles", "organization_memberships"
+  add_foreign_key "organization_roles", "organizations"
   add_foreign_key "profiles", "organizations"
   add_foreign_key "profiles", "users"
 end
