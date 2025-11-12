@@ -1,19 +1,19 @@
 module ApplicationHelper
-  # For regular nav links (e.g., desktop)
+  # For desktop nav links
   def active_nav_class(path)
     if current_page?(path)
-      "text-transparent bg-gradient-to-r from-pink-500 to-indigo-500 bg-clip-text font-medium"
+      "px-4 py-2 rounded-lg text-sm font-medium text-white bg-slate-700/70 border border-slate-600"
     else
-      "text-white/70 hover:text-white/90 transition-colors duration-200"
+      "px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-700/50 transition-all duration-200"
     end
   end
 
-  # For mobile bottom nav (e.g., icon-only buttons)
+  # For mobile bottom nav
   def nav_active_class(path)
     if current_page?(path)
-      "text-transparent bg-gradient-to-r from-pink-500 to-indigo-500 bg-clip-text"
+      "text-purple-400"
     else
-      ""
+      "text-slate-400"
     end
   end
 end

@@ -18,61 +18,58 @@
     </div>
 
     <!-- Search & Filter Bar -->
-    <div class="bg-slate-900/60 backdrop-blur-xl rounded-2xl border border-white/10 shadow-xl shadow-purple-500/5 p-6 mb-8">
+    <div class="bg-slate-800/80 backdrop-blur-xl rounded-xl border border-slate-700 p-6 mb-8 transition-all duration-300 hover:border-purple-500/30">
       <div class="flex flex-col md:flex-row gap-4">
         <!-- Search Input -->
         <div class="relative flex-grow">
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <i class="fas fa-search text-slate-400"></i>
           </div>
           <input
             type="text"
             id="search"
             placeholder="Search organizations..."
-            class="w-full pl-10 px-3 py-3 bg-slate-800/50 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-white placeholder-slate-400 transition-all duration-300"
+            class="w-full px-4 py-3 pl-11 bg-slate-900/70 border-2 border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200"
             onkeyup="filterOrganizations()"
           >
         </div>
 
         <!-- Filter by Visibility -->
         <div class="relative min-w-[200px]">
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <i class="fas fa-filter text-slate-400"></i>
           </div>
           <select
             id="visibility-filter"
             onchange="filterOrganizations()"
-            class="w-full pl-10 px-3 py-3 bg-slate-800/50 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-white appearance-none transition-all duration-300"
+            class="w-full px-4 py-3 pl-11 pr-10 bg-slate-900/70 border-2 border-slate-700 rounded-lg text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 appearance-none transition-all duration-200"
           >
             <option value="">All Organizations</option>
             <option value="open">Public</option>
             <option value="restricted">Private</option>
           </select>
-          <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+          <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
             <i class="fas fa-chevron-down text-slate-400 text-xs"></i>
           </div>
         </div>
 
         <!-- Create Organization Button -->
         <%= link_to new_organization_path,
-                    class: "inline-flex items-center justify-center font-medium rounded-xl transition-all duration-300 px-5 py-3
-                    text-white bg-gradient-to-r from-purple-600 to-pink-500
-                    hover:bg-gradient-to-r hover:from-purple-500 hover:to-pink-400
-                    shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40
-                    transform hover:-translate-y-1" do %>
-          <i class="fas fa-plus mr-2"></i> Create Gym
+                    class: "inline-flex items-center justify-center px-6 py-3 rounded-lg font-medium text-white bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-500 hover:to-pink-400 shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 transform hover:-translate-y-0.5 active:scale-98 transition-all duration-200" do %>
+          <i class="fas fa-plus mr-2"></i>
+          Create Gym
         <% end %>
       </div>
     </div>
 
     <!-- Organizations Grid -->
-    <div class="bg-slate-900/60 backdrop-blur-xl rounded-2xl border border-white/10 shadow-xl p-6">
+    <div class="bg-slate-800/80 backdrop-blur-xl rounded-xl border border-slate-700 p-6 transition-all duration-300 hover:border-purple-500/30">
       <h2 class="text-2xl font-bold text-white mb-6">Available Organizations</h2>
 
       <% if @organizations.present? %>
         <div id="organizations-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <% @organizations.each do |organization| %>
-            <div class="organization-item group bg-slate-800/60 backdrop-blur-sm rounded-xl border border-white/10 shadow-lg overflow-hidden hover:shadow-purple-500/20 transition-all duration-300 hover:-translate-y-1 hover:border-purple-500/30"
+            <div class="organization-item group bg-slate-900/70 rounded-xl border border-slate-700 shadow-lg overflow-hidden hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-300 hover:-translate-y-1 hover:border-purple-500/50"
                  data-name="<%= organization.name.downcase %>"
                  data-location="<%= organization.location&.downcase || '' %>"
                  data-visibility="<%= organization.visibility %>">

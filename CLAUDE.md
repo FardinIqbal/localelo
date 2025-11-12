@@ -24,7 +24,7 @@ The author's core thesis is that the primary determinant of success in software 
 The goal of concept-driven design is to align three things:
 The designer's explicit Conceptual Model.
 The user's Mental Model (their understanding of how it works).
-The System Image (the UI—buttons, labels, etc.) which projects the conceptual model to the user.
+The System Image (the UI—buttons, labels, etc.) which projects the conc eptual model to the user.
 The Three Levels of Design
 To understand concept design, we must first separate design into three distinct levels. Most usability problems are incorrectly attributed to the lower levels (a bad icon or button) when they are actually flaws in the highest level (a broken concept).
 Level 1: The Physical Level
