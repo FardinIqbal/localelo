@@ -187,26 +187,32 @@
               <div class="flex justify-between items-center">
                 <div class="flex items-center">
                   <div class="flex items-center space-x-4">
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
-                      <%= match.user1.username[0..1].upcase %>
-                    </div>
-                    <div class="text-white font-medium"><%= match.user1.username %></div>
-                    <div class="text-slate-400">vs</div>
-                    <div class="text-white font-medium"><%= match.opponent.username %></div>
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center text-white font-bold">
-                      <%= match.opponent.username[0..1].upcase %>
-                    </div>
+                    <% if match.user1 && match.opponent %>
+                      <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
+                        <%= match.user1.username[0..1].upcase %>
+                      </div>
+                      <div class="text-white font-medium"><%= match.user1.username %></div>
+                      <div class="text-slate-400">vs</div>
+                      <div class="text-white font-medium"><%= match.opponent.username %></div>
+                      <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center text-white font-bold">
+                        <%= match.opponent.username[0..1].upcase %>
+                      </div>
+                    <% else %>
+                      <div class="text-slate-400">Match data incomplete</div>
+                    <% end %>
                   </div>
                 </div>
 
                 <div class="flex items-center">
                   <% if match.is_draw %>
                     <span class="text-yellow-400 font-medium">Draw</span>
-                  <% else %>
+                  <% elsif match.winner %>
                     <span class="text-white font-medium">Winner: </span>
                     <span class="ml-2 font-medium <%= match.winner_id == match.user1_id ? 'text-green-400' : 'text-red-400' %>">
                       <%= match.winner.username %>
                     </span>
+                  <% else %>
+                    <span class="text-slate-400">No result</span>
                   <% end %>
                   <div class="ml-3 text-xs text-slate-400">
                     <%= match.created_at.strftime("%b %d, %Y") %>

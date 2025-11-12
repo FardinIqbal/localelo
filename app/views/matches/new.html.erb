@@ -1,471 +1,309 @@
-<!-- app/views/matches/new.html.erb -->
+<!-- app/views/matches/new.html.erb - REDESIGNED SIMPLE VERSION -->
 <div class="relative min-h-screen">
   <!-- Decorative Background Elements -->
   <div class="absolute -top-20 -right-20 w-96 h-96 bg-purple-600/10 rounded-full filter blur-3xl animate-pulse-slow z-0"></div>
   <div class="absolute -bottom-20 -left-20 w-64 h-64 bg-pink-600/10 rounded-full filter blur-3xl animate-pulse-slow z-0" style="animation-delay: 1.5s;"></div>
 
   <!-- Main Content -->
-  <div class="relative z-10 max-w-3xl mx-auto px-4 py-6">
+  <div class="relative z-10 max-w-2xl mx-auto px-4 py-6">
     <!-- Page Header -->
-    <h1 class="font-extrabold text-3xl md:text-4xl bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
-      Log a Match
-    </h1>
-    <p class="text-slate-400 mb-6">Record your match results to update Elo ratings</p>
+    <div class="mb-6">
+      <h1 class="font-extrabold text-3xl md:text-4xl bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+        Log a Match
+      </h1>
+      <p class="text-slate-400 mt-2">Quick and easy - just 4 steps</p>
+    </div>
 
-    <%= form_with(model: @match, local: true, id: "match-form", class: "space-y-6") do |f| %>
-      <!-- Quick Access Section -->
-      <% if @recent_opponents.present? %>
-        <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-700 p-4 mb-2">
-          <h3 class="text-sm font-medium text-slate-300 mb-3">Recent Opponents</h3>
-          <div class="flex flex-wrap gap-2">
-            <% @recent_opponents.each do |opponent| %>
-              <button type="button"
-                      class="quick-opponent px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-sm flex items-center"
-                      data-opponent-profile-id="<%= opponent.id %>"
-                      data-opponent-name="<%= opponent.username %>">
-                <div class="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center text-white font-bold text-xs mr-2">
-                  <%= opponent.username[0..1].upcase %>
-                </div>
-                <%= opponent.username %>
-              </button>
-            <% end %>
-          </div>
-        </div>
-      <% end %>
-
+    <%= form_with(model: @match, local: true, html: { id: "match-form", class: "space-y-6" }) do |f| %>
       <!-- Main Form Card -->
-      <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-700 p-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <!-- Leaderboard Selection -->
-          <div>
-            <label class="text-sm text-slate-400 mb-1 block">Leaderboard <span class="text-pink-400">*</span></label>
-            <%= f.select :leaderboard_id,
-                         options_for_select(@leaderboards.map { |leaderboard| [leaderboard.name, leaderboard.id, { 'data-organization-id': leaderboard.organization_id }] }, params[:leaderboard_id]),
-                         { include_blank: "Select leaderboard" },
-                         { class: "w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white",
-                           required: true,
-                           data: { user_profiles: @user_profiles_by_org.to_json } } %>
-            <div class="text-xs text-red-400 hidden mt-1" id="leaderboard-error">Please select a leaderboard</div>
-          </div>
+      <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-700 p-6 space-y-6">
 
-          <!-- Opponent Selection -->
-          <div id="opponent_selection">
-            <label class="text-sm text-slate-400 mb-1 block">Opponent <span class="text-pink-400">*</span></label>
-            <%= f.select :opponent_profile_id,
-                         @opponents.present? ? options_from_collection_for_select(@opponents, :id, :username, @selected_opponent_profile_id || params.dig(:match, :opponent_profile_id)) : [],
-                         { include_blank: "Select opponent" },
-                         { class: "w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white",
-                           required: true,
-                           id: "match_opponent_profile_id" } %>
-            <div class="text-xs text-red-400 hidden mt-1" id="opponent-error">Please select an opponent</div>
-          </div>
-        </div>
-
-        <!-- Match Preview -->
-        <div id="match-preview" class="<%= params[:opponent_profile_id].present? ? '' : 'hidden' %> mb-6 p-4 rounded-lg bg-slate-700/50 border border-slate-600">
-          <h3 class="text-sm font-medium text-slate-300 mb-3">Match Preview</h3>
-          <div class="flex items-center justify-between">
-            <div class="flex flex-col items-center">
-                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-sm font-bold">
-                <%= (@current_profile&.username || current_user.username)[0..1].upcase %>
-              </div>
-              <div class="mt-2 text-center">
-                <div class="text-white text-sm font-medium"><%= @current_profile&.username || "You" %></div>
-                <div class="text-xs text-slate-400" id="user-rating">1500</div>
-              </div>
-            </div>
-
-            <div class="flex flex-col items-center">
-              <div class="text-lg font-bold text-white">VS</div>
-              <div class="text-xs text-slate-400 mt-1" id="leaderboard-name"></div>
-            </div>
-
-            <div class="flex flex-col items-center">
-              <div class="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center text-white text-sm font-bold" id="opponent-initials">
-                ?
-              </div>
-              <div class="mt-2 text-center">
-                <div class="text-white text-sm font-medium" id="opponent-name">Opponent</div>
-                <div class="text-xs text-slate-400" id="opponent-rating">1500</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="mt-3 text-center text-xs text-slate-400">
-            <span id="elo-prediction" class="font-medium">
-              <i class="fas fa-calculator mr-1"></i> Win: <span class="text-green-400">+0</span> | Loss: <span class="text-red-400">-0</span>
-            </span>
-          </div>
-        </div>
-
-        <!-- Result Selection (without Draw option) -->
+        <!-- Step 1: Organization -->
         <div>
-          <label class="text-sm text-slate-400 mb-3 block">Match Result <span class="text-pink-400">*</span></label>
-          <div class="grid grid-cols-2 gap-3">
+          <label class="flex items-center text-sm font-medium text-white mb-2">
+            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-purple-500 text-white text-xs mr-2">1</span>
+            Which gym?
+          </label>
+          <%= select_tag :organization_id,
+                         options_for_select(
+                           [["Select your gym...", ""]] +
+                           current_user.organizations.map { |org| [org.name, org.id] },
+                           params[:organization_id]
+                         ),
+                         class: "w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white",
+                         id: "organization-select",
+                         required: true %>
+        </div>
+
+        <!-- Step 2: Leaderboard -->
+        <div>
+          <label class="flex items-center text-sm font-medium text-white mb-2">
+            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-purple-500 text-white text-xs mr-2">2</span>
+            Which game/sport?
+          </label>
+          <%= f.select :leaderboard_id,
+                       [["First, select a gym above", ""]],
+                       {},
+                       { class: "w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white",
+                         id: "leaderboard-select",
+                         required: true,
+                         disabled: true } %>
+        </div>
+
+        <!-- Step 3: Opponent -->
+        <div>
+          <label class="flex items-center text-sm font-medium text-white mb-2">
+            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-purple-500 text-white text-xs mr-2">3</span>
+            Who did you play?
+          </label>
+          <%= f.select :opponent_profile_id,
+                       [["First, select a game above", ""]],
+                       {},
+                       { class: "w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white",
+                         id: "opponent-select",
+                         required: true,
+                         disabled: true } %>
+        </div>
+
+        <!-- Hidden field for current user's profile -->
+        <%= hidden_field_tag :profile1_id, "", id: "profile1-id" %>
+
+        <!-- Step 4: Result -->
+        <div>
+          <label class="flex items-center text-sm font-medium text-white mb-3">
+            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-purple-500 text-white text-xs mr-2">4</span>
+            What was the result?
+          </label>
+
+          <div class="grid grid-cols-2 gap-4">
             <!-- I Won -->
-            <label class="cursor-pointer">
-              <%= f.radio_button :winner_profile_id, @current_profile&.id, class: "hidden result-radio", id: "player-winner-radio" %>
-              <div class="p-3 rounded-lg border border-slate-700 hover:border-green-500/50 transition-all duration-300 bg-slate-800/50 text-center result-option">
-                <div class="text-green-400 text-lg mb-1"><i class="fas fa-trophy"></i></div>
-                <div class="text-white text-sm">I Won</div>
-                <div class="w-4 h-4 rounded-full border border-slate-600 mx-auto mt-2 flex items-center justify-center result-check">
-                  <i class="fas fa-check text-green-500 opacity-0 transition-opacity duration-300"></i>
+            <label class="relative cursor-pointer group">
+              <%= f.radio_button :winner_profile_id, "",
+                                 class: "peer sr-only",
+                                 id: "winner-me",
+                                 required: true %>
+              <div class="p-6 rounded-xl border-2 border-slate-600 bg-slate-900/30 transition-all
+                          peer-checked:border-green-500 peer-checked:bg-green-500/10
+                          group-hover:border-slate-500">
+                <div class="text-center">
+                  <div class="text-white font-semibold text-xl mb-2">I Won</div>
+                  <div class="mt-2 w-5 h-5 rounded-full border-2 border-slate-600 mx-auto
+                              peer-checked:border-green-500 peer-checked:bg-green-500
+                              flex items-center justify-center">
+                    <svg class="w-3 h-3 text-white opacity-0 peer-checked:opacity-100" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+                    </svg>
+                  </div>
                 </div>
               </div>
             </label>
 
             <!-- I Lost -->
-            <label class="cursor-pointer">
-              <%= f.radio_button :winner_profile_id, @selected_opponent_profile_id, class: "hidden result-radio", id: "opponent-winner-radio" %>
-              <div class="p-3 rounded-lg border border-slate-700 hover:border-red-500/50 transition-all duration-300 bg-slate-800/50 text-center result-option">
-                <div class="text-red-400 text-lg mb-1"><i class="fas fa-times"></i></div>
-                <div class="text-white text-sm">I Lost</div>
-                <div class="w-4 h-4 rounded-full border border-slate-600 mx-auto mt-2 flex items-center justify-center result-check">
-                  <i class="fas fa-check text-red-500 opacity-0 transition-opacity duration-300"></i>
+            <label class="relative cursor-pointer group">
+              <%= f.radio_button :winner_profile_id, "",
+                                 class: "peer sr-only",
+                                 id: "winner-opponent",
+                                 required: true %>
+              <div class="p-6 rounded-xl border-2 border-slate-600 bg-slate-900/30 transition-all
+                          peer-checked:border-red-500 peer-checked:bg-red-500/10
+                          group-hover:border-slate-500">
+                <div class="text-center">
+                  <div class="text-white font-semibold text-xl mb-2">I Lost</div>
+                  <div class="mt-2 w-5 h-5 rounded-full border-2 border-slate-600 mx-auto
+                              peer-checked:border-red-500 peer-checked:bg-red-500
+                              flex items-center justify-center">
+                    <svg class="w-3 h-3 text-white opacity-0 peer-checked:opacity-100" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+                    </svg>
+                  </div>
                 </div>
               </div>
             </label>
           </div>
-          <div class="text-xs text-red-400 hidden mt-1" id="result-error">Please select a match result</div>
         </div>
 
         <!-- Submit Button -->
-        <div class="mt-6">
-          <button type="submit" id="submit-button" class="w-full px-5 py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:shadow-lg hover:shadow-purple-500/20 transition-all transform hover:-translate-y-0.5">
-            <span id="submit-text">Log Match</span>
-            <i class="fas fa-spinner fa-spin ml-2 hidden" id="spinner"></i>
-          </button>
-          <div class="text-xs text-center text-slate-400 mt-2">
-            <span class="text-purple-400">Pro tip:</span> Press <kbd class="px-1.5 py-0.5 bg-slate-700 rounded text-xs">Alt + Enter</kbd> to quickly submit
-          </div>
-        </div>
+        <button type="submit"
+                id="submit-btn"
+                class="w-full px-6 py-4 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500
+                       text-white font-bold text-lg
+                       hover:shadow-lg hover:shadow-purple-500/50
+                       disabled:opacity-50 disabled:cursor-not-allowed
+                       transition-all transform hover:-translate-y-1">
+          <span id="submit-text">Log Match</span>
+          <span id="submit-loading" class="hidden">
+            <i class="fas fa-spinner fa-spin mr-2"></i> Logging...
+          </span>
+        </button>
+
+        <p class="text-center text-slate-400 text-sm">
+          <i class="fas fa-keyboard mr-1"></i> Press <kbd class="px-2 py-1 bg-slate-700 rounded text-xs">Enter</kbd> to submit
+        </p>
       </div>
     <% end %>
   </div>
 </div>
 
-<!-- Toast Notification -->
-<div id="toast" class="fixed bottom-5 right-5 px-4 py-3 rounded-lg shadow-lg transform translate-y-10 opacity-0 transition-all duration-500 z-50 flex items-center hidden">
-  <i class="fas mr-2 text-xl toast-icon"></i>
-  <div>
-    <div class="font-medium toast-title"></div>
-    <div class="text-sm toast-message"></div>
-  </div>
-</div>
-
-
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        console.log("✅ DOM Loaded! JavaScript is running.");
+document.addEventListener("DOMContentLoaded", function() {
+    console.log("Match form loaded");
 
-        const leaderboardSelect = document.getElementById("match_leaderboard_id");
-        let opponentSelect = document.getElementById("match_opponent_profile_id");
-        const opponentWinnerRadio = document.getElementById("opponent-winner-radio");
-        const playerWinnerRadio = document.getElementById("player-winner-radio");
-        const matchForm = document.getElementById("match-form");
-        const submitButton = document.getElementById("submit-button");
-        const spinner = document.getElementById("spinner");
-        const previewContainer = document.getElementById("match-preview");
-        const opponentNameDisplay = document.getElementById("opponent-name");
-        const opponentInitialsDisplay = document.getElementById("opponent-initials");
-        let userProfilesByOrg = {};
+    // Get all form elements
+    const organizationSelect = document.getElementById("organization-select");
+    const leaderboardSelect = document.getElementById("leaderboard-select");
+    const opponentSelect = document.getElementById("opponent-select");
+    const profile1Input = document.getElementById("profile1-id");
+    const winnerMeRadio = document.getElementById("winner-me");
+    const winnerOpponentRadio = document.getElementById("winner-opponent");
+    const submitBtn = document.getElementById("submit-btn");
+    const matchForm = document.getElementById("match-form");
 
-        try {
-            userProfilesByOrg = JSON.parse(leaderboardSelect.dataset.userProfiles || '{}');
-        } catch (error) {
-            console.error("Unable to parse user profiles dataset", error);
+    // Store all data
+    <%
+      leaderboards_data = @leaderboards.map do |lb|
+        { id: lb.id, name: lb.name, org_id: lb.organization_id }
+      end
+    %>
+    const allData = <%= raw({ leaderboards: leaderboards_data, profiles_by_org: @user_profiles_by_org }.to_json) %>;
+
+    console.log("Form data loaded:", allData);
+
+    // Step 1: Organization changes → Update leaderboards
+    organizationSelect.addEventListener("change", function() {
+        const orgId = this.value;
+        console.log("Organization selected:", orgId);
+
+        leaderboardSelect.innerHTML = '<option value="">Select game/sport...</option>';
+        opponentSelect.innerHTML = '<option value="">Select opponent...</option>';
+
+        if (!orgId) {
+            leaderboardSelect.disabled = true;
+            opponentSelect.disabled = true;
+            return;
         }
 
-        // Handle leaderboard change
-        leaderboardSelect.addEventListener("change", () => {
-            updatePlayerWinnerValue();
-            updateOpponents();
+        // Filter leaderboards for this org
+        const orgLeaderboards = allData.leaderboards.filter(lb => lb.org_id == orgId);
+
+        if (orgLeaderboards.length === 0) {
+            leaderboardSelect.innerHTML = '<option value="">No games available</option>';
+            leaderboardSelect.disabled = true;
+            return;
+        }
+
+        orgLeaderboards.forEach(lb => {
+            const option = new Option(lb.name, lb.id);
+            leaderboardSelect.add(option);
         });
 
-        updatePlayerWinnerValue();
-        updateWinnerOpponent();
-        updatePreviewFromSelection();
+        leaderboardSelect.disabled = false;
 
-        document.querySelectorAll(".quick-opponent").forEach(button => {
-            button.addEventListener("click", function() {
-                const opponentId = this.dataset.opponentProfileId;
-                if (opponentSelect) {
-                    opponentSelect.value = opponentId;
-                    opponentSelect.dispatchEvent(new Event("change"));
-                }
-                updateWinnerOpponent();
-                updatePreviewFromSelection();
+        // Set profile1_id for this org
+        const profileId = allData.profiles_by_org[orgId];
+        profile1Input.value = profileId || "";
+        winnerMeRadio.value = profileId || "";
+
+        console.log("Set profile1_id:", profileId);
+    });
+
+    // Step 2: Leaderboard changes → Fetch opponents
+    leaderboardSelect.addEventListener("change", function() {
+        const leaderboardId = this.value;
+        console.log("Leaderboard selected:", leaderboardId);
+
+        opponentSelect.innerHTML = '<option value="">Loading...</option>';
+        opponentSelect.disabled = true;
+
+        if (!leaderboardId) {
+            opponentSelect.innerHTML = '<option value="">Select opponent...</option>';
+            return;
+        }
+
+        // Fetch opponents for this leaderboard
+        fetch(`/matches/update_opponents?leaderboard_id=${leaderboardId}`, {
+            headers: {
+                "Accept": "application/json",
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Opponents loaded:", data);
+
+            opponentSelect.innerHTML = '<option value="">Select opponent...</option>';
+
+            if (!data.opponents || data.opponents.length === 0) {
+                opponentSelect.innerHTML = '<option value="">No opponents available</option>';
+                return;
+            }
+
+            data.opponents.forEach(opp => {
+                const option = new Option(opp.username, opp.id);
+                opponentSelect.add(option);
             });
+
+            opponentSelect.disabled = false;
+        })
+        .catch(error => {
+            console.error("Error fetching opponents:", error);
+            opponentSelect.innerHTML = '<option value="">Error loading opponents</option>';
         });
+    });
 
-        // Handle match result selection
-        const resultRadios = document.querySelectorAll(".result-radio");
-        resultRadios.forEach(radio => {
-            radio.addEventListener("change", function() {
-                // Reset all result options
-                document.querySelectorAll(".result-option").forEach(option => {
-                    option.classList.remove("ring-2");
-                    const checkIcon = option.querySelector(".result-check i");
-                    if (checkIcon) {
-                        checkIcon.style.opacity = "0";
-                    }
-                });
+    // Step 3: Opponent changes → Update winner radio values
+    opponentSelect.addEventListener("change", function() {
+        const opponentId = this.value;
+        console.log("Opponent selected:", opponentId);
 
-                // Highlight selected option
-                if (this.checked) {
-                    const parent = this.parentElement;
-                    parent.querySelector(".result-option").classList.add("ring-2");
-                    const checkIcon = parent.querySelector(".result-check i");
-                    if (checkIcon) {
-                        checkIcon.style.opacity = "1";
-                    }
+        winnerOpponentRadio.value = opponentId || "";
+    });
 
-                    // If "I Lost" is selected, set the opponent as winner
-                    if (this.id === "opponent-winner-radio") {
-                        updateWinnerOpponent();
-                    }
-                }
-            });
-        });
+    // Form submission
+    matchForm.addEventListener("submit", function(e) {
+        e.preventDefault();
 
-        // Form submission
-        matchForm.addEventListener("submit", function(event) {
-            event.preventDefault();
-
-            // Validate form
-            let isValid = true;
-
-            if (!leaderboardSelect.value) {
-                const leaderboardError = document.getElementById("leaderboard-error");
-                if (leaderboardError) {
-                    leaderboardError.classList.remove("hidden");
-                }
-                isValid = false;
-            } else {
-                const leaderboardError = document.getElementById("leaderboard-error");
-                if (leaderboardError) {
-                    leaderboardError.classList.add("hidden");
-                }
-            }
-
-            if (!opponentSelect.value) {
-                const opponentError = document.getElementById("opponent-error");
-                if (opponentError) {
-                    opponentError.classList.remove("hidden");
-                }
-                isValid = false;
-            } else {
-                const opponentError = document.getElementById("opponent-error");
-                if (opponentError) {
-                    opponentError.classList.add("hidden");
-                }
-            }
-
-            const winnerSelected = document.querySelector('input[name="match[winner_profile_id]"]:checked');
-
-            if (!winnerSelected) {
-                const resultError = document.getElementById("result-error");
-                if (resultError) {
-                    resultError.classList.remove("hidden");
-                }
-                isValid = false;
-            } else {
-                const resultError = document.getElementById("result-error");
-                if (resultError) {
-                    resultError.classList.add("hidden");
-                }
-            }
-
-            if (isValid) {
-                // Show loading state
-                submitButton.disabled = true;
-                const submitText = document.getElementById("submit-text");
-                if (submitText) {
-                    submitText.textContent = "Submitting...";
-                }
-                spinner.classList.remove("hidden");
-
-                // Submit the form
-                this.submit();
-            } else {
-                // Show toast error
-                showToast("Error", "Please fill in all required fields", "error");
-            }
-        });
-
-        // Alt+Enter shortcut for form submission
-        document.addEventListener("keydown", function(e) {
-            if (e.altKey && e.key === "Enter") {
-                submitButton.click();
-            }
-        });
-
-        // Helper functions
-        function updateOpponents() {
-            const leaderboardId = leaderboardSelect.value;
-            console.log("🎯 Leaderboard changed:", leaderboardId);
-
-            if (!leaderboardId) {
-                console.warn("⚠️ No leaderboard selected. Exiting.");
-                if (opponentSelect) {
-                    opponentSelect.innerHTML = '';
-                }
-                updatePreviewFromSelection();
-                return;
-            }
-
-            // Show loading state
-            const opponentSelection = document.getElementById("opponent_selection");
-            opponentSelection.innerHTML = `
-        <label class="text-sm text-slate-400 mb-1 block">Opponent <span class="text-pink-400">*</span></label>
-        <select class="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white" disabled>
-          <option>Loading opponents...</option>
-        </select>
-      `;
-
-            const url = `/matches/update_opponents?leaderboard_id=${leaderboardId}`;
-            console.log("📡 Fetching opponents from:", url);
-
-            fetch(url, {
-                headers: {
-                    "Accept": "text/vnd.turbo-stream.html, application/json, text/html",
-                    "X-Requested-With": "XMLHttpRequest"
-                }
-            })
-              .then(response => {
-                  console.log("🔄 Response status:", response.status);
-                  if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-                  return response.text();
-              })
-              .then(html => {
-                  if (!html.trim()) {
-                      console.warn("❌ EMPTY RESPONSE from server");
-                      opponentSelection.innerHTML = `
-            <label class="text-sm text-slate-400 mb-1 block">Opponent <span class="text-pink-400">*</span></label>
-            <div class="w-full px-3 py-2 bg-slate-800/50 border border-slate-600 rounded-lg text-red-400">
-              No opponents available
-            </div>
-          `;
-                      return;
-                  }
-
-                  // Extract the HTML content from turbo-stream
-                  const parser = new DOMParser();
-                  const doc = parser.parseFromString(html, 'text/html');
-                  const template = doc.querySelector('template');
-
-                  if (template) {
-                      opponentSelection.innerHTML = template.innerHTML;
-                  } else {
-                      // Fallback if we can't parse the turbo stream
-                      opponentSelection.innerHTML = html;
-                  }
-                  // Re-initialize the opponent select reference
-                  opponentSelect = document.getElementById("match_opponent_profile_id");
-                  if (opponentSelect) {
-                      opponentSelect.addEventListener("change", function() {
-                          updateWinnerOpponent();
-                      });
-                      updateWinnerOpponent();
-                  }
-              })
-              .catch(error => {
-                  console.error("🚨 Error loading opponents:", error);
-                  opponentSelection.innerHTML = `
-      <label class="text-sm text-slate-400 mb-1 block">Opponent <span class="text-pink-400">*</span></label>
-      <div class="w-full px-3 py-2 bg-slate-800/50 border border-slate-600 rounded-lg text-red-400">
-        Error loading opponents. Please try again.
-      </div>
-    `;
-              });
+        // Validate
+        if (!organizationSelect.value) {
+            alert("Please select a gym");
+            return;
+        }
+        if (!leaderboardSelect.value) {
+            alert("Please select a game/sport");
+            return;
+        }
+        if (!opponentSelect.value) {
+            alert("Please select an opponent");
+            return;
+        }
+        if (!winnerMeRadio.checked && !winnerOpponentRadio.checked) {
+            alert("Please select who won");
+            return;
         }
 
-        function updateWinnerOpponent() {
-            if (!opponentSelect) return;
+        // Show loading
+        submitBtn.disabled = true;
+        document.getElementById("submit-text").classList.add("hidden");
+        document.getElementById("submit-loading").classList.remove("hidden");
 
-            const opponentId = opponentSelect.value;
-            opponentWinnerRadio.value = opponentId || '';
-            updatePreviewFromSelection();
-        }
+        // Log what we're sending
+        const formData = new FormData(matchForm);
+        console.log("Submitting form:", {
+            leaderboard_id: formData.get("match[leaderboard_id]"),
+            opponent_profile_id: formData.get("match[opponent_profile_id]"),
+            winner_profile_id: formData.get("match[winner_profile_id]"),
+            profile1_id: formData.get("profile1_id")
+        });
 
-        function updatePlayerWinnerValue() {
-            if (!leaderboardSelect || !playerWinnerRadio) {
-                return;
-            }
+        // Submit
+        matchForm.submit();
+    });
 
-            const selectedOption = leaderboardSelect.options[leaderboardSelect.selectedIndex];
-            if (!selectedOption) {
-                playerWinnerRadio.value = '';
-                return;
-            }
-
-            const organizationId = selectedOption.dataset.organizationId;
-            const profileId = organizationId ? userProfilesByOrg[organizationId] : null;
-            playerWinnerRadio.value = profileId || '';
-        }
-
-        function updatePreviewFromSelection() {
-            if (!opponentSelect || !previewContainer) {
-                return;
-            }
-
-            const selectedOption = opponentSelect.options[opponentSelect.selectedIndex];
-
-            if (!selectedOption || !selectedOption.value) {
-                previewContainer.classList.add("hidden");
-                return;
-            }
-
-            const name = selectedOption.textContent.trim();
-            if (opponentNameDisplay) {
-                opponentNameDisplay.textContent = name;
-            }
-
-            if (opponentInitialsDisplay) {
-                opponentInitialsDisplay.textContent = name.slice(0, 2).toUpperCase();
-            }
-
-            previewContainer.classList.remove("hidden");
-        }
-
-        function showToast(title, message, type) {
-            const toast = document.getElementById("toast");
-            const toastTitle = document.querySelector(".toast-title");
-            const toastMessage = document.querySelector(".toast-message");
-            const toastIcon = document.querySelector(".toast-icon");
-
-            // Set content
-            toastTitle.textContent = title;
-            toastMessage.textContent = message;
-
-            // Set type styling
-            toast.classList.remove("bg-green-500/90", "bg-red-500/90", "bg-blue-500/90");
-            toastIcon.classList.remove("fa-check-circle", "fa-times-circle", "fa-info-circle");
-
-            if (type === "success") {
-                toast.classList.add("bg-green-500/90");
-                toastIcon.classList.add("fa-check-circle");
-            } else if (type === "error") {
-                toast.classList.add("bg-red-500/90");
-                toastIcon.classList.add("fa-times-circle");
-            } else {
-                toast.classList.add("bg-blue-500/90");
-                toastIcon.classList.add("fa-info-circle");
-            }
-
-            // Show toast
-            toast.classList.remove("hidden");
-            setTimeout(() => {
-                toast.classList.remove("translate-y-10", "opacity-0");
-            }, 10);
-
-            // Hide toast after 3 seconds
-            setTimeout(() => {
-                toast.classList.add("translate-y-10", "opacity-0");
-                setTimeout(() => {
-                    toast.classList.add("hidden");
-                }, 500);
-            }, 3000);
+    // Keyboard shortcut (Enter key)
+    matchForm.addEventListener("keypress", function(e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            submitBtn.click();
         }
     });
+});
 </script>

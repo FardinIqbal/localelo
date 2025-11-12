@@ -6,7 +6,7 @@ class MatchParticipant < ApplicationRecord
   delegate :user, to: :profile
 
   # == Validations ==
-  validates :match_id, :profile_id, presence: true
+  validates :match, :profile, presence: true
   validates :elo_before_match, :elo_after_match, numericality: { allow_nil: true, only_integer: true }
   validates :is_winner, inclusion: { in: [true, false] }
 

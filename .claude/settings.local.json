@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ruby -c:*)",
+      "Bash(rails routes:*)",
+      "Bash(bundle exec rails runner:*)",
+      "Bash(rails runner:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
