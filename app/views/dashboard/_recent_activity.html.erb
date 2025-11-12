@@ -1,12 +1,13 @@
 <!-- _recent_activity.html.erb -->
 <div class="p-6" data-controller="toggle">
-  <div class="flex justify-between items-center mb-6">
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
     <h2 class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
       <%= @scoped_organization ? "Recent Activity for #{@scoped_organization.name}" : "Recent Activity" %>
     </h2>
 
-    <!-- Toggle Buttons -->
-    <div role="tablist" class="flex gap-2">
+    <div class="flex items-center gap-2">
+      <!-- Toggle Buttons -->
+      <div role="tablist" class="flex gap-2">
       <button type="button"
               data-action="toggle#switch"
               data-toggle-target="all"
@@ -22,6 +23,13 @@
               class="px-4 py-2 rounded-lg <%= params[:view] == 'mine' ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium' : 'bg-slate-700 text-slate-300' %> hover:shadow-lg transition-all transform hover:-translate-y-0.5">
         <i class="fas fa-user mr-2"></i> <%= t("dashboard.recent_activity.mine") %>
       </button>
+      </div>
+
+      <!-- View All Link -->
+      <%= link_to matches_path,
+                  class: "px-3 py-1 rounded-lg bg-slate-700 text-purple-400 text-sm hover:bg-slate-600 transition-all transform hover:-translate-y-0.5" do %>
+        View All <i class="fas fa-arrow-right ml-1"></i>
+      <% end %>
     </div>
   </div>
 

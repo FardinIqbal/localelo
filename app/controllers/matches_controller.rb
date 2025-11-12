@@ -63,27 +63,42 @@ class MatchesController < ApplicationController
   end
 
   # GET /matches/update_opponents
-  # Turbo action: Update opponent list based on leaderboard
+  # Update opponent list based on leaderboard (supports both turbo_stream and JSON)
   def update_opponents
     @leaderboard = Leaderboard.find_by(id: params[:leaderboard_id])
 
     if @leaderboard.nil?
-      render turbo_stream: turbo_stream.replace("opponent_selection", "<p class='text-red-500'>❌ Leaderboard not found.</p>")
+      respond_to do |format|
+        format.turbo_stream { render turbo_stream: turbo_stream.replace("opponent_selection", "<p class='text-red-500'>❌ Leaderboard not found.</p>") }
+        format.json { render json: { error: "Leaderboard not found", opponents: [] }, status: :not_found }
+      end
       return
     end
 
     @opponents = available_profiles_for_leaderboard(@leaderboard)
 
     if @opponents.empty?
-      render turbo_stream: turbo_stream.replace("opponent_selection", "<p class='text-yellow-500'>⚠️ No opponents available.</p>")
+      respond_to do |format|
+        format.turbo_stream { render turbo_stream: turbo_stream.replace("opponent_selection", "<p class='text-yellow-500'>⚠️ No opponents available.</p>") }
+        format.json { render json: { opponents: [] } }
+      end
       return
     end
 
-    render turbo_stream: turbo_stream.replace(
-      "opponent_selection",
-      partial: "matches/opponent_selection",
-      locals: { opponents: @opponents }
-    )
+    respond_to do |format|
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.replace(
+          "opponent_selection",
+          partial: "matches/opponent_selection",
+          locals: { opponents: @opponents }
+        )
+      end
+      format.json do
+        render json: {
+          opponents: @opponents.map { |profile| { id: profile.id, username: profile.username } }
+        }
+      end
+    end
   end
 
   # POST /matches

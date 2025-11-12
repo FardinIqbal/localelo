@@ -131,6 +131,17 @@ class Match < ApplicationRecord
     winner_profile_id == profile_id
   end
 
+  # Returns the Elo rating change for the winner
+  # Returns nil for draws or if Elo history is not available
+  def elo_change
+    return nil if is_draw?
+
+    participant = winner_participant
+    return nil unless participant&.elo_before_match && participant.elo_after_match
+
+    participant.elo_after_match - participant.elo_before_match
+  end
+
   def invalidate!
     raise StandardError, "Match #{id} is already invalidated" if invalidated?
 
@@ -329,15 +340,6 @@ class Match < ApplicationRecord
     }
 
     Rails.logger.info "MATCH_RESULT: #{log_data.to_json}"
-  end
-
-  def elo_change
-    return nil if is_draw?
-
-    participant = winner_participant
-    return nil unless participant&.elo_before_match && participant.elo_after_match
-
-    participant.elo_after_match - participant.elo_before_match
   end
 
   def calculate_elo_change(winner_before_rating, loser_before_rating)

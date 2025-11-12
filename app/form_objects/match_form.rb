@@ -16,7 +16,7 @@ class MatchForm
     @match = Match.new(
       leaderboard_id: leaderboard_id,
       winner_profile: draw? ? nil : winner_profile,
-      is_draw: draw?
+      is_draw: draw? || false
     )
 
     build_participants
@@ -33,7 +33,7 @@ class MatchForm
   private
 
   def draw?
-    ActiveModel::Type::Boolean.new.cast(is_draw)
+    ActiveModel::Type::Boolean.new.cast(is_draw) == true
   end
 
   def winner_or_draw_must_be_present
