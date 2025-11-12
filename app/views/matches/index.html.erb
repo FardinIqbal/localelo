@@ -1,34 +1,34 @@
 <div class="page-transition">
   <!-- Page Header -->
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-pink-500 to-indigo-500 bg-clip-text text-transparent">
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+    <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
       Your Matches
     </h1>
-    <%= link_to new_match_path, class: "inline-flex items-center justify-center font-medium rounded-md transition-all duration-300 h-10 px-4 text-white bg-gradient-to-r from-purple-600 to-pink-500 hover:bg-gradient-to-r hover:from-purple-500 hover:to-pink-400 shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 transform hover:-translate-y-1" do %>
-      <i class="fas fa-plus mr-1.5"></i>
+    <%= link_to new_match_path, class: "inline-flex items-center justify-center px-6 py-3 rounded-lg font-medium text-white bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-500 hover:to-pink-400 shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 transform hover:-translate-y-0.5 active:scale-98 transition-all duration-200" do %>
+      <i class="fas fa-plus mr-2"></i>
       Log Match
     <% end %>
   </div>
 
   <!-- Filters and Search -->
-  <div class="bg-slate-800/50 backdrop-blur-md rounded-xl p-4 mb-6 border border-white/10">
+  <div class="bg-slate-800/80 backdrop-blur-xl rounded-xl p-5 mb-6 border border-slate-700 transition-all duration-300 hover:border-purple-500/30">
     <div class="flex flex-col md:flex-row gap-4">
       <div class="flex-grow">
         <div class="relative">
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <i class="fas fa-search text-slate-400"></i>
           </div>
-          <input type="text" id="search-input" placeholder="Search matches..." class="w-full pl-10 pr-4 py-2 bg-slate-700/50 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50">
+          <input type="text" id="search-input" placeholder="Search matches..." class="w-full px-4 py-3 pl-11 bg-slate-900/70 border-2 border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200">
         </div>
       </div>
-      <div class="flex flex-col sm:flex-row gap-2">
-        <select id="leaderboard-filter" class="bg-slate-700/50 border border-white/10 rounded-lg text-white px-3 py-2 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50">
+      <div class="flex flex-col sm:flex-row gap-3">
+        <select id="leaderboard-filter" class="px-4 py-3 bg-slate-900/70 border-2 border-slate-700 rounded-lg text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200">
           <option value="all">All Leaderboards</option>
           <% @leaderboards&.each do |leaderboard| %>
             <option value="<%= leaderboard.id %>"><%= leaderboard.name %></option>
           <% end %>
         </select>
-        <select id="time-filter" class="bg-slate-700/50 border border-white/10 rounded-lg text-white px-3 py-2 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50">
+        <select id="time-filter" class="px-4 py-3 bg-slate-900/70 border-2 border-slate-700 rounded-lg text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200">
           <option value="all">All Time</option>
           <option value="month">This Month</option>
           <option value="week">This Week</option>
@@ -40,22 +40,22 @@
 
   <% if @matches.present? %>
     <!-- Matches List -->
-    <div class="bg-slate-800/30 backdrop-blur-md rounded-xl border border-white/10 overflow-hidden">
+    <div class="bg-slate-800/80 backdrop-blur-xl rounded-xl border border-slate-700 overflow-hidden transition-all duration-300 hover:border-purple-500/30">
       <div class="overflow-x-auto">
         <table class="w-full data-table" id="matches-table">
           <thead>
-          <tr class="bg-slate-800/50 text-left">
-            <th class="px-4 py-3 text-sm font-semibold text-slate-300" data-sortable="true" data-sort-key="date">Date</th>
-            <th class="px-4 py-3 text-sm font-semibold text-slate-300" data-sortable="true" data-sort-key="opponent">Opponent</th>
-            <th class="hidden md:table-cell px-4 py-3 text-sm font-semibold text-slate-300" data-sortable="true" data-sort-key="leaderboard">Leaderboard</th>
-            <th class="px-4 py-3 text-sm font-semibold text-slate-300" data-sortable="true" data-sort-key="result">Result</th>
-            <th class="px-4 py-3 text-sm font-semibold text-slate-300" data-sortable="true" data-sort-key="rating">Rating Change</th>
-            <th class="px-4 py-3 text-sm font-semibold text-slate-300" data-sortable="false">Actions</th>
+          <tr class="bg-slate-900/70 text-left">
+            <th class="px-5 py-4 text-sm font-semibold text-slate-300" data-sortable="true" data-sort-key="date">Date</th>
+            <th class="px-5 py-4 text-sm font-semibold text-slate-300" data-sortable="true" data-sort-key="opponent">Opponent</th>
+            <th class="hidden md:table-cell px-5 py-4 text-sm font-semibold text-slate-300" data-sortable="true" data-sort-key="leaderboard">Leaderboard</th>
+            <th class="px-5 py-4 text-sm font-semibold text-slate-300" data-sortable="true" data-sort-key="result">Result</th>
+            <th class="px-5 py-4 text-sm font-semibold text-slate-300" data-sortable="true" data-sort-key="rating">Rating Change</th>
+            <th class="px-5 py-4 text-sm font-semibold text-slate-300" data-sortable="false">Actions</th>
           </tr>
           </thead>
-          <tbody class="divide-y divide-white/5">
+          <tbody class="divide-y divide-slate-700">
           <% @matches.each do |match| %>
-            <tr class="match-row hover:bg-slate-700/30 transition-colors"
+            <tr class="match-row hover:bg-slate-700/50 transition-all duration-200"
                 data-leaderboard-id="<%= match.leaderboard_id %>"
                 data-date="<%= match.created_at.to_i %>"
                 data-opponent="<%= match.user1_id == current_user.id ? match.opponent.username : match.user1.username %>">

@@ -7,52 +7,48 @@
 %>
 <div
   id="bottom-nav"
-  class="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900/80 backdrop-blur-xl z-40
-         shadow-lg h-16 rounded-t-2xl transition-transform duration-300
+  class="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur-xl z-40
+         shadow-xl h-16 rounded-t-2xl transition-transform duration-200
          border-t border-white/10"
   data-controller="bottom-nav"
   data-action="scroll@window->bottom-nav#handleScroll"
   data-bottom-nav-hidden-class="translate-y-full"
 >
-  <div class="flex justify-around items-center h-full px-2">
+  <div class="flex items-center h-full">
     <%# Home navigation link %>
-    <%= render 'shared/navigation/bottom_nav_link',
-               text: 'Home',
-               path: authenticated_root_path,
-               icon: 'fa-home',
-               extra_classes: nav_active_class(authenticated_root_path) %>
+    <%= link_to authenticated_root_path, class: "flex flex-col items-center justify-center flex-1 py-2 transition-all duration-200 #{nav_active_class(authenticated_root_path)}" do %>
+      <i class="fas fa-home text-lg mb-1"></i>
+      <span class="text-xs font-medium">Home</span>
+    <% end %>
 
     <%# Explore navigation link %>
-    <%= render 'shared/navigation/bottom_nav_link',
-               text: 'Explore',
-               path: organizations_path,
-               icon: 'fa-search',
-               extra_classes: nav_active_class(organizations_path) %>
+    <%= link_to organizations_path, class: "flex flex-col items-center justify-center flex-1 py-2 transition-all duration-200 #{nav_active_class(organizations_path)}" do %>
+      <i class="fas fa-search text-lg mb-1"></i>
+      <span class="text-xs font-medium">Explore</span>
+    <% end %>
 
     <%# Create new match button (elevated above the navigation bar) %>
     <%= link_to new_match_path,
                 aria: { label: "Create new match" },
-                class: "flex items-center justify-center rounded-full shadow-lg text-white w-14 h-14 -mt-7
+                class: "flex items-center justify-center rounded-full shadow-lg text-white w-14 h-14 -mt-7 flex-shrink-0 mx-2
                         bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-500 hover:to-pink-400
-                        shadow-purple-500/20 hover:shadow-purple-500/40 transform hover:scale-105 transition-all" do %>
-      <i class="fas fa-plus" aria-hidden="true"></i>
+                        shadow-purple-500/30 hover:shadow-purple-500/50 active:scale-95 transition-all duration-200" do %>
+      <i class="fas fa-plus text-xl" aria-hidden="true"></i>
       <span class="sr-only">Create new match</span>
     <% end %>
 
     <%# My Organizations navigation link %>
-    <%= render 'shared/navigation/bottom_nav_link',
-               text: 'My Orgs',
-               path: account_organizations_path,
-               icon: 'fa-users',
-               extra_classes: nav_active_class(account_organizations_path) %>
+    <%= link_to account_organizations_path, class: "flex flex-col items-center justify-center flex-1 py-2 transition-all duration-200 #{nav_active_class(account_organizations_path)}" do %>
+      <i class="fas fa-users text-lg mb-1"></i>
+      <span class="text-xs font-medium">My Orgs</span>
+    <% end %>
 
     <%# User Profile navigation link %>
     <% primary_profile = current_user.profiles.first %>
     <% profile_path_link = primary_profile ? profile_path(primary_profile) : authenticated_root_path %>
-    <%= render 'shared/navigation/bottom_nav_link',
-               text: 'Profile',
-               path: profile_path_link,
-               icon: 'fa-user',
-               extra_classes: nav_active_class(profile_path_link) %>
+    <%= link_to profile_path_link, class: "flex flex-col items-center justify-center flex-1 py-2 transition-all duration-200 #{nav_active_class(profile_path_link)}" do %>
+      <i class="fas fa-user text-lg mb-1"></i>
+      <span class="text-xs font-medium">Profile</span>
+    <% end %>
   </div>
 </div>
