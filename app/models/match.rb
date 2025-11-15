@@ -1,4 +1,6 @@
 class Match < ApplicationRecord
+  DEFAULT_RATING = 1500.0
+
   # == Associations ==
   belongs_to :leaderboard
   belongs_to :winner_profile, class_name: "Profile", inverse_of: :matches_won_as_profile, optional: true
@@ -69,6 +71,7 @@ class Match < ApplicationRecord
   enum status: { active: 0, invalidated: 1 }, _default: :active
 
   # == Callbacks ==
+  after_commit :process_ratings, on: :create
 
   # == Scopes ==
   scope :recent, -> { order(created_at: :desc) }
@@ -227,5 +230,11 @@ class Match < ApplicationRecord
 
   def active_participants
     match_participants.reject(&:marked_for_destruction?)
+  end
+
+  def process_ratings
+    RatingService.process_match(self)
+  rescue StandardError => e
+    Rails.logger.error "[MATCH] Failed to process ratings for match #{id}: #{e.message}"
   end
 end
