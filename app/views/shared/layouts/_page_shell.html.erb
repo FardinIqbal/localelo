@@ -1,25 +1,23 @@
-<%# Shared neutral page shell to unify interior spacing and tone %>
+<%# Shared retro page shell to unify interior spacing and tone %>
 <% content = capture { yield } if block_given? %>
-<% body_classes = ["space-y-8", local_assigns[:body_classes]].compact.join(" ") %>
-<div class="mx-auto w-full <%= local_assigns[:max_width] || 'max-w-6xl' %>">
-  <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-    <div class="px-6 py-8 sm:px-10 sm:py-12">
-      <% if local_assigns[:eyebrow].present? || local_assigns[:title].present? || local_assigns[:subtitle].present? %>
-        <header class="mb-8 space-y-2">
-          <% if local_assigns[:eyebrow].present? %>
-            <p class="text-xs font-semibold uppercase tracking-widest text-slate-500"><%= local_assigns[:eyebrow] %></p>
-          <% end %>
-          <% if local_assigns[:title].present? %>
-            <h1 class="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl"><%= local_assigns[:title] %></h1>
-          <% end %>
-          <% if local_assigns[:subtitle].present? %>
-            <p class="text-base text-slate-600"><%= local_assigns[:subtitle] %></p>
-          <% end %>
-        </header>
-      <% end %>
-      <div class="<%= body_classes %>">
-        <%= content %>
-      </div>
+<% body_classes = ["retro-shell__body", local_assigns[:body_classes]].compact.join(" ") %>
+<div class="retro-shell">
+  <div class="retro-shell__surface">
+    <% if local_assigns[:eyebrow].present? || local_assigns[:title].present? || local_assigns[:subtitle].present? %>
+      <header class="retro-shell__header">
+        <% if local_assigns[:eyebrow].present? %>
+          <p class="retro-shell__eyebrow"><%= local_assigns[:eyebrow] %></p>
+        <% end %>
+        <% if local_assigns[:title].present? %>
+          <h1 class="retro-shell__title"><%= local_assigns[:title] %></h1>
+        <% end %>
+        <% if local_assigns[:subtitle].present? %>
+          <p class="retro-shell__subtitle"><%= local_assigns[:subtitle] %></p>
+        <% end %>
+      </header>
+    <% end %>
+    <div class="<%= body_classes %>">
+      <%= content %>
     </div>
   </div>
 </div>

@@ -4,25 +4,26 @@
   <%= render 'shared/system/head' %>
 </head>
 <body
-      class="min-h-screen flex flex-col font-['Inter'] bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-900 dark:text-slate-50"
-      data-controller="navigation flash bottom-nav tooltip table theme"
+  class="retro-layout"
+  data-controller="navigation flash bottom-nav tooltip table theme"
 >
+  <%= render 'shared/navigation/desktop_nav' %>
+  <%= render 'shared/navigation/mobile_nav_menu' %>
+  <%= render 'shared/system/flash_messages' %>
 
-<%= render 'shared/navigation/desktop_nav' %>         <!-- desktop nav -->
-<%= render 'shared/navigation/mobile_nav_menu' %>     <!-- mobile nav/menu -->
-<%= render 'shared/system/flash_messages' %>
+  <main
+    class="retro-main opacity-0 translate-y-4 transition-all duration-500"
+    data-navigation-target="mainContent"
+  >
+    <div class="retro-app">
+      <%= yield %>
+    </div>
+  </main>
 
-<main
-      class="container mx-auto px-4 flex-grow py-8 md:py-12 opacity-0 translate-y-4 transition-all duration-500 <%= 'pb-16' if user_signed_in? %>"
-      data-navigation-target="mainContent"
->
-  <%= yield %>
-</main>
+  <% if user_signed_in? %>
+    <%= render 'shared/navigation/bottom_nav' %>
+  <% end %>
 
-<% if user_signed_in? %>
-  <%= render 'shared/navigation/bottom_nav' %>       <!-- bottom nav -->
-<% end %>
-
-<%= render 'shared/system/toast_container' %>          <!-- toast container -->
+  <%= render 'shared/system/toast_container' %>
 </body>
 </html>

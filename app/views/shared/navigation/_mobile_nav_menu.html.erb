@@ -1,204 +1,161 @@
 <% if user_signed_in? %>
-  <!-- Mobile nav controller wrapper -->
   <div class="md:hidden" data-controller="mobile-menu">
-    <!-- Top Bar -->
-    <div class="flex justify-between items-center px-4 py-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200/60 dark:border-white/10 shadow-lg">
-      <!-- Logo -->
-      <%= link_to authenticated_root_path,
-                  class: "flex items-center group" do %>
-        <div class="flex items-center space-x-3">
-          <div class="bg-gradient-to-r from-pink-500 to-indigo-500 rounded-lg p-1.5 shadow-lg group-hover:scale-105 transition-all duration-200">
-            <i class="fas fa-chart-line text-white"></i>
-          </div>
-          <div class="flex flex-col leading-tight">
-            <span class="text-lg font-bold tracking-tight bg-gradient-to-r from-pink-500 to-indigo-500 bg-clip-text text-transparent">LocalElo</span>
-            <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">Clear rankings for every local rivalry</span>
+    <div class="retro-mobile-bar">
+      <div class="retro-app">
+        <div class="retro-mobile__inner">
+          <%= link_to authenticated_root_path, class: "retro-brand retro-brand--compact" do %>
+            <span class="retro-brand__mark">LE</span>
+            <span class="retro-brand__text">
+              <span class="retro-brand__title">LocalElo</span>
+              <span class="retro-brand__tagline">Retro rankings</span>
+            </span>
+          <% end %>
+
+          <div class="retro-mobile__actions">
+            <%= render 'shared/navigation/theme_toggle' %>
+            <button
+              type="button"
+              class="retro-icon-button"
+              data-action="click->mobile-menu#open"
+              aria-label="Open menu"
+            >
+              <i class="fas fa-bars"></i>
+            </button>
           </div>
         </div>
-      <% end %>
-
-      <!-- Hamburger Toggle -->
-      <button
-        type="button"
-        class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700/80 text-slate-600 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-600/80 border border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 transition-all duration-200 active:scale-95"
-        data-action="click->mobile-menu#open"
-        aria-label="Open menu"
-      >
-        <i class="fas fa-bars"></i>
-      </button>
+      </div>
     </div>
 
-    <!-- Slideout Menu -->
     <div
-      class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden transition-opacity duration-200 ease-out"
+      class="retro-mobile-overlay fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-200 ease-out"
       data-mobile-menu-target="overlay"
     >
       <div
-        class="h-full w-80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl p-6 shadow-2xl border-r border-slate-200 dark:border-white/10 transform -translate-x-full transition-transform duration-200 ease-out"
+        class="retro-mobile-panel h-full w-80 max-w-full transform -translate-x-full transition-transform duration-200 ease-out"
         data-mobile-menu-target="menu"
       >
-        <!-- Header -->
-        <div class="flex justify-between items-center mb-8">
-          <div class="flex items-center space-x-3">
-            <div class="bg-gradient-to-r from-pink-500 to-indigo-500 rounded-lg p-1.5 shadow-lg">
-              <i class="fas fa-chart-line text-white"></i>
-            </div>
-            <div class="flex flex-col leading-tight">
-              <span class="text-lg font-bold tracking-tight bg-gradient-to-r from-pink-500 to-indigo-500 bg-clip-text text-transparent">LocalElo</span>
-              <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">Clear rankings for every local rivalry</span>
-            </div>
+        <div class="retro-mobile-panel__content">
+          <div class="flex items-center justify-between">
+            <%= link_to authenticated_root_path, class: "retro-brand retro-brand--compact" do %>
+              <span class="retro-brand__mark">LE</span>
+              <span class="retro-brand__text">
+                <span class="retro-brand__title">LocalElo</span>
+                <span class="retro-brand__tagline">Minimal retro</span>
+              </span>
+            <% end %>
+            <button
+              type="button"
+              class="retro-icon-button"
+              data-action="click->mobile-menu#close"
+              aria-label="Close menu"
+            >
+              <i class="fas fa-times"></i>
+            </button>
           </div>
-          <button
-            type="button"
-            class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700/80 text-slate-600 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-600/80 border border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 transition-all duration-200 active:scale-95"
-            data-action="click->mobile-menu#close"
-            aria-label="Close menu"
-          >
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
 
-        <%= form_with url: search_path, method: :get, local: true, class: "mb-6" do |form| %>
-          <%= form.label :q, "Search", class: "sr-only" %>
-          <div class="flex items-center bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-full pl-4 pr-1 py-1.5 shadow-sm focus-within:ring-2 focus-within:ring-purple-500 transition">
+          <%= form_with url: search_path, method: :get, local: true, class: "retro-search retro-mobile-menu__search" do |form| %>
+            <%= form.label :q, "Search", class: "sr-only" %>
+            <i class="fas fa-search retro-search__icon" aria-hidden="true"></i>
             <%= form.search_field :q,
                                   value: params[:q],
                                   placeholder: "Search",
-                                  class: "bg-transparent text-sm text-slate-700 dark:text-slate-200 focus:outline-none flex-1",
+                                  class: "retro-search__input",
                                   'aria-label': 'Search' %>
-            <button type="submit" class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-sm hover:shadow-md transition" aria-label="Submit search">
-              <i class="fas fa-search text-xs"></i>
-            </button>
-          </div>
-        <% end %>
+          <% end %>
 
-        <!-- User Info -->
-        <div class="flex items-center mb-8 pb-6 border-b border-slate-200 dark:border-slate-700">
-          <div class="w-12 h-12 bg-slate-200 dark:bg-slate-700/80 rounded-full flex items-center justify-center border border-slate-300 dark:border-white/10 shadow-md">
-            <i class="fas fa-user text-slate-600 dark:text-white/70 text-lg"></i>
-          </div>
-          <div class="ml-3 flex-1 min-w-0">
-            <div class="font-semibold text-slate-900 dark:text-white truncate"><%= current_user.username %></div>
-            <% primary_profile = current_user.profiles.first %>
-            <%= link_to(primary_profile ? profile_path(primary_profile) : authenticated_root_path,
-                        class: "text-sm text-slate-500 dark:text-slate-400 hover:text-purple-500 dark:hover:text-purple-400 transition-colors duration-200 flex items-center mt-0.5 group") do %>
-              <span>View Profile</span>
-              <i class="fas fa-chevron-right ml-1 text-xs group-hover:translate-x-0.5 transition-transform duration-200"></i>
-            <% end %>
-          </div>
-        </div>
-
-        <!-- Navigation Links -->
-        <div class="space-y-6">
-          <div class="space-y-1">
-            <h3 class="text-slate-400 dark:text-slate-500 uppercase text-xs font-semibold tracking-wider mb-3 px-2">Main</h3>
-            <%= link_to authenticated_root_path, class: "flex items-center px-3 py-3 rounded-lg text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all duration-200 active:scale-98" do %>
-              <i class="fas fa-home mr-3 w-5 text-center text-slate-400"></i>
-              <span class="font-medium">Home</span>
-            <% end %>
-            <%= link_to organizations_path, class: "flex items-center px-3 py-3 rounded-lg text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all duration-200 active:scale-98" do %>
-              <i class="fas fa-search mr-3 w-5 text-center text-slate-400"></i>
-              <span class="font-medium">Explore</span>
-            <% end %>
-            <%= link_to account_organizations_path, class: "flex items-center px-3 py-3 rounded-lg text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all duration-200 active:scale-98" do %>
-              <i class="fas fa-users mr-3 w-5 text-center text-slate-400"></i>
-              <span class="font-medium">My Organizations</span>
-            <% end %>
-          </div>
-
-          <div class="space-y-1">
-            <h3 class="text-slate-400 dark:text-slate-500 uppercase text-xs font-semibold tracking-wider mb-3 px-2">Matches</h3>
-            <%= link_to matches_path, class: "flex items-center px-3 py-3 rounded-lg text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all duration-200 active:scale-98" do %>
-              <i class="fas fa-trophy mr-3 w-5 text-center text-slate-400"></i>
-              <span class="font-medium">View Matches</span>
-            <% end %>
-            <%= link_to new_match_path, class: "flex items-center px-3 py-3 rounded-lg text-slate-900 dark:text-white bg-purple-100 dark:bg-gradient-to-r dark:from-purple-600/10 dark:to-pink-500/10 border border-purple-300 dark:border-purple-500/20 hover:bg-purple-50 dark:hover:bg-slate-800/80 transition-all duration-200 active:scale-98" do %>
-              <i class="fas fa-plus-circle mr-3 w-5 text-center text-purple-500 dark:text-purple-400"></i>
-              <span class="font-medium">Log New Match</span>
-            <% end %>
-          </div>
-
-          <div class="border-t border-slate-200 dark:border-slate-700 pt-4">
-            <div class="space-y-1">
-              <h3 class="text-slate-400 dark:text-slate-500 uppercase text-xs font-semibold tracking-wider mb-3 px-2">Account</h3>
-              <%= link_to '#', class: "flex items-center px-3 py-3 rounded-lg text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all duration-200 active:scale-98" do %>
-                <i class="fas fa-cog mr-3 w-5 text-center text-slate-400"></i>
-                <span class="font-medium">Settings</span>
-              <% end %>
-              <%= button_to destroy_user_session_path,
-                            method: :delete,
-                            class: "w-full flex items-center px-3 py-3 rounded-lg text-red-500 dark:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-red-600 dark:hover:text-red-300 transition-all duration-200 active:scale-98" do %>
-                <i class="fas fa-sign-out-alt mr-3 w-5 text-center"></i>
-                <span class="font-medium">Logout</span>
+          <div class="retro-mobile-user">
+            <div class="retro-mobile-user__avatar">
+              <i class="fas fa-user"></i>
+            </div>
+            <div>
+              <p class="font-semibold"><%= current_user.username %></p>
+              <% primary_profile = current_user.profiles.first %>
+              <%= link_to(primary_profile ? profile_path(primary_profile) : authenticated_root_path,
+                          class: "retro-mobile-menu__link") do %>
+                <i class="fas fa-id-badge"></i>
+                <span>View profile</span>
               <% end %>
             </div>
           </div>
-        </div>
 
-        <!-- App version -->
-        <div class="absolute bottom-6 left-0 right-0 text-center text-slate-400 dark:text-slate-500 text-xs">
-          LocalElo v1.0
+          <div class="retro-mobile-menu__group">
+            <p class="retro-mobile-menu__heading">Navigate</p>
+            <%= link_to authenticated_root_path, class: "retro-mobile-menu__link" do %>
+              <i class="fas fa-home"></i>
+              <span>Home</span>
+            <% end %>
+            <%= link_to organizations_path, class: "retro-mobile-menu__link" do %>
+              <i class="fas fa-search"></i>
+              <span>Explore</span>
+            <% end %>
+            <%= link_to account_organizations_path, class: "retro-mobile-menu__link" do %>
+              <i class="fas fa-users"></i>
+              <span>My Organizations</span>
+            <% end %>
+            <%= link_to matches_path, class: "retro-mobile-menu__link" do %>
+              <i class="fas fa-trophy"></i>
+              <span>Matches</span>
+            <% end %>
+          </div>
+
+          <div class="retro-mobile-menu__group">
+            <p class="retro-mobile-menu__heading">Matches</p>
+            <%= link_to new_match_path, class: "retro-mobile-menu__link" do %>
+              <i class="fas fa-plus-circle"></i>
+              <span>Log a match</span>
+            <% end %>
+          </div>
+
+          <div class="retro-mobile-menu__group">
+            <p class="retro-mobile-menu__heading">Account</p>
+            <%= link_to '#', class: "retro-mobile-menu__link" do %>
+              <i class="fas fa-cog"></i>
+              <span>Settings</span>
+            <% end %>
+            <%= button_to destroy_user_session_path,
+                          method: :delete,
+                          class: "retro-mobile-menu__link retro-mobile-menu__link--danger" do %>
+              <i class="fas fa-sign-out-alt"></i>
+              <span>Logout</span>
+            <% end %>
+          </div>
+
+          <p class="retro-mobile-footer">LocalElo v1.0</p>
         </div>
       </div>
     </div>
   </div>
 <% else %>
-  <!-- Guest Mobile Header -->
-  <div class="md:hidden bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200/60 dark:border-white/10 shadow-lg">
-    <div class="flex justify-between items-center px-4 py-4">
-      <!-- Logo -->
-      <%= link_to unauthenticated_root_path,
-                  class: "flex items-center group" do %>
-        <div class="flex items-center space-x-3">
-          <div class="bg-gradient-to-r from-pink-500 to-indigo-500 rounded-lg p-1.5 shadow-lg group-hover:scale-105 transition-all duration-200">
-            <i class="fas fa-chart-line text-white"></i>
-          </div>
-          <div class="flex flex-col leading-tight">
-            <span class="text-lg font-bold tracking-tight bg-gradient-to-r from-pink-500 to-indigo-500 bg-clip-text text-transparent">LocalElo</span>
-            <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">Clear rankings for every local rivalry</span>
-          </div>
-        </div>
-      <% end %>
+  <div class="md:hidden retro-mobile-bar">
+    <div class="retro-app">
+      <div class="retro-mobile__inner">
+        <%= link_to unauthenticated_root_path, class: "retro-brand retro-brand--compact" do %>
+          <span class="retro-brand__mark">LE</span>
+          <span class="retro-brand__text">
+            <span class="retro-brand__title">LocalElo</span>
+            <span class="retro-brand__tagline">Retro rankings</span>
+          </span>
+        <% end %>
 
-      <!-- Guest Links -->
-      <div class="flex items-center gap-2">
-        <%= form_with url: search_path, method: :get, local: true, class: "flex-1" do |form| %>
-          <%= form.label :q, "Search", class: "sr-only" %>
-          <div class="flex items-center bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-full pl-4 pr-1 py-1.5 shadow-sm focus-within:ring-2 focus-within:ring-purple-500 transition">
+        <div class="retro-mobile__actions">
+          <%= form_with url: search_path, method: :get, local: true, class: "retro-search retro-mobile-menu__search" do |form| %>
+            <%= form.label :q, "Search", class: "sr-only" %>
+            <i class="fas fa-search retro-search__icon" aria-hidden="true"></i>
             <%= form.search_field :q,
                                   value: params[:q],
                                   placeholder: "Search",
-                                  class: "bg-transparent text-sm text-slate-700 dark:text-slate-200 focus:outline-none flex-1",
+                                  class: "retro-search__input",
                                   'aria-label': 'Search' %>
-            <button type="submit" class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-sm hover:shadow-md transition" aria-label="Submit search">
-              <i class="fas fa-search text-xs"></i>
-            </button>
-          </div>
-        <% end %>
-
-        <%= link_to organizations_path, class: "inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700/80 text-slate-600 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-600/80 border border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 transition-all duration-200 active:scale-95" do %>
-          <i class="fas fa-search"></i>
-        <% end %>
-
-        <!-- Theme Toggle for guest users -->
-        <%= render 'shared/navigation/theme_toggle' %>
-
-        <div class="relative" data-controller="dropdown">
-          <button
-            class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700/80 text-slate-600 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-600/80 border border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 transition-all duration-200 active:scale-95"
-            data-action="click->dropdown#toggle"
-          >
-            <i class="fas fa-user"></i>
-          </button>
-
-          <div class="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800/90 backdrop-blur-xl rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 hidden z-50 transform origin-top-right transition-all duration-200" data-dropdown-target="menu">
-            <%= link_to new_user_session_path, class: "flex items-center px-4 py-3 text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 hover:text-purple-500 dark:hover:text-purple-400 rounded-t-xl transition-all duration-200" do %>
-              <i class="fas fa-sign-in-alt mr-3 w-5 text-center"></i>
-              <span>Sign In</span>
+          <% end %>
+          <%= render 'shared/navigation/theme_toggle' %>
+          <div class="retro-nav__links">
+            <%= link_to new_user_session_path, class: active_nav_class(new_user_session_path) do %>
+              <i class="fas fa-sign-in-alt"></i>
+              Sign In
             <% end %>
-            <%= link_to new_user_registration_path, class: "flex items-center px-4 py-3 text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 hover:text-purple-500 dark:hover:text-purple-400 rounded-b-xl transition-all duration-200" do %>
-              <i class="fas fa-user-plus mr-3 w-5 text-center"></i>
-              <span>Sign Up</span>
+            <%= link_to new_user_registration_path, class: active_nav_class(new_user_registration_path) do %>
+              <i class="fas fa-user-plus"></i>
+              Sign Up
             <% end %>
           </div>
         </div>
