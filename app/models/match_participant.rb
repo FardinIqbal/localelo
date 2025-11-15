@@ -7,7 +7,6 @@ class MatchParticipant < ApplicationRecord
 
   # == Validations ==
   validates :match, :profile, presence: true
-  validates :elo_before_match, :elo_after_match, numericality: { allow_nil: true, only_integer: true }
   validates :is_winner, inclusion: { in: [true, false] }
 
   scope :winners, -> { where(is_winner: true) }
@@ -15,5 +14,11 @@ class MatchParticipant < ApplicationRecord
 
   def winner?
     is_winner
+  end
+
+  def elo_change
+    return nil unless rating_after_match && rating_before_match
+
+    rating_after_match - rating_before_match
   end
 end

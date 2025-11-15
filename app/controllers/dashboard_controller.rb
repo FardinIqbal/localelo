@@ -84,18 +84,18 @@ class DashboardController < ApplicationController
                               Match.none
                             end
 
-    # == Elo History for Visualization (used by Stimulus or Turbo frame refreshes) ==
+    # == Rating History for Visualization (used by Stimulus or Turbo frame refreshes) ==
     @time_period = params[:period] || '30'
     period_days = @time_period == 'all' ? 365 : @time_period.to_i
 
-    @elo_history = if profile_ids.any?
-                     EloHistory.where(profile_id: profile_ids)
-                               .where("recorded_at >= ?", period_days.days.ago)
-                               .order(:recorded_at)
-                               .pluck(:recorded_at, :elo)
-                   else
-                     []
-                   end
+    @rating_history = if profile_ids.any?
+                        RatingHistory.where(profile_id: profile_ids)
+                                     .where("created_at >= ?", period_days.days.ago)
+                                     .order(:created_at)
+                                     .pluck(:created_at, :rating)
+                      else
+                        []
+                      end
 
     # == Rankings Across All Leaderboards ==
     ranking_profile_ids = if @scoped_organization
@@ -110,11 +110,11 @@ class DashboardController < ApplicationController
     @user_rankings = @user_rankings.includes(leaderboard: :organization)
                                      .order(rating: :desc)
 
-    # == Basic Elo Stats ==
+    # == Basic Rating Stats ==
     ratings = user_leaderboard_ratings(@profile)
-    elo_ratings = ratings.pluck(:rating)
-    @highest_elo = elo_ratings.max || 1500
-    @average_elo = elo_ratings.any? ? (elo_ratings.sum / elo_ratings.size).round : 1500
+    rating_values = ratings.pluck(:rating)
+    @highest_rating = rating_values.max || 1500
+    @average_rating = rating_values.any? ? (rating_values.sum / rating_values.size).round : 1500
 
     # == Win/Loss Summary ==
     @total_wins = ratings.sum(:wins)
@@ -125,8 +125,8 @@ class DashboardController < ApplicationController
       total_wins: @total_wins,
       total_losses: @total_losses,
       win_loss_ratio: @win_loss_ratio,
-      highest_elo: @highest_elo,
-      average_elo: @average_elo
+      highest_rating: @highest_rating,
+      average_rating: @average_rating
     }
 
     # == Match Activity Trend (30d vs previous 30d) ==
@@ -183,7 +183,7 @@ class DashboardController < ApplicationController
 
     respond_to do |format|
       format.html
-      format.json { render json: { elo_history: @elo_history } }
+      format.json { render json: { rating_history: @rating_history } }
     end
   end
 
@@ -195,26 +195,26 @@ class DashboardController < ApplicationController
     ratings = user_leaderboard_ratings(@profile)
 
     if ratings.sum(:wins) + ratings.sum(:losses) == 0
-      tips << "Log your first match to start building your Elo rating and track your progress."
+      tips << "Log your first match to start building your rating and track your progress."
     end
 
     matches_scope = Match.involving_profiles(Array(@profile_ids))
     matches_scope = matches_scope.where(leaderboard_id: Array(@scoped_organization&.leaderboard_ids)) if @scoped_organization
 
-    if matches_scope.where("match_time >= ?", 30.days.ago).count == 0
+    if matches_scope.where("matches.created_at >= ?", 30.days.ago).count == 0
       tips << "You haven't played any matches in the last 30 days. Stay active to maintain your skills!"
     end
 
-    if @elo_history.size >= 2 && @elo_history.last[1] > @elo_history.first[1]
-      elo_gain = @elo_history.last[1] - @elo_history.first[1]
-      tips << "Great job! You've improved your Elo by #{elo_gain} points in the selected time period."
+    if @rating_history.size >= 2 && @rating_history.last[1] > @rating_history.first[1]
+      rating_gain = @rating_history.last[1] - @rating_history.first[1]
+      tips << "Great job! You've improved your rating by #{rating_gain.round} points in the selected time period."
     end
 
     if @organizations.count < 2
       tips << "Join more gyms to expand your network and find new opponents."
     end
 
-    tips.sample || "Play consistently to improve your Elo rating. Your highest rating is currently #{@highest_elo}."
+    tips.sample || "Play consistently to improve your rating. Your highest rating is currently #{@highest_rating.round}."
   end
 
   def performance
@@ -222,9 +222,9 @@ class DashboardController < ApplicationController
     profile = current_user.profiles.find_by(id: params[:profile_id])
 
     ratings = user_leaderboard_ratings(profile)
-    elo_ratings = ratings.pluck(:rating)
-    @highest_elo = elo_ratings.max || 1500
-    @average_elo = elo_ratings.any? ? (elo_ratings.sum / elo_ratings.size).round : 1500
+    rating_values = ratings.pluck(:rating)
+    @highest_rating = rating_values.max || 1500
+    @average_rating = rating_values.any? ? (rating_values.sum / rating_values.size).round : 1500
 
     @total_wins = ratings.sum(:wins)
     @total_losses = ratings.sum(:losses)
