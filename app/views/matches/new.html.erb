@@ -152,6 +152,17 @@
                 </div>
               </label>
             </div>
+
+            <div id="elo-preview" class="mt-6 hidden">
+              <div class="rounded-xl border border-slate-200/70 dark:border-slate-700/70 bg-white/70 dark:bg-slate-900/60 px-5 py-4 shadow-inner">
+                <div class="flex items-center text-sm font-semibold text-slate-600 dark:text-slate-300 mb-3">
+                  <i class="fas fa-chart-line mr-2 text-purple-500"></i>
+                  Projected rating change
+                </div>
+                <div id="elo-preview-content" class="space-y-2 text-sm text-slate-700 dark:text-slate-200"></div>
+              </div>
+              <div id="elo-preview-error" class="mt-2 text-sm text-rose-500 dark:text-rose-400 hidden"></div>
+            </div>
           </div>
 
         </div>
@@ -220,6 +231,10 @@ document.addEventListener("DOMContentLoaded", function() {
     const matchForm = document.getElementById("match-form");
     const progressBar = document.getElementById("progress-bar");
     const currentStepText = document.getElementById("current-step");
+    const eloPreviewContainer = document.getElementById("elo-preview");
+    const eloPreviewContent = document.getElementById("elo-preview-content");
+    const eloPreviewError = document.getElementById("elo-preview-error");
+    const resultRadios = [winnerMeRadio, winnerOpponentRadio];
 
     // Store all data
     <%
@@ -232,6 +247,7 @@ document.addEventListener("DOMContentLoaded", function() {
     console.log("Form data loaded:", allData);
 
     let currentStep = 1;
+    let previewAbortController = null;
 
     // Helper: Update progress bar
     function updateProgress(step) {
@@ -248,7 +264,6 @@ document.addEventListener("DOMContentLoaded", function() {
             stepContainer.classList.remove('opacity-50');
             stepContainer.classList.add('animate-fade-in');
 
-            // Show hint
             const hint = document.getElementById(`${getHintId(stepNum)}-hint`);
             if (hint) {
                 setTimeout(() => hint.classList.remove('opacity-0'), 200);
@@ -276,33 +291,183 @@ document.addEventListener("DOMContentLoaded", function() {
         }, 300);
     }
 
-    // Step 1: Organization changes → Update leaderboards
-    organizationSelect.addEventListener("change", function() {
-        const orgId = this.value;
-        console.log("Organization selected:", orgId);
+    function resetResultSelection() {
+        resultRadios.forEach(radio => {
+            radio.checked = false;
+        });
+        submitBtn.disabled = true;
+    }
 
-        // Hide hint
-        document.getElementById('org-hint').classList.add('opacity-0');
+    function resetEloPreview() {
+        if (previewAbortController) {
+            previewAbortController.abort();
+            previewAbortController = null;
+        }
+        eloPreviewContainer.classList.add('hidden');
+        eloPreviewContent.innerHTML = '';
+        eloPreviewError.classList.add('hidden');
+        eloPreviewError.textContent = '';
+    }
+
+    function formatSignedChange(value) {
+        const number = Number(value || 0);
+        const formatted = number.toFixed(2);
+        if (number > 0) {
+            return `+${formatted}`;
+        }
+        if (number < 0) {
+            return formatted;
+        }
+        return '0.00';
+    }
+
+    function formatRating(value) {
+        const number = Number(value);
+        if (Number.isNaN(number)) {
+            return '--';
+        }
+        return Number.isInteger(number) ? number.toString() : number.toFixed(2);
+    }
+
+    function changeClass(value) {
+        if (value > 0) {
+            return 'text-emerald-500';
+        }
+        if (value < 0) {
+            return 'text-rose-500';
+        }
+        return 'text-slate-500 dark:text-slate-300';
+    }
+
+    function selectedWinnerId() {
+        const selected = resultRadios.find(radio => radio.checked);
+        return selected ? selected.value : '';
+    }
+
+    function updateEloPreview() {
+        const leaderboardId = leaderboardSelect.value;
+        const opponentId = opponentSelect.value;
+        const profile1Id = profile1Input.value;
+        const winnerId = selectedWinnerId();
+
+        if (!leaderboardId || !opponentId || !profile1Id || !winnerId) {
+            resetEloPreview();
+            return;
+        }
+
+        if (previewAbortController) {
+            previewAbortController.abort();
+        }
+        previewAbortController = new AbortController();
+
+        const params = new URLSearchParams({
+            leaderboard_id: leaderboardId,
+            opponent_profile_id: opponentId,
+            profile1_id: profile1Id,
+            winner_profile_id: winnerId
+        });
+
+        eloPreviewContainer.classList.remove('hidden');
+        eloPreviewContent.innerHTML = '<div class="flex items-center text-sm text-slate-500 dark:text-slate-400"><i class="fas fa-spinner fa-spin mr-2"></i>Calculating rating impact...</div>';
+        eloPreviewError.classList.add('hidden');
+        eloPreviewError.textContent = '';
+
+        fetch(`/matches/elo_preview?${params.toString()}`, {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            signal: previewAbortController.signal
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(body => { throw body; });
+            }
+            return response.json();
+        })
+        .then(data => {
+            previewAbortController = null;
+
+            const playerData = data.player || {};
+            const opponentData = data.opponent || {};
+
+            const playerChange = Number(playerData.change || 0);
+            const opponentChange = Number(opponentData.change || 0);
+
+            const playerBlock = `
+                <div class="flex items-center justify-between rounded-lg bg-slate-900/10 dark:bg-slate-800/70 px-4 py-3">
+                    <div class="text-sm font-medium text-slate-600 dark:text-slate-300">You</div>
+                    <div class="text-right">
+                        <div class="text-sm font-semibold ${changeClass(playerChange)}">${formatSignedChange(playerChange)}</div>
+                        <div class="text-xs text-slate-500 dark:text-slate-400">${formatRating(playerData.rating_before)} → ${formatRating(playerData.rating_after)}</div>
+                    </div>
+                </div>
+            `;
+
+            const opponentBlock = `
+                <div class="flex items-center justify-between rounded-lg bg-slate-900/10 dark:bg-slate-800/70 px-4 py-3">
+                    <div class="text-sm font-medium text-slate-600 dark:text-slate-300">Opponent</div>
+                    <div class="text-right">
+                        <div class="text-sm font-semibold ${changeClass(opponentChange)}">${formatSignedChange(opponentChange)}</div>
+                        <div class="text-xs text-slate-500 dark:text-slate-400">${formatRating(opponentData.rating_before)} → ${formatRating(opponentData.rating_after)}</div>
+                    </div>
+                </div>
+            `;
+
+            eloPreviewContent.innerHTML = playerBlock + opponentBlock;
+            eloPreviewContainer.classList.remove('hidden');
+        })
+        .catch(error => {
+            if (error.name === 'AbortError') {
+                return;
+            }
+            previewAbortController = null;
+            eloPreviewContainer.classList.add('hidden');
+            const message = error && error.error ? error.error : 'Unable to calculate rating change right now.';
+            eloPreviewError.textContent = message;
+            eloPreviewError.classList.remove('hidden');
+        });
+    }
+
+    // Step 1: Organization changes → Update leaderboards
+    organizationSelect.addEventListener('change', function() {
+        const orgId = this.value;
+        console.log('Organization selected:', orgId);
+
+        const orgHint = document.getElementById('org-hint');
+        if (orgHint) {
+            orgHint.classList.add('opacity-0');
+        }
+
+        resetEloPreview();
+        resetResultSelection();
 
         leaderboardSelect.innerHTML = '<option value="">Select game/sport...</option>';
+        leaderboardSelect.disabled = true;
+
         opponentSelect.innerHTML = '<option value="">Select opponent...</option>';
+        opponentSelect.disabled = true;
+
+        winnerMeRadio.disabled = true;
+        winnerOpponentRadio.disabled = true;
+        winnerOpponentRadio.value = '';
+
+        disableStep(2);
+        disableStep(3);
+        disableStep(4);
 
         if (!orgId) {
-            leaderboardSelect.disabled = true;
-            opponentSelect.disabled = true;
-            disableStep(2);
-            disableStep(3);
-            disableStep(4);
+            profile1Input.value = '';
+            winnerMeRadio.value = '';
             updateProgress(1);
             return;
         }
 
-        // Filter leaderboards for this org
         const orgLeaderboards = allData.leaderboards.filter(lb => lb.org_id == orgId);
 
         if (orgLeaderboards.length === 0) {
             leaderboardSelect.innerHTML = '<option value="">No games available</option>';
-            leaderboardSelect.disabled = true;
+            updateProgress(1);
             return;
         }
 
@@ -315,46 +480,53 @@ document.addEventListener("DOMContentLoaded", function() {
         enableStep(2);
         updateProgress(2);
 
-        // Set profile1_id for this org
         const profileId = allData.profiles_by_org[orgId];
-        profile1Input.value = profileId || "";
-        winnerMeRadio.value = profileId || "";
+        profile1Input.value = profileId || '';
+        winnerMeRadio.value = profileId || '';
 
-        console.log("Set profile1_id:", profileId);
+        console.log('Set profile1_id:', profileId);
 
-        // Auto-focus next field
         focusNext(leaderboardSelect);
     });
 
     // Step 2: Leaderboard changes → Fetch opponents
-    leaderboardSelect.addEventListener("change", function() {
+    leaderboardSelect.addEventListener('change', function() {
         const leaderboardId = this.value;
-        console.log("Leaderboard selected:", leaderboardId);
+        console.log('Leaderboard selected:', leaderboardId);
 
-        // Hide hint
-        document.getElementById('leaderboard-hint').classList.add('opacity-0');
+        const leaderboardHint = document.getElementById('leaderboard-hint');
+        if (leaderboardHint) {
+            leaderboardHint.classList.add('opacity-0');
+        }
+
+        resetEloPreview();
+        resetResultSelection();
 
         opponentSelect.innerHTML = '<option value="">Loading...</option>';
         opponentSelect.disabled = true;
 
+        winnerMeRadio.disabled = true;
+        winnerOpponentRadio.disabled = true;
+        winnerOpponentRadio.value = '';
+
+        disableStep(3);
+        disableStep(4);
+
         if (!leaderboardId) {
             opponentSelect.innerHTML = '<option value="">Select opponent...</option>';
-            disableStep(3);
-            disableStep(4);
             updateProgress(2);
             return;
         }
 
-        // Fetch opponents for this leaderboard
         fetch(`/matches/update_opponents?leaderboard_id=${leaderboardId}`, {
             headers: {
-                "Accept": "application/json",
-                "X-Requested-With": "XMLHttpRequest"
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             }
         })
         .then(response => response.json())
         .then(data => {
-            console.log("Opponents loaded:", data);
+            console.log('Opponents loaded:', data);
 
             opponentSelect.innerHTML = '<option value="">Select opponent...</option>';
 
@@ -371,34 +543,35 @@ document.addEventListener("DOMContentLoaded", function() {
             opponentSelect.disabled = false;
             enableStep(3);
             updateProgress(3);
-
-            // Auto-focus next field
             focusNext(opponentSelect);
         })
         .catch(error => {
-            console.error("Error fetching opponents:", error);
+            console.error('Error fetching opponents:', error);
             opponentSelect.innerHTML = '<option value="">Error loading opponents</option>';
         });
     });
 
     // Step 3: Opponent changes → Update winner radio values
-    opponentSelect.addEventListener("change", function() {
+    opponentSelect.addEventListener('change', function() {
         const opponentId = this.value;
-        console.log("Opponent selected:", opponentId);
+        console.log('Opponent selected:', opponentId);
 
-        // Hide hint
-        document.getElementById('opponent-hint').classList.add('opacity-0');
+        const opponentHint = document.getElementById('opponent-hint');
+        if (opponentHint) {
+            opponentHint.classList.add('opacity-0');
+        }
 
-        winnerOpponentRadio.value = opponentId || "";
+        resetEloPreview();
+        resetResultSelection();
+
+        winnerOpponentRadio.value = opponentId || '';
 
         if (opponentId) {
-            // Enable result buttons
             winnerMeRadio.disabled = false;
             winnerOpponentRadio.disabled = false;
             enableStep(4);
             updateProgress(4);
 
-            // Auto-focus first result button
             setTimeout(() => {
                 document.getElementById('won-label').scrollIntoView({ behavior: 'smooth', block: 'center' });
             }, 300);
@@ -406,32 +579,33 @@ document.addEventListener("DOMContentLoaded", function() {
             winnerMeRadio.disabled = true;
             winnerOpponentRadio.disabled = true;
             disableStep(4);
-            submitBtn.disabled = true;
         }
     });
 
-    // Result selection → Enable submit
-    [winnerMeRadio, winnerOpponentRadio].forEach(radio => {
-        radio.addEventListener("change", function() {
+    // Result selection → Enable submit and preview ratings
+    resultRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
             if (this.checked) {
                 submitBtn.disabled = false;
+                updateEloPreview();
                 setTimeout(() => {
                     submitBtn.scrollIntoView({ behavior: 'smooth', block: 'end' });
                 }, 300);
+            } else if (!resultRadios.some(r => r.checked)) {
+                submitBtn.disabled = true;
+                resetEloPreview();
             }
         });
     });
 
     // Keyboard shortcuts
-    document.addEventListener("keydown", function(e) {
-        // W key = I Won
+    document.addEventListener('keydown', function(e) {
         if ((e.key === 'w' || e.key === 'W') && !winnerMeRadio.disabled && !e.ctrlKey && !e.metaKey) {
             e.preventDefault();
             winnerMeRadio.checked = true;
             winnerMeRadio.dispatchEvent(new Event('change'));
         }
 
-        // L key = I Lost
         if ((e.key === 'l' || e.key === 'L') && !winnerOpponentRadio.disabled && !e.ctrlKey && !e.metaKey) {
             e.preventDefault();
             winnerOpponentRadio.checked = true;
@@ -440,51 +614,47 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     // Form submission
-    matchForm.addEventListener("submit", function(e) {
+    matchForm.addEventListener('submit', function(e) {
         e.preventDefault();
 
-        // Validate
         if (!organizationSelect.value) {
-            alert("Please select a gym");
+            alert('Please select a gym');
             organizationSelect.focus();
             return;
         }
         if (!leaderboardSelect.value) {
-            alert("Please select a game/sport");
+            alert('Please select a game/sport');
             leaderboardSelect.focus();
             return;
         }
         if (!opponentSelect.value) {
-            alert("Please select an opponent");
+            alert('Please select an opponent');
             opponentSelect.focus();
             return;
         }
         if (!winnerMeRadio.checked && !winnerOpponentRadio.checked) {
-            alert("Please select who won");
+            alert('Please select who won');
             return;
         }
 
-        // Show loading
         submitBtn.disabled = true;
-        document.getElementById("submit-text").classList.add("hidden");
-        document.getElementById("submit-loading").classList.remove("hidden");
+        document.getElementById('submit-text').classList.add('hidden');
+        document.getElementById('submit-loading').classList.remove('hidden');
 
-        // Log what we're sending
         const formData = new FormData(matchForm);
-        console.log("Submitting form:", {
-            leaderboard_id: formData.get("match[leaderboard_id]"),
-            opponent_profile_id: formData.get("match[opponent_profile_id]"),
-            winner_profile_id: formData.get("match[winner_profile_id]"),
-            profile1_id: formData.get("profile1_id")
+        console.log('Submitting form:', {
+            leaderboard_id: formData.get('match[leaderboard_id]'),
+            opponent_profile_id: formData.get('match[opponent_profile_id]'),
+            winner_profile_id: formData.get('match[winner_profile_id]'),
+            profile1_id: formData.get('profile1_id')
         });
 
-        // Submit
         matchForm.submit();
     });
 
     // Keyboard shortcut (Enter key) to submit
-    matchForm.addEventListener("keypress", function(e) {
-        if (e.key === "Enter" && !e.shiftKey && !submitBtn.disabled) {
+    matchForm.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey && !submitBtn.disabled) {
             e.preventDefault();
             submitBtn.click();
         }

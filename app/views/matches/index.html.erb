@@ -10,6 +10,26 @@
     <% end %>
   </div>
 
+  <% if @return_to_organization.present? %>
+    <div class="mb-6">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-xl border border-purple-500/30 bg-slate-800/70 px-5 py-4 shadow-lg shadow-purple-500/10">
+        <div class="flex items-center text-slate-200">
+          <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-600/30 text-purple-200 mr-3">
+            <i class="fas fa-undo-alt"></i>
+          </span>
+          <div>
+            <p class="text-sm font-semibold text-white">Match logged for <%= @return_to_organization.name %></p>
+            <p class="text-xs text-slate-400">Hop back to the organization dashboard without retracing your steps.</p>
+          </div>
+        </div>
+        <%= link_to organization_path(@return_to_organization), class: "inline-flex items-center justify-center px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-medium shadow-md shadow-purple-500/20 hover:shadow-purple-500/40 transition-all duration-200 hover:-translate-y-0.5" do %>
+          Return to <%= @return_to_organization.name %>
+          <i class="fas fa-arrow-right ml-2"></i>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
   <!-- Filters and Search -->
   <div class="bg-slate-800/80 backdrop-blur-xl rounded-xl p-5 mb-6 border border-slate-700 transition-all duration-300 hover:border-purple-500/30">
     <div class="flex flex-col md:flex-row gap-4">
