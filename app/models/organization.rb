@@ -122,13 +122,13 @@ class Organization < ApplicationRecord
 
   # Get all approved members
   def approved_members
-    membership_profiles.joins(:organization_memberships)
+    membership_profiles.joins(:organization_membership)
                        .merge(OrganizationMembership.where(organization_id: id, status: :approved))
   end
 
   # Get pending membership requests
   def pending_requests
-    membership_profiles.joins(:organization_memberships)
+    membership_profiles.joins(:organization_membership)
                        .merge(OrganizationMembership.where(organization_id: id, status: :pending))
   end
 

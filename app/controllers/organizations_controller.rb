@@ -34,6 +34,8 @@ class OrganizationsController < ApplicationController
                         .where(leaderboards: { organization_id: @organization.id })
                         .order(created_at: :desc)
                         .limit(20)
+
+    build_matchup_insights
   end
 
   # GET /organizations/new
@@ -395,6 +397,86 @@ class OrganizationsController < ApplicationController
   end
 
   private
+
+  def build_matchup_insights
+    @viewer_profile = current_user.profile_for(@organization)
+    @rivalries = []
+    @ducking_opponents = []
+
+    return unless @viewer_profile
+
+    organization_leaderboard_ids = @organization.leaderboard_ids
+    return if organization_leaderboard_ids.empty?
+
+    matches_with_viewer = MatchParticipant
+                            .joins(:match)
+                            .merge(Match.active.where(leaderboard_id: organization_leaderboard_ids))
+                            .where(profile_id: @viewer_profile.id)
+                            .select(:match_id)
+
+    opponent_counts = MatchParticipant
+                        .where(match_id: matches_with_viewer)
+                        .where.not(profile_id: @viewer_profile.id)
+                        .group(:profile_id)
+                        .count
+
+    last_played_map = MatchParticipant
+                        .joins(:match)
+                        .merge(Match.active)
+                        .where(match_id: matches_with_viewer)
+                        .where.not(profile_id: @viewer_profile.id)
+                        .group(:profile_id)
+                        .maximum("matches.created_at")
+
+    approved_profiles = @organization.approved_members.includes(:user).to_a
+    approved_profile_map = approved_profiles.index_by(&:id)
+    activity_counts = MatchParticipant
+                        .joins(:match)
+                        .merge(Match.active.where(leaderboard_id: organization_leaderboard_ids))
+                        .where(profile_id: approved_profile_map.keys)
+                        .group(:profile_id)
+                        .count
+
+    insights_candidates = approved_profiles.reject { |profile| profile.id == @viewer_profile.id }.map do |profile|
+      matches_together = opponent_counts[profile.id] || 0
+      {
+        profile: profile,
+        matches_together: matches_together,
+        total_matches: activity_counts[profile.id] || 0,
+        last_played_at: last_played_map[profile.id]
+      }
+    end
+
+    @rivalries = insights_candidates
+                    .reject { |data| data[:matches_together].zero? }
+                    .sort_by do |data|
+                      [
+                        -data[:matches_together],
+                        -(data[:last_played_at]&.to_i || 0),
+                        data[:profile].username.downcase
+                      ]
+                    end
+                    .first(3)
+
+    never_played = insights_candidates
+                     .select { |data| data[:matches_together].zero? }
+                     .sort_by { |data| [-data[:total_matches], data[:profile].username.downcase] }
+
+    low_history = insights_candidates
+                    .reject { |data| data[:matches_together].zero? }
+                    .sort_by do |data|
+                      [
+                        data[:matches_together],
+                        data[:last_played_at] || (Time.zone ? Time.zone.at(0) : Time.at(0)),
+                        data[:profile].username.downcase
+                      ]
+                    end
+
+    @ducking_opponents = never_played.first(3)
+    if @ducking_opponents.size < 3
+      @ducking_opponents += low_history.first(3 - @ducking_opponents.size)
+    end
+  end
 
   def set_organization
     @organization = Organization.find(params[:id])

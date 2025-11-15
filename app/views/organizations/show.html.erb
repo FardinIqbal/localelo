@@ -164,6 +164,83 @@
               </div>
             </div>
           </div>
+
+          <div class="space-y-6">
+            <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-700 p-5">
+              <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-white">My Rival</h3>
+                <i class="fas fa-fire text-pink-400"></i>
+              </div>
+
+              <% if @viewer_profile.nil? %>
+                <p class="mt-3 text-sm text-slate-300">
+                  Become an approved member of this gym to unlock rivalry insights.
+                </p>
+              <% elsif @rivalries.present? %>
+                <ul class="mt-4 space-y-4">
+                  <% @rivalries.each_with_index do |entry, index| %>
+                    <li class="flex items-start justify-between gap-4">
+                      <div>
+                        <div class="flex items-center gap-2">
+                          <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-purple-500/20 text-purple-300 text-xs font-semibold">#<%= index + 1 %></span>
+                          <span class="text-lg font-semibold text-white">
+                            <%= link_to entry[:profile].username, profile_path(entry[:profile]), class: "hover:text-pink-400 transition-colors" %>
+                          </span>
+                        </div>
+                        <%= render partial: "matchup_insight_stats", locals: { entry: entry } %>
+                      </div>
+                      <div class="flex-shrink-0">
+                        <%= link_to new_match_path(opponent_profile_id: entry[:profile].id, return_to_organization_id: @organization.id),
+                                    class: "inline-flex items-center px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-medium hover:shadow-lg hover:shadow-purple-500/20 transition-all" do %>
+                          <i class="fas fa-swords mr-2"></i> Challenge Again
+                        <% end %>
+                      </div>
+                    </li>
+                  <% end %>
+                </ul>
+              <% else %>
+                <p class="mt-3 text-sm text-slate-300">
+                  Log a match to discover who your fiercest rival is inside this organization.
+                </p>
+              <% end %>
+            </div>
+
+            <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-700 p-5">
+              <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-white">Challengers You're Ducking</h3>
+                <i class="fas fa-running text-purple-400"></i>
+              </div>
+
+              <% if @viewer_profile.nil? %>
+                <p class="mt-3 text-sm text-slate-300">
+                  Once you're approved, we'll highlight the players you should square off with next.
+                </p>
+              <% elsif @ducking_opponents.present? %>
+                <ul class="mt-4 space-y-4">
+                  <% @ducking_opponents.each do |entry| %>
+                    <li class="flex items-start justify-between gap-4">
+                      <div>
+                        <div class="text-base font-semibold text-white">
+                          <%= link_to entry[:profile].username, profile_path(entry[:profile]), class: "hover:text-pink-400 transition-colors" %>
+                        </div>
+                        <%= render partial: "matchup_insight_stats", locals: { entry: entry } %>
+                      </div>
+                      <div class="flex-shrink-0">
+                        <%= link_to new_match_path(opponent_profile_id: entry[:profile].id, return_to_organization_id: @organization.id),
+                                    class: "inline-flex items-center px-3 py-1.5 rounded-lg bg-slate-700 text-white text-xs font-medium hover:bg-slate-600 transition-all" do %>
+                          <i class="fas fa-bolt mr-2"></i> Challenge
+                        <% end %>
+                      </div>
+                    </li>
+                  <% end %>
+                </ul>
+              <% else %>
+                <p class="mt-3 text-sm text-slate-300">
+                  Nice work—you've been keeping up with everyone in this gym recently.
+                </p>
+              <% end %>
+            </div>
+          </div>
         </div>
 
         <!-- Call to Action for Non-Members -->
