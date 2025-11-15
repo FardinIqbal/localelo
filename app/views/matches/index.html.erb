@@ -74,10 +74,15 @@
           </thead>
           <tbody class="divide-y divide-slate-700">
           <% @matches.each do |match| %>
+            <% participants = match_participants_for_display(match, current_user) %>
+            <% fallback_opponent_name = match.user1_id == current_user.id ? match.opponent&.username : match.user1&.username %>
+            <% display_opponent_name = participant_username(participants[:opponent], fallback: fallback_opponent_name.presence || "Opponent") %>
+            <% user_badge = rating_change_badge(participants[:current]) %>
+            <% opponent_badge = rating_change_badge(participants[:opponent]) %>
             <tr class="match-row hover:bg-slate-700/50 transition-all duration-200"
                 data-leaderboard-id="<%= match.leaderboard_id %>"
                 data-date="<%= match.created_at.to_i %>"
-                data-opponent="<%= match.user1_id == current_user.id ? match.opponent.username : match.user1.username %>">
+                data-opponent="<%= display_opponent_name %>">
               <td class="px-4 py-3 text-sm text-slate-300">
                 <%= match.created_at.strftime("%b %d, %Y") %>
               </td>
@@ -88,7 +93,7 @@
                   </div>
                   <div>
                     <div class="font-medium text-white">
-                      <%= match.user1_id == current_user.id ? match.opponent.username : match.user1.username %>
+                      <%= display_opponent_name %>
                     </div>
                   </div>
                 </div>
@@ -106,6 +111,22 @@
                       <i class="fas fa-times mr-1 text-red-400"></i> Loss
                     </span>
                 <% end %>
+                <% if user_badge || opponent_badge %>
+                  <div class="mt-2 space-y-1 text-xs text-slate-400">
+                    <% if user_badge %>
+                      <div class="flex items-center">
+                        <span class="text-slate-400">You</span>
+                        <%= user_badge %>
+                      </div>
+                    <% end %>
+                    <% if opponent_badge %>
+                      <div class="flex items-center">
+                        <span class="text-slate-400"><%= display_opponent_name %></span>
+                        <%= opponent_badge %>
+                      </div>
+                    <% end %>
+                  </div>
+                <% end %>
               </td>
               <td class="px-4 py-3 text-sm">
                 <%= link_to match_path(match), class: "text-indigo-400 hover:text-pink-400 transition-colors" do %>
@@ -122,10 +143,15 @@
     <!-- Mobile Card View (visible on small screens only) -->
     <div class="md:hidden mt-4 space-y-4" id="mobile-matches-container">
       <% @matches.each do |match| %>
+        <% participants = match_participants_for_display(match, current_user) %>
+        <% fallback_opponent_name = match.user1_id == current_user.id ? match.opponent&.username : match.user1&.username %>
+        <% display_opponent_name = participant_username(participants[:opponent], fallback: fallback_opponent_name.presence || "Opponent") %>
+        <% user_badge = rating_change_badge(participants[:current]) %>
+        <% opponent_badge = rating_change_badge(participants[:opponent]) %>
         <div class="match-card bg-slate-800/30 backdrop-blur-md rounded-xl border border-white/10 p-4"
              data-leaderboard-id="<%= match.leaderboard_id %>"
              data-date="<%= match.created_at.to_i %>"
-             data-opponent="<%= match.user1_id == current_user.id ? match.opponent.username : match.user1.username %>">
+             data-opponent="<%= display_opponent_name %>">
           <div class="flex justify-between items-start mb-3">
             <div class="flex items-center">
               <div class="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center mr-3 border border-white/10">
@@ -133,7 +159,7 @@
               </div>
               <div>
                 <div class="font-medium text-white">
-                  <%= match.user1_id == current_user.id ? match.opponent.username : match.user1.username %>
+                  <%= display_opponent_name %>
                 </div>
                 <div class="text-xs text-slate-400">
                   <%= match.leaderboard.name %>
@@ -152,6 +178,22 @@
               <% end %>
             </div>
           </div>
+          <% if user_badge || opponent_badge %>
+            <div class="mb-3 space-y-1 text-xs text-slate-400">
+              <% if user_badge %>
+                <div class="flex items-center">
+                  <span class="text-slate-400">You</span>
+                  <%= user_badge %>
+                </div>
+              <% end %>
+              <% if opponent_badge %>
+                <div class="flex items-center">
+                  <span class="text-slate-400"><%= display_opponent_name %></span>
+                  <%= opponent_badge %>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
           <div class="flex justify-between items-center text-sm">
             <div class="text-slate-300">
               <%= match.created_at.strftime("%b %d, %Y") %>
