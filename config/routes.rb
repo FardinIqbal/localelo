@@ -15,6 +15,9 @@ Rails.application.routes.draw do
   # Profile routes
   resources :profiles, only: [:show, :edit, :update]
 
+  # Global search
+  get "/search", to: "searches#show"
+
   # Account-level pages (e.g., organization membership overview)
   get "/account/my-organizations", to: "account_organizations#index", as: :account_organizations
   get "dashboard/performance", to: "dashboard#performance", as: :dashboard_performance

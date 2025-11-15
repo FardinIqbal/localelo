@@ -58,6 +58,20 @@
           </button>
         </div>
 
+        <%= form_with url: search_path, method: :get, local: true, class: "mb-6" do |form| %>
+          <%= form.label :q, "Search", class: "sr-only" %>
+          <div class="flex items-center bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-full pl-4 pr-1 py-1.5 shadow-sm focus-within:ring-2 focus-within:ring-purple-500 transition">
+            <%= form.search_field :q,
+                                  value: params[:q],
+                                  placeholder: "Search",
+                                  class: "bg-transparent text-sm text-slate-700 dark:text-slate-200 focus:outline-none flex-1",
+                                  'aria-label': 'Search' %>
+            <button type="submit" class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-sm hover:shadow-md transition" aria-label="Submit search">
+              <i class="fas fa-search text-xs"></i>
+            </button>
+          </div>
+        <% end %>
+
         <!-- User Info -->
         <div class="flex items-center mb-8 pb-6 border-b border-slate-200 dark:border-slate-700">
           <div class="w-12 h-12 bg-slate-200 dark:bg-slate-700/80 rounded-full flex items-center justify-center border border-slate-300 dark:border-white/10 shadow-md">
@@ -147,7 +161,21 @@
       <% end %>
 
       <!-- Guest Links -->
-      <div class="flex gap-2">
+      <div class="flex items-center gap-2">
+        <%= form_with url: search_path, method: :get, local: true, class: "flex-1" do |form| %>
+          <%= form.label :q, "Search", class: "sr-only" %>
+          <div class="flex items-center bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-full pl-4 pr-1 py-1.5 shadow-sm focus-within:ring-2 focus-within:ring-purple-500 transition">
+            <%= form.search_field :q,
+                                  value: params[:q],
+                                  placeholder: "Search",
+                                  class: "bg-transparent text-sm text-slate-700 dark:text-slate-200 focus:outline-none flex-1",
+                                  'aria-label': 'Search' %>
+            <button type="submit" class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-sm hover:shadow-md transition" aria-label="Submit search">
+              <i class="fas fa-search text-xs"></i>
+            </button>
+          </div>
+        <% end %>
+
         <%= link_to organizations_path, class: "inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700/80 text-slate-600 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-600/80 border border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 transition-all duration-200 active:scale-95" do %>
           <i class="fas fa-search"></i>
         <% end %>
