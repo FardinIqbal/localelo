@@ -1,5 +1,5 @@
 <%# Shared neutral page shell to unify interior spacing and tone %>
-<% content = capture(&block) if block_given? %>
+<% content = capture { yield } if block_given? %>
 <% body_classes = ["space-y-8", local_assigns[:body_classes]].compact.join(" ") %>
 <div class="mx-auto w-full <%= local_assigns[:max_width] || 'max-w-6xl' %>">
   <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
