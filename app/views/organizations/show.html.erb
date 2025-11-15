@@ -177,20 +177,33 @@
                   Become an approved member of this gym to unlock rivalry insights.
                 </p>
               <% elsif @top_rivals.present? %>
-                <ul class="mt-4 space-y-4">
-                  <% @top_rivals.each do |entry| %>
-                    <li class="flex items-start justify-between gap-4">
-                      <div>
-                        <div class="text-base font-semibold text-white">
-                          <%= link_to entry[:profile].username, profile_path(entry[:profile]), class: "hover:text-pink-400 transition-colors" %>
+                <ul class="mt-6 grid grid-cols-1 gap-4">
+                  <% @top_rivals.each_with_index do |entry, index| %>
+                    <li class="group relative overflow-hidden rounded-2xl border border-pink-500/15 bg-slate-900/60 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-pink-400/40 hover:shadow-lg hover:shadow-pink-500/20">
+                      <div class="pointer-events-none absolute -right-20 -top-24 h-40 w-40 rounded-full bg-gradient-to-br from-pink-500/30 via-purple-500/10 to-transparent blur-3xl opacity-0 transition-opacity duration-300 group-hover:opacity-80"></div>
+
+                      <div class="relative flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+                        <div class="flex items-start gap-4">
+                          <div class="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-pink-500 to-purple-500 text-base font-semibold text-white shadow-lg shadow-pink-500/20">
+                            <%= index + 1 %>
+                          </div>
+                          <div>
+                            <div class="flex items-center gap-2">
+                              <%= link_to entry[:profile].username, profile_path(entry[:profile]), class: "text-lg font-semibold text-white transition-colors hover:text-pink-300" %>
+                              <span class="rounded-full border border-pink-500/30 bg-pink-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-pink-200">Rival</span>
+                            </div>
+                            <p class="mt-1 text-xs text-slate-400">Keep tabs on the players who keep pushing you to level up.</p>
+                            <%= render "organizations/matchup_insight_stats", entry: entry %>
+                          </div>
                         </div>
-                        <%= render "organizations/matchup_insight_stats", entry: entry %>
-                      </div>
-                      <div class="flex-shrink-0">
-                        <%= link_to new_match_path(opponent_profile_id: entry[:profile].id, return_to_organization_id: @organization.id),
-                                    class: "inline-flex items-center px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-medium hover:shadow-lg hover:shadow-purple-500/20 transition-all" do %>
-                          <i class="fas fa-swords mr-2"></i> Challenge
-                        <% end %>
+
+                        <div class="flex flex-col gap-2 md:items-end">
+                          <%= link_to new_match_path(opponent_profile_id: entry[:profile].id, return_to_organization_id: @organization.id),
+                                      class: "inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 via-purple-500 to-purple-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-pink-500/20 transition-all hover:shadow-pink-500/30 focus:outline-none focus:ring-2 focus:ring-pink-400/60 focus:ring-offset-2 focus:ring-offset-slate-900" do %>
+                            <i class="fas fa-swords text-[13px]"></i>
+                            Challenge Now
+                          <% end %>
+                        </div>
                       </div>
                     </li>
                   <% end %>
@@ -213,20 +226,33 @@
                   Once you're approved, we'll highlight the players you should square off with next.
                 </p>
               <% elsif @ducking_opponents.present? %>
-                <ul class="mt-4 space-y-4">
-                  <% @ducking_opponents.each do |entry| %>
-                    <li class="flex items-start justify-between gap-4">
-                      <div>
-                        <div class="text-base font-semibold text-white">
-                          <%= link_to entry[:profile].username, profile_path(entry[:profile]), class: "hover:text-pink-400 transition-colors" %>
+                <ul class="mt-6 grid grid-cols-1 gap-4">
+                  <% @ducking_opponents.each_with_index do |entry, index| %>
+                    <li class="group relative overflow-hidden rounded-2xl border border-purple-500/15 bg-slate-900/60 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-purple-400/40 hover:shadow-lg hover:shadow-purple-500/20">
+                      <div class="pointer-events-none absolute -left-16 -bottom-24 h-40 w-40 rounded-full bg-gradient-to-br from-blue-500/10 via-purple-500/20 to-transparent blur-3xl opacity-0 transition-opacity duration-300 group-hover:opacity-80"></div>
+
+                      <div class="relative flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+                        <div class="flex items-start gap-4">
+                          <div class="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-500 text-base font-semibold text-white shadow-lg shadow-purple-500/20">
+                            <%= index + 1 %>
+                          </div>
+                          <div>
+                            <div class="flex items-center gap-2">
+                              <%= link_to entry[:profile].username, profile_path(entry[:profile]), class: "text-lg font-semibold text-white transition-colors hover:text-purple-300" %>
+                              <span class="rounded-full border border-purple-500/30 bg-purple-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-purple-200">Challenger</span>
+                            </div>
+                            <p class="mt-1 text-xs text-slate-400">These players are itching for a match—don't keep them waiting.</p>
+                            <%= render "organizations/matchup_insight_stats", entry: entry %>
+                          </div>
                         </div>
-                        <%= render "organizations/matchup_insight_stats", entry: entry %>
-                      </div>
-                      <div class="flex-shrink-0">
-                        <%= link_to new_match_path(opponent_profile_id: entry[:profile].id, return_to_organization_id: @organization.id),
-                                    class: "inline-flex items-center px-3 py-1.5 rounded-lg bg-slate-700 text-white text-xs font-medium hover:bg-slate-600 transition-all" do %>
-                          <i class="fas fa-bolt mr-2"></i> Challenge
-                        <% end %>
+
+                        <div class="flex flex-col gap-2 md:items-end">
+                          <%= link_to new_match_path(opponent_profile_id: entry[:profile].id, return_to_organization_id: @organization.id),
+                                      class: "inline-flex items-center justify-center gap-2 rounded-xl bg-slate-800/80 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-slate-900/40 transition-all hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-purple-400/60 focus:ring-offset-2 focus:ring-offset-slate-900" do %>
+                            <i class="fas fa-bolt text-[13px]"></i>
+                            Issue Challenge
+                          <% end %>
+                        </div>
                       </div>
                     </li>
                   <% end %>
