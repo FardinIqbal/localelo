@@ -23,6 +23,11 @@ class DashboardController < ApplicationController
                              .order(created_at: :desc)
     @profiles = @profiles.where(organization_id: @scoped_organization.id) if @scoped_organization
 
+    @approved_profile_ids = current_user.profiles
+                                        .joins(:organization_membership)
+                                        .merge(OrganizationMembership.approved)
+                                        .ids
+
     @profile = if params[:profile_id].present?
                  @profiles.find_by(id: params[:profile_id])
                end
@@ -101,7 +106,7 @@ class DashboardController < ApplicationController
     ranking_profile_ids = if @scoped_organization
                             profile_ids
                           else
-                            profile_ids.presence || @user.profile_ids
+                            profile_ids.presence || @approved_profile_ids
                           end
 
     @user_rankings = LeaderboardRating.joins(:profile, :leaderboard)
