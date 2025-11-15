@@ -1,0 +1,16 @@
+<%
+  link_classes = local_assigns[:class] || ""
+  disabled_classes = local_assigns[:disabled_class] || link_classes
+  sr_label = local_assigns[:sr_label] || t('views.pagination.previous')
+%>
+<% if current_page.first? %>
+  <span class="<%= disabled_classes %>" aria-disabled="true">
+    <span class="sr-only"><%= sr_label %></span>
+    <i class="fas fa-chevron-left opacity-60"></i>
+  </span>
+<% else %>
+  <%= link_to url, class: link_classes, rel: 'prev', remote: remote do %>
+    <span class="sr-only"><%= sr_label %></span>
+    <i class="fas fa-chevron-left"></i>
+  <% end %>
+<% end %>

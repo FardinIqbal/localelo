@@ -1,0 +1,7 @@
+<%
+  gap_classes = local_assigns[:class] || ""
+  gap_label = t('views.pagination.truncate', default: '…')
+%>
+<span class="<%= gap_classes %>" aria-hidden="true">
+  <span><%= gap_label %></span>
+</span>
