@@ -69,11 +69,9 @@ class Match < ApplicationRecord
   enum status: { active: 0, invalidated: 1 }, _default: :active
 
   # == Callbacks ==
-  after_create :adjust_ratings
-  after_create :record_elo_history
 
   # == Scopes ==
-  scope :recent, -> { active.order(created_at: :desc) }
+  scope :recent, -> { order(created_at: :desc) }
   scope :by_leaderboard, ->(leaderboard_id) { active.where(leaderboard_id: leaderboard_id) }
   scope :involving_profile, ->(profile_id) { joins(:match_participants).active.where(match_participants: { profile_id: profile_id }).distinct }
   scope :involving_profiles, lambda { |profile_ids|
@@ -91,10 +89,6 @@ class Match < ApplicationRecord
   }
   scope :recent_by_profile, ->(profile_id) { involving_profile(profile_id).recent.limit(10) }
   scope :by_date_range, ->(start_date, end_date) { active.where(created_at: start_date..end_date) }
-
-  # == Constants ==
-  K_FACTOR = 32
-  DEFAULT_RATING = 1500
 
   # == Class Methods ==
 
@@ -131,57 +125,17 @@ class Match < ApplicationRecord
     winner_profile_id == profile_id
   end
 
-  # Returns the Elo rating change for the winner
-  # Returns nil for draws or if Elo history is not available
-  def elo_change
-    return nil if is_draw?
-
-    participant = winner_participant
-    return nil unless participant&.elo_before_match && participant.elo_after_match
-
-    participant.elo_after_match - participant.elo_before_match
-  end
-
   def invalidate!
     raise StandardError, "Match #{id} is already invalidated" if invalidated?
+    # With Glicko-2, reverting ratings is complex as it would require recalculating the entire rating period.
+    # For now, we will just mark the match as invalidated.
+    # A more complete solution could involve a new rating period calculation excluding the invalidated match.
+    update!(status: :invalidated)
+  end
 
-    ActiveRecord::Base.transaction do
-      ratings = leaderboard.leaderboard_ratings.where(profile_id: participant_profile_ids).index_by(&:profile_id)
-      ratings.values.each(&:lock!)
-
-      if is_draw?
-        ensure_draws_can_be_reverted!(*ratings.values)
-        ratings.each_value { |rating| rating.update!(draws: rating.draws - 1) }
-      else
-        change = elo_change
-        raise StandardError, "Match #{id} has no elo_change to revert" if change.nil?
-
-        winner_rating = ratings.fetch(winner_profile_id)
-        loser_rating = ratings.except(winner_profile_id).values.first
-
-        raise StandardError, "Winner rating wins cannot be negative" if winner_rating.wins <= 0
-        raise StandardError, "Loser rating losses cannot be negative" if loser_rating.losses <= 0
-
-        winner_rating.update!(
-          rating: winner_rating.rating - change,
-          wins: winner_rating.wins - 1
-        )
-        loser_rating.update!(
-          rating: loser_rating.rating + change,
-          losses: loser_rating.losses - 1
-        )
-      end
-
-      EloHistory.where(match_id: id).destroy_all
-
-      match_participants.update_all(elo_before_match: nil, elo_after_match: nil)
-
-      update!(status: :invalidated)
-    end
-  rescue => e
-    Rails.logger.error "Failed to invalidate match #{id}: #{e.message}"
-    Rails.logger.error e.backtrace.join("\n")
-    raise
+  def elo_change_for_user(user)
+    participant = match_participants.find { |p| p.profile.user_id == user.id }
+    participant&.elo_change&.round
   end
 
   private
@@ -261,133 +215,6 @@ class Match < ApplicationRecord
   def sync_winner_from_participants
     winner = active_participants.find(&:winner?)
     self.winner_profile = winner&.profile if winner && winner_profile_id.blank?
-  end
-
-  # Performs Elo adjustments for each match
-  def adjust_ratings
-    participants = match_participants.includes(:profile).to_a
-    ratings_by_profile = {}
-
-    participants.each do |participant|
-      ratings_by_profile[participant.profile_id] = leaderboard.leaderboard_ratings.find_or_create_by(profile: participant.profile) do |r|
-        r.rating = DEFAULT_RATING
-        r.wins = 0
-        r.losses = 0
-        r.draws = 0
-      end
-    end
-
-    before_ratings = ratings_by_profile.transform_values(&:rating)
-
-    if is_draw?
-      ActiveRecord::Base.transaction do
-        participants.each do |participant|
-          rating = ratings_by_profile.fetch(participant.profile_id)
-          participant.update!(
-            elo_before_match: before_ratings[participant.profile_id],
-            elo_after_match: before_ratings[participant.profile_id]
-          )
-          rating.increment!(:draws)
-        end
-      end
-
-      log_draw_match(participants, before_ratings)
-      return
-    end
-
-    winner_rating = ratings_by_profile.fetch(winner_profile_id)
-    loser_participant = participants.find { |participant| participant.profile_id != winner_profile_id }
-    raise StandardError, "Match #{id} must include a losing participant" unless loser_participant
-    loser_rating = ratings_by_profile.fetch(loser_participant.profile_id)
-
-    change = calculate_elo_change(before_ratings.fetch(winner_profile_id), before_ratings.fetch(loser_participant.profile_id))
-
-    ActiveRecord::Base.transaction do
-      update_ratings(winner_rating, loser_rating, change)
-
-      participants.each do |participant|
-        rating = ratings_by_profile.fetch(participant.profile_id)
-        participant.update!(
-          elo_before_match: before_ratings[participant.profile_id],
-          elo_after_match: rating.rating
-        )
-      end
-    end
-
-    log_rating_changes(participants, change)
-  rescue => e
-    Rails.logger.error "Elo adjustment failed for match #{id}: #{e.message}"
-    Rails.logger.error e.backtrace.join("\n")
-  end
-
-  # Log draw match with no rating changes
-  def log_draw_match(participants, before_ratings)
-    log_data = {
-      match_id: id,
-      leaderboard_id: leaderboard_id,
-      leaderboard_name: leaderboard.name,
-      participants: participants.map do |participant|
-        {
-          profile_id: participant.profile_id,
-          user_id: participant.profile.user_id,
-          username: participant.profile.username,
-          rating: before_ratings.fetch(participant.profile_id)
-        }
-      end,
-      result: "Draw",
-      elo_change: 0,
-      timestamp: Time.current.iso8601
-    }
-
-    Rails.logger.info "MATCH_RESULT: #{log_data.to_json}"
-  end
-
-  def calculate_elo_change(winner_before_rating, loser_before_rating)
-    expected_score = 1.0 / (1.0 + 10**((loser_before_rating - winner_before_rating) / 400.0))
-    (K_FACTOR * (1 - expected_score)).round
-  end
-
-  def update_ratings(winner_rating, loser_rating, change)
-    winner_rating.increment!(:wins)
-    loser_rating.increment!(:losses)
-
-    winner_rating.update!(rating: winner_rating.rating + change)
-    loser_rating.update!(rating: loser_rating.rating - change)
-  end
-
-  def log_rating_changes(participants, change)
-    log_data = {
-      match_id: id,
-      leaderboard_id: leaderboard_id,
-      leaderboard_name: leaderboard.name,
-      participants: participants.map do |participant|
-        {
-          profile_id: participant.profile_id,
-          user_id: participant.profile.user_id,
-          username: participant.profile.username,
-          old_rating: participant.elo_before_match,
-          new_rating: participant.elo_after_match,
-          winner: participant.winner?
-        }
-      end,
-      result: winner_profile&.username,
-      elo_change: change,
-      timestamp: Time.current.iso8601
-    }
-
-    Rails.logger.info "MATCH_RESULT: #{log_data.to_json}"
-  end
-
-  def record_elo_history
-    match_participants.includes(:profile).find_each do |participant|
-      EloHistory.create!(
-        profile: participant.profile,
-        leaderboard: leaderboard,
-        match: self,
-        elo: participant.elo_after_match || DEFAULT_RATING,
-        recorded_at: created_at
-      )
-    end
   end
 
   def primary_participant

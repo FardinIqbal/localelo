@@ -7,12 +7,13 @@ FactoryBot.define do
 
     # Default values
     status { :approved } # Use symbol instead of integer for better readability
-    admin { false }
 
     # == Traits ==
     # Admin membership
     trait :admin do
-      admin { true }
+      after(:create) do |membership|
+        create(:organization_role, organization_membership: membership, organization: membership.organization, admin: true)
+      end
     end
 
     # Pending membership request
@@ -27,12 +28,6 @@ FactoryBot.define do
 
     # Active member (alias for default)
     trait :active do
-      status { :approved }
-    end
-
-    # Admin and approved in one trait
-    trait :admin_approved do
-      admin { true }
       status { :approved }
     end
   end
