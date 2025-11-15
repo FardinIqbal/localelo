@@ -77,3 +77,6 @@ gem "tailwindcss-rails", "~> 4.1"
 gem "kaminari", "~> 1.2"
 # Soft delete
 gem "discard"
+
+# Glicko2 rating system
+gem "glicko2"

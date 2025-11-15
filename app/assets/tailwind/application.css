@@ -1,1 +1,8 @@
 @import "tailwindcss";
+
+@variant dark (.dark *);
+
+@theme {
+  /* Optional: Set default color scheme */
+  --color-scheme: dark light;
+}

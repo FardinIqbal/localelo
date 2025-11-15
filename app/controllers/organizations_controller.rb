@@ -410,7 +410,6 @@ class OrganizationsController < ApplicationController
 
     organization.leaderboards.each do |leaderboard|
       leaderboard.leaderboard_ratings.find_or_create_by(profile: profile) do |rating|
-        rating.rating = 1500 # Default ELO rating
         rating.wins = 0
         rating.losses = 0
       end

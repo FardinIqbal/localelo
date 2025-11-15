@@ -12,24 +12,24 @@
       <h1 class="font-extrabold text-4xl md:text-5xl bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-3">
         Find an Organization
       </h1>
-      <p class="text-slate-400 text-lg">
+      <p class="text-slate-600 dark:text-slate-400 text-lg">
         Browse organizations and request to join private ones or instantly join public ones.
       </p>
     </div>
 
     <!-- Search & Filter Bar -->
-    <div class="bg-slate-800/80 backdrop-blur-xl rounded-xl border border-slate-700 p-6 mb-8 transition-all duration-300 hover:border-purple-500/30">
+    <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl border border-slate-200 dark:border-slate-700 p-6 mb-8 transition-all duration-300 hover:border-purple-500/30">
       <div class="flex flex-col md:flex-row gap-4">
         <!-- Search Input -->
         <div class="relative flex-grow">
           <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <i class="fas fa-search text-slate-400"></i>
+            <i class="fas fa-search text-slate-500 dark:text-slate-400"></i>
           </div>
           <input
             type="text"
             id="search"
             placeholder="Search organizations..."
-            class="w-full px-4 py-3 pl-11 bg-slate-900/70 border-2 border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200"
+            class="w-full px-4 py-3 pl-11 bg-slate-50 dark:bg-slate-900/70 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200"
             onkeyup="filterOrganizations()"
           >
         </div>
@@ -37,19 +37,19 @@
         <!-- Filter by Visibility -->
         <div class="relative min-w-[200px]">
           <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <i class="fas fa-filter text-slate-400"></i>
+            <i class="fas fa-filter text-slate-500 dark:text-slate-400"></i>
           </div>
           <select
             id="visibility-filter"
             onchange="filterOrganizations()"
-            class="w-full px-4 py-3 pl-11 pr-10 bg-slate-900/70 border-2 border-slate-700 rounded-lg text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 appearance-none transition-all duration-200"
+            class="w-full px-4 py-3 pl-11 pr-10 bg-slate-50 dark:bg-slate-900/70 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 appearance-none transition-all duration-200"
           >
             <option value="">All Organizations</option>
             <option value="open">Public</option>
             <option value="restricted">Private</option>
           </select>
           <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-            <i class="fas fa-chevron-down text-slate-400 text-xs"></i>
+            <i class="fas fa-chevron-down text-slate-500 dark:text-slate-400 text-xs"></i>
           </div>
         </div>
 
@@ -63,21 +63,21 @@
     </div>
 
     <!-- Organizations Grid -->
-    <div class="bg-slate-800/80 backdrop-blur-xl rounded-xl border border-slate-700 p-6 transition-all duration-300 hover:border-purple-500/30">
-      <h2 class="text-2xl font-bold text-white mb-6">Available Organizations</h2>
+    <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl border border-slate-200 dark:border-slate-700 p-6 transition-all duration-300 hover:border-purple-500/30">
+      <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-6">Available Organizations</h2>
 
       <% if @organizations.present? %>
         <div id="organizations-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <% @organizations.each do |organization| %>
-            <div class="organization-item group bg-slate-900/70 rounded-xl border border-slate-700 shadow-lg overflow-hidden hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-300 hover:-translate-y-1 hover:border-purple-500/50"
+            <div class="organization-item group bg-white dark:bg-slate-900/70 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg overflow-hidden hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-300 hover:-translate-y-1 hover:border-purple-500/50"
                  data-name="<%= organization.name.downcase %>"
                  data-location="<%= organization.location&.downcase || '' %>"
                  data-visibility="<%= organization.visibility %>">
 
               <!-- Card Header with Background -->
-              <div class="h-32 bg-gradient-to-r from-indigo-900/50 to-purple-900/50 flex items-center justify-center relative overflow-hidden">
+              <div class="h-32 bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-900/50 dark:to-purple-900/50 flex items-center justify-center relative overflow-hidden">
                 <% if organization.name.present? %>
-                  <div class="text-6xl font-bold text-white/10 absolute inset-0 flex items-center justify-center">
+                  <div class="text-6xl font-bold text-slate-900/10 dark:text-white/10 absolute inset-0 flex items-center justify-center">
                     <%= organization.name.first.upcase %>
                   </div>
                 <% end %>
@@ -97,7 +97,7 @@
 
                 <!-- Location Badge -->
                 <% if organization.location.present? %>
-                  <div class="absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur-sm rounded-md px-2 py-1 text-xs text-slate-300 flex items-center">
+                  <div class="absolute bottom-3 left-3 bg-white/90 dark:bg-slate-900/80 backdrop-blur-sm rounded-md px-2 py-1 text-xs text-slate-700 dark:text-slate-300 flex items-center">
                     <i class="fas fa-map-marker-alt mr-1.5 text-pink-500"></i>
                     <%= organization.location %>
                   </div>
@@ -106,25 +106,25 @@
 
               <!-- Card Content -->
               <div class="p-5">
-                <h3 class="text-xl font-bold text-white group-hover:text-pink-500 transition-colors duration-300 mb-2">
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white group-hover:text-pink-500 transition-colors duration-300 mb-2">
                   <%= organization.name %>
                 </h3>
 
                 <% if organization.description.present? %>
-                  <p class="text-slate-400 text-sm mb-4 line-clamp-2">
+                  <p class="text-slate-600 dark:text-slate-400 text-sm mb-4 line-clamp-2">
                     <%= organization.description %>
                   </p>
                 <% end %>
 
                 <!-- Stats Row -->
                 <div class="flex items-center justify-between mb-4">
-                  <div class="flex items-center text-slate-400 text-sm">
-                    <i class="fas fa-users mr-1.5 text-indigo-400"></i>
+                  <div class="flex items-center text-slate-600 dark:text-slate-400 text-sm">
+                    <i class="fas fa-users mr-1.5 text-indigo-500 dark:text-indigo-400"></i>
                     <%= organization.organization_memberships.count %> members
                   </div>
 
-                  <div class="flex items-center text-slate-400 text-sm">
-                    <i class="fas fa-trophy mr-1.5 text-indigo-400"></i>
+                  <div class="flex items-center text-slate-600 dark:text-slate-400 text-sm">
+                    <i class="fas fa-trophy mr-1.5 text-indigo-500 dark:text-indigo-400"></i>
                     <%= organization.leaderboards.count %> leaderboards
                   </div>
                 </div>
@@ -150,19 +150,19 @@
 
         <!-- No Results Message (Hidden by Default) -->
         <div id="no-results" class="py-12 text-center hidden">
-          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-800/80 text-slate-400 mb-4">
+          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 mb-4">
             <i class="fas fa-search text-2xl"></i>
           </div>
-          <p class="text-slate-400">No organizations found matching your search.</p>
+          <p class="text-slate-600 dark:text-slate-400">No organizations found matching your search.</p>
         </div>
       <% else %>
         <!-- Empty State -->
         <div class="py-12 text-center">
-          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-800/80 text-slate-400 mb-4">
+          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 mb-4">
             <i class="fas fa-dumbbell text-2xl"></i>
           </div>
-          <p class="text-slate-400 mb-4">No organizations available yet.</p>
-          <p class="text-slate-500 mb-6">Be the first to create a gym or fitness club!</p>
+          <p class="text-slate-600 dark:text-slate-400 mb-4">No organizations available yet.</p>
+          <p class="text-slate-500 dark:text-slate-500 mb-6">Be the first to create a gym or fitness club!</p>
           <%= link_to new_organization_path,
                       class: "inline-flex items-center justify-center font-medium rounded-xl transition-all duration-300 px-5 py-3
                       text-white bg-gradient-to-r from-purple-600 to-pink-500

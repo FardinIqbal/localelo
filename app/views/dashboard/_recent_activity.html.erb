@@ -12,7 +12,7 @@
               data-action="toggle#switch"
               data-toggle-target="all"
               aria-selected="<%= params[:view] != 'mine' %>"
-              class="px-4 py-2 rounded-lg <%= params[:view] != 'mine' ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium' : 'bg-slate-700 text-slate-300' %> hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+              class="px-4 py-2 rounded-lg <%= params[:view] != 'mine' ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300' %> hover:shadow-lg transition-all transform hover:-translate-y-0.5">
         <i class="fas fa-globe mr-2"></i> <%= t("dashboard.recent_activity.all") %>
       </button>
 
@@ -20,14 +20,14 @@
               data-action="toggle#switch"
               data-toggle-target="mine"
               aria-selected="<%= params[:view] == 'mine' %>"
-              class="px-4 py-2 rounded-lg <%= params[:view] == 'mine' ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium' : 'bg-slate-700 text-slate-300' %> hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+              class="px-4 py-2 rounded-lg <%= params[:view] == 'mine' ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300' %> hover:shadow-lg transition-all transform hover:-translate-y-0.5">
         <i class="fas fa-user mr-2"></i> <%= t("dashboard.recent_activity.mine") %>
       </button>
       </div>
 
       <!-- View All Link -->
       <%= link_to matches_path,
-                  class: "px-3 py-1 rounded-lg bg-slate-700 text-purple-400 text-sm hover:bg-slate-600 transition-all transform hover:-translate-y-0.5" do %>
+                  class: "px-3 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 text-purple-500 dark:text-purple-400 text-sm hover:bg-slate-300 dark:hover:bg-slate-600 transition-all transform hover:-translate-y-0.5" do %>
         View All <i class="fas fa-arrow-right ml-1"></i>
       <% end %>
     </div>
@@ -47,9 +47,9 @@
         <% end %>
       </div>
     <% else %>
-      <div class="flex flex-col items-center justify-center py-10 text-slate-400">
-        <div class="w-20 h-20 rounded-full bg-slate-800/70 flex items-center justify-center mb-4">
-          <i class="fas fa-trophy text-3xl text-purple-400/70"></i>
+      <div class="flex flex-col items-center justify-center py-10 text-slate-500 dark:text-slate-400">
+        <div class="w-20 h-20 rounded-full bg-slate-100 dark:bg-slate-800/70 flex items-center justify-center mb-4">
+          <i class="fas fa-trophy text-3xl text-purple-500/70 dark:text-purple-400/70"></i>
         </div>
         <p class="text-lg"><%= t("dashboard.empty_states.no_matches") %></p>
 

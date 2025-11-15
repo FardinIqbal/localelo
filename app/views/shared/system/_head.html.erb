@@ -4,6 +4,9 @@
 <%= csrf_meta_tags %>
 <%= csp_meta_tag %>
 
+<%# Inline script to set theme and avoid FOUC %>
+<%= render 'shared/system/theme_script' %>
+
 <!-- Tailwind CSS -->
 <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
 

@@ -4,7 +4,12 @@
       "Bash(ruby -c:*)",
       "Bash(rails routes:*)",
       "Bash(bundle exec rails runner:*)",
-      "Bash(rails runner:*)"
+      "Bash(rails runner:*)",
+      "Bash(npm run build:*)",
+      "Bash(cat:*)",
+      "Bash(rails assets:precompile:*)",
+      "Bash(bin/rails importmap:pin:*)",
+      "Bash(rails tailwindcss:build)"
     ],
     "deny": [],
     "ask": []

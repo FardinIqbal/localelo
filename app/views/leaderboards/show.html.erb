@@ -65,16 +65,16 @@
         <% avg = @leaderboard.leaderboard_ratings.average(:rating)&.round || 1500 %>
         <div class="text-2xl font-bold text-white mt-1"><%= avg %></div>
         <div class="mt-2 text-xs text-purple-400">
-          <i class="fas fa-chart-line mr-1"></i> Mean Elo
+          <i class="fas fa-chart-line mr-1"></i> Mean Rating
         </div>
       </div>
 
       <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
         <div class="text-sm text-slate-400">Top Rating</div>
-        <% top = @leaderboard.leaderboard_ratings.maximum(:rating) || 1500 %>
+        <% top = @leaderboard.leaderboard_ratings.maximum(:rating)&.round || 1500 %>
         <div class="text-2xl font-bold text-white mt-1"><%= top %></div>
         <div class="mt-2 text-xs text-pink-400">
-          <i class="fas fa-trophy mr-1"></i> Highest Elo
+          <i class="fas fa-trophy mr-1"></i> Highest Rating
         </div>
       </div>
     </div>
@@ -137,7 +137,10 @@
                     </div>
                   </div>
                 </td>
-                <td class="p-4 text-center font-bold text-lg text-purple-400"><%= rating.rating %></td>
+                <td class="p-4 text-center">
+                  <div class="font-bold text-lg text-purple-400"><%= rating.rating.round %></div>
+                  <div class="text-xs text-slate-400">±<%= rating.rating_deviation.round %></div>
+                </td>
                 <td class="p-4 text-center text-green-400"><%= rating.wins %></td>
                 <td class="p-4 text-center text-red-400"><%= rating.losses %></td>
                 <td class="p-4 text-center">

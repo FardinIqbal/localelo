@@ -6,7 +6,9 @@ class LeaderboardRating < ApplicationRecord
   validates :profile, presence: true
   validates :leaderboard, presence: true
   validates :profile_id, uniqueness: { scope: :leaderboard_id }
-  validates :rating, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
+  validates :rating, numericality: { greater_than_or_equal_to: 0 }
+  validates :rating_deviation, numericality: { greater_than_or_equal_to: 0 }
+  validates :volatility, numericality: { greater_than_or_equal_to: 0 }
   validates :wins, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :losses, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :draws, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
@@ -19,6 +21,8 @@ class LeaderboardRating < ApplicationRecord
     self.wins ||= 0
     self.losses ||= 0
     self.draws ||= 0
-    self.rating ||= 1500  # Standard starting Elo rating
+    self.rating ||= 1500.0
+    self.rating_deviation ||= 350.0
+    self.volatility ||= 0.06
   end
 end
