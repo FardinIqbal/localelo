@@ -152,8 +152,21 @@ class Organization < ApplicationRecord
 
   # Get active users (users who have played matches)
   def active_users
-    profile_ids = matches.joins(:match_participants).pluck('match_participants.profile_id').uniq
+    profile_ids = matches
+                    .active
+                    .joins(:match_participants)
+                    .distinct
+                    .pluck('match_participants.profile_id')
     Profile.where(id: profile_ids).includes(:user).map(&:user).compact
+  end
+
+  # Count of distinct profiles who have played an active match in this organization
+  def active_member_count
+    matches
+      .active
+      .joins(:match_participants)
+      .distinct
+      .count('match_participants.profile_id')
   end
 
   private

@@ -37,6 +37,11 @@ class Match < ApplicationRecord
     winner_profile&.user
   end
 
+  def participant_for(profile_or_id)
+    profile_id = profile_or_id.respond_to?(:id) ? profile_or_id.id : profile_or_id
+    match_participants.find { |participant| participant.profile_id == profile_id }
+  end
+
   def profile1_id
     profile1&.id
   end
