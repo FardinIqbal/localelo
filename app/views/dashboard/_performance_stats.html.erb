@@ -2,9 +2,9 @@
 <% profile ||= nil %>
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
   <!-- Total Matches -->
-  <div class="bg-slate-800/80 backdrop-blur-xl rounded-xl p-5 border border-slate-700 hover:border-purple-500/50 transition-all duration-300 group">
-    <div class="text-sm font-medium text-slate-400 mb-1">Total Matches</div>
-    <div class="text-3xl font-bold text-white mt-2 mb-3 group-hover:text-purple-400 transition-colors duration-300">
+  <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl p-5 border border-slate-200 dark:border-slate-700 hover:border-purple-500/50 transition-all duration-300 group">
+    <div class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Total Matches</div>
+    <div class="text-3xl font-bold text-slate-900 dark:text-white mt-2 mb-3 group-hover:text-purple-500 dark:group-hover:text-purple-400 transition-colors duration-300">
       <%= stats[:total_matches] || 0 %>
     </div>
     <div class="text-xs text-purple-400 flex items-center">
@@ -15,9 +15,9 @@
 
   <!-- Win/Loss Ratio -->
   <% if @scoped_organization %>
-    <div class="bg-slate-800/80 backdrop-blur-xl rounded-xl p-5 border border-slate-700 hover:border-purple-500/50 transition-all duration-300 group">
-      <div class="text-sm font-medium text-slate-400 mb-1">Win/Loss Ratio</div>
-      <div class="text-3xl font-bold text-white mt-2 mb-3 group-hover:text-pink-400 transition-colors duration-300">
+    <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl p-5 border border-slate-200 dark:border-slate-700 hover:border-purple-500/50 transition-all duration-300 group">
+      <div class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Win/Loss Ratio</div>
+      <div class="text-3xl font-bold text-slate-900 dark:text-white mt-2 mb-3 group-hover:text-pink-500 dark:group-hover:text-pink-400 transition-colors duration-300">
         <%= stats[:win_loss_ratio] || "0.0" %>
       </div>
       <div class="text-xs text-pink-400 flex items-center">
@@ -29,9 +29,9 @@
 
   <!-- Highest Elo -->
   <% if @scoped_organization %>
-    <div class="bg-slate-800/80 backdrop-blur-xl rounded-xl p-5 border border-slate-700 hover:border-purple-500/50 transition-all duration-300 group">
-      <div class="text-sm font-medium text-slate-400 mb-1">Highest Elo</div>
-      <div class="text-3xl font-bold text-white mt-2 mb-3 group-hover:text-purple-400 transition-colors duration-300">
+    <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl p-5 border border-slate-200 dark:border-slate-700 hover:border-purple-500/50 transition-all duration-300 group">
+      <div class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Highest Elo</div>
+      <div class="text-3xl font-bold text-slate-900 dark:text-white mt-2 mb-3 group-hover:text-purple-500 dark:group-hover:text-purple-400 transition-colors duration-300">
         <%= stats[:highest_elo] || 1500 %>
       </div>
       <div class="text-xs text-purple-400 flex items-center">
@@ -43,9 +43,9 @@
 
   <!-- Average Elo -->
   <% if @scoped_organization %>
-    <div class="bg-slate-800/80 backdrop-blur-xl rounded-xl p-5 border border-slate-700 hover:border-purple-500/50 transition-all duration-300 group">
-      <div class="text-sm font-medium text-slate-400 mb-1">Average Elo</div>
-      <div class="text-3xl font-bold text-white mt-2 mb-3 group-hover:text-pink-400 transition-colors duration-300">
+    <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl p-5 border border-slate-200 dark:border-slate-700 hover:border-purple-500/50 transition-all duration-300 group">
+      <div class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Average Elo</div>
+      <div class="text-3xl font-bold text-slate-900 dark:text-white mt-2 mb-3 group-hover:text-pink-500 dark:group-hover:text-pink-400 transition-colors duration-300">
         <%= stats[:average_elo] || 1500 %>
       </div>
       <div class="text-xs text-pink-400 flex items-center">

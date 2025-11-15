@@ -12,6 +12,7 @@ import MobileMenuController from "./mobile_menu_controller"
 import ProfileDropdownController from "./profile_dropdown_controller"
 import DropdownController from "./dropdown_controller"
 import ContextSwitcherController from "./context_switcher_controller"
+import ThemeController from "./theme_controller"
 
 // === Dashboard / Stats Controllers ===
 import GreetingController from "./greeting_controller"
@@ -34,6 +35,7 @@ application.register("mobile-menu", MobileMenuController)
 application.register("profile-dropdown", ProfileDropdownController)
 application.register("dropdown", DropdownController)
 application.register("context-switcher", ContextSwitcherController)
+application.register("theme", ThemeController)
 
 // Register dashboard-specific controllers
 application.register("greeting", GreetingController)

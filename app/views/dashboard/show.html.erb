@@ -3,7 +3,7 @@
      integrated and enhanced using design from the older dashboard.
 -->
 
-<div class="relative min-h-screen text-white">
+<div class="relative min-h-screen text-slate-900 dark:text-white">
 
   <!-- Decorative Background Elements -->
   <div class="absolute -top-20 -right-20 w-96 h-96 bg-purple-600/10 rounded-full filter blur-3xl animate-pulse z-0 pointer-events-none"></div>
@@ -19,15 +19,15 @@
     <%= render "dashboard/quick_actions", profile: @profile %>
 
     <!-- Context Switcher -->
-    <div class="bg-slate-800/80 backdrop-blur-xl rounded-xl border border-slate-700 px-6 py-5 transition-all duration-300 hover:border-purple-500/30">
-      <label for="dashboard-organization-selector" class="block text-sm font-semibold text-slate-300 uppercase tracking-wide mb-3">
+    <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl border border-slate-200 dark:border-slate-700 px-6 py-5 transition-all duration-300 hover:border-purple-500/30">
+      <label for="dashboard-organization-selector" class="block text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wide mb-3">
         Viewing Dashboard For:
       </label>
       <select id="dashboard-organization-selector"
               name="organization"
               data-controller="context-switcher"
               data-action="change->context-switcher#switch"
-              class="w-full px-4 py-3 bg-slate-900/70 border-2 border-slate-700 rounded-lg text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200">
+              class="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900/70 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200">
         <option value="all">All Organizations</option>
         <% @selectable_organizations.each do |org| %>
           <option value="<%= org.id %>"><%= org.name %></option>
@@ -39,22 +39,22 @@
     <%= render "dashboard/performance_stats", profile: @profile, stats: @profile_stats %>
 
     <!-- My Organizations -->
-    <div class="bg-slate-800/80 backdrop-blur-xl rounded-xl border border-slate-700 transition-all duration-300 hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/10">
+    <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl border border-slate-200 dark:border-slate-700 transition-all duration-300 hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/10">
       <%= render "dashboard/my_organizations", profiles: @profiles %>
     </div>
 
     <!-- Recent Activity Toggle + Match Feed -->
-    <div class="bg-slate-800/80 backdrop-blur-xl rounded-xl border border-slate-700 transition-all duration-300 hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/10">
+    <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl border border-slate-200 dark:border-slate-700 transition-all duration-300 hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/10">
       <%= render "dashboard/recent_activity", profile: @profile, matches_all: @recent_matches_all, matches_mine: @recent_matches_mine %>
     </div>
 
     <!-- Leaderboard Spotlight -->
-    <div class="bg-slate-800/80 backdrop-blur-xl rounded-xl border border-slate-700 transition-all duration-300 hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/10">
+    <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl border border-slate-200 dark:border-slate-700 transition-all duration-300 hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/10">
       <%= render "dashboard/leaderboard_spotlight" %>
     </div>
 
     <!-- Roadmap / Teaser -->
-    <div class="bg-slate-800/80 backdrop-blur-xl rounded-xl border border-slate-700 transition-all duration-300 hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/10">
+    <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl border border-slate-200 dark:border-slate-700 transition-all duration-300 hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/10">
       <%= render "dashboard/roadmap_teaser" %>
     </div>
 

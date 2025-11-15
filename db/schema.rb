@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_12_02_000001) do
+ActiveRecord::Schema[7.1].define(version: 2025_12_02_000007) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -42,26 +42,18 @@ ActiveRecord::Schema[7.1].define(version: 2025_12_02_000001) do
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
-  create_table "elo_histories", force: :cascade do |t|
-    t.bigint "leaderboard_id", null: false
-    t.integer "elo", null: false
-    t.datetime "recorded_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.bigint "profile_id", null: false
-    t.bigint "match_id"
-    t.index ["match_id"], name: "index_elo_histories_on_match_id"
-    t.index ["profile_id", "leaderboard_id", "recorded_at"], name: "index_elo_history_on_profile_and_leaderboard"
-    t.index ["profile_id"], name: "index_elo_histories_on_profile_id"
-  end
-
   create_table "leaderboard_ratings", force: :cascade do |t|
     t.bigint "leaderboard_id", null: false
-    t.integer "rating", default: 1500, null: false
+    t.float "rating", default: 1500.0, null: false
     t.integer "wins", default: 0
     t.integer "losses", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "profile_id", null: false
     t.integer "draws", default: 0, null: false
+    t.float "rating_deviation", default: 350.0
+    t.float "volatility", default: 0.06
+    t.datetime "last_rated_at"
     t.index ["leaderboard_id", "rating"], name: "index_leaderboard_ratings_on_leaderboard_id_and_rating"
     t.index ["leaderboard_id"], name: "index_leaderboard_ratings_on_leaderboard_id"
     t.index ["profile_id", "leaderboard_id"], name: "index_leaderboard_ratings_on_profile_id_and_leaderboard_id", unique: true
@@ -82,11 +74,15 @@ ActiveRecord::Schema[7.1].define(version: 2025_12_02_000001) do
   create_table "match_participants", force: :cascade do |t|
     t.bigint "match_id", null: false
     t.bigint "profile_id", null: false
-    t.integer "elo_before_match"
-    t.integer "elo_after_match"
     t.boolean "is_winner", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.float "rating_before_match"
+    t.float "rating_deviation_before_match"
+    t.float "volatility_before_match"
+    t.float "rating_after_match"
+    t.float "rating_deviation_after_match"
+    t.float "volatility_after_match"
     t.index ["match_id", "profile_id"], name: "index_match_participants_on_match_id_and_profile_id", unique: true
     t.index ["match_id"], name: "index_match_participants_on_match_id"
     t.index ["profile_id"], name: "index_match_participants_on_profile_id"
@@ -100,6 +96,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_12_02_000001) do
     t.boolean "is_draw", default: false, null: false
     t.bigint "winner_profile_id"
     t.integer "status", default: 0, null: false
+    t.datetime "rated_at"
     t.index ["leaderboard_id"], name: "index_matches_on_leaderboard_id"
     t.index ["match_time"], name: "index_matches_on_match_time"
     t.index ["status"], name: "index_matches_on_status"
@@ -158,6 +155,20 @@ ActiveRecord::Schema[7.1].define(version: 2025_12_02_000001) do
     t.index ["user_id"], name: "index_profiles_on_user_id"
   end
 
+  create_table "rating_histories", force: :cascade do |t|
+    t.bigint "profile_id", null: false
+    t.bigint "leaderboard_id", null: false
+    t.bigint "match_id", null: false
+    t.float "rating"
+    t.float "rating_deviation"
+    t.float "volatility"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["leaderboard_id"], name: "index_rating_histories_on_leaderboard_id"
+    t.index ["match_id"], name: "index_rating_histories_on_match_id"
+    t.index ["profile_id"], name: "index_rating_histories_on_profile_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -174,9 +185,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_12_02_000001) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
-  add_foreign_key "elo_histories", "leaderboards"
-  add_foreign_key "elo_histories", "matches"
-  add_foreign_key "elo_histories", "profiles"
   add_foreign_key "leaderboard_ratings", "leaderboards"
   add_foreign_key "leaderboard_ratings", "profiles"
   add_foreign_key "leaderboards", "organizations"
@@ -190,4 +198,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_12_02_000001) do
   add_foreign_key "organization_roles", "organizations"
   add_foreign_key "profiles", "organizations"
   add_foreign_key "profiles", "users"
+  add_foreign_key "rating_histories", "leaderboards"
+  add_foreign_key "rating_histories", "matches"
+  add_foreign_key "rating_histories", "profiles"
 end

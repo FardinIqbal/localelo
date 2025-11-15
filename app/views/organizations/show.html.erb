@@ -239,7 +239,10 @@
                     <div class="bg-slate-700/50 rounded-lg p-3 mb-4">
                       <div class="flex justify-between items-center">
                         <span class="text-sm text-slate-400">Your Rating</span>
-                        <span class="text-lg font-bold text-purple-400"><%= user_rating.rating %></span>
+                        <div>
+                          <span class="text-lg font-bold text-purple-400"><%= user_rating.rating.round %></span>
+                          <span class="text-xs text-slate-400">±<%= user_rating.rating_deviation.round %></span>
+                        </div>
                       </div>
                       <div class="flex justify-between items-center mt-1">
                         <span class="text-xs text-slate-400">Rank</span>
@@ -268,7 +271,7 @@
                           </div>
                           <span class="ml-2 text-sm text-white"><%= link_to rating.profile.username, profile_path(rating.profile), class: "hover:text-purple-300 transition-colors" %></span>
                         </div>
-                        <span class="text-sm font-medium text-purple-400"><%= rating.rating %></span>
+                        <span class="text-sm font-medium text-purple-400"><%= rating.rating.round %></span>
                       </div>
                     <% end %>
                   </div>
@@ -332,7 +335,7 @@
                 <th class="px-4 py-3">Status</th>
                 <th class="px-4 py-3">Joined</th>
                 <th class="px-4 py-3">Matches</th>
-                <th class="px-4 py-3">Highest Elo</th>
+                <th class="px-4 py-3">Highest Rating</th>
                 <% if @organization.admin?(current_user) %>
                   <th class="px-4 py-3">Role</th>
                   <th class="px-4 py-3">Actions</th>
@@ -371,9 +374,9 @@
                              .count %>
                   </td>
                   <td class="px-4 py-3 text-purple-400 font-medium">
-                    <%= LeaderboardRating.joins(:leaderboard)
+                    <%= (LeaderboardRating.joins(:leaderboard)
                                          .where(profile_id: membership.profile_id, leaderboards: { organization_id: @organization.id })
-                                         .maximum(:rating) || 1500 %>
+                                         .maximum(:rating) || 1500).round %>
                   </td>
                   <% if @organization.admin?(current_user) %>
                     <td class="px-4 py-3">
@@ -448,7 +451,6 @@
                 <th class="px-4 py-3">Players</th>
                 <th class="px-4 py-3">Leaderboard</th>
                 <th class="px-4 py-3">Result</th>
-                <th class="px-4 py-3">Elo Change</th>
                 <th class="px-4 py-3">Date</th>
                 <% if @organization.admin?(current_user) %>
                   <th class="px-4 py-3">Actions</th>
@@ -476,11 +478,6 @@
                     <% elsif match.winner_profile_id.present? %>
                       <span class="text-green-400"><%= match.winner_profile&.username %> won</span>
                     <% else %> <span class="text-slate-400">No result</span>
-                    <% end %> </td>
-                  <td class="px-4 py-3">
-                    <% if match.elo_change %>
-                      <span class="<%= match.elo_change > 0 ? 'text-green-400' : 'text-red-400' %>"> <%= match.elo_change > 0 ? '+' : '' %><%= match.elo_change %> </span>
-                    <% else %> <span class="text-slate-400">-</span>
                     <% end %> </td>
                   <td class="px-4 py-3 text-slate-400 text-sm"> <%= match.created_at.strftime("%b %d, %Y") %> </td>
                   <% if @organization.admin?(current_user) %>

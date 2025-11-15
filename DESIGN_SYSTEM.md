@@ -14,7 +14,9 @@ This document defines the design system for LocalElo - a modern, fast, and user-
 
 ## Color System
 
-### Base Colors (Backgrounds & Surfaces)
+### Dark Mode (Default)
+
+#### Base Colors (Backgrounds & Surfaces)
 ```
 Background Primary:   bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950
 Background Secondary: bg-slate-900
@@ -23,7 +25,7 @@ Surface Card:         bg-slate-800/70 backdrop-blur-sm
 Surface Input:        bg-slate-900/70
 ```
 
-### Text Colors
+#### Text Colors
 ```
 Text Primary:    text-white / text-slate-50
 Text Secondary:  text-slate-300
@@ -31,11 +33,45 @@ Text Muted:      text-slate-400
 Text Disabled:   text-slate-500
 ```
 
-### Border Colors
+#### Border Colors
 ```
 Border Default:  border-slate-700
 Border Subtle:   border-white/10
 Border Focus:    border-purple-500
+```
+
+### Light Mode
+
+#### Base Colors (Backgrounds & Surfaces)
+```
+Background Primary:   bg-gradient-to-br from-slate-50 via-white to-slate-50
+Background Secondary: bg-white
+Surface Elevated:     bg-white/80 backdrop-blur-xl
+Surface Card:         bg-white/90 backdrop-blur-sm
+Surface Input:        bg-gray-50
+```
+
+#### Text Colors
+```
+Text Primary:    text-slate-900
+Text Secondary:  text-slate-600
+Text Muted:      text-slate-500
+Text Disabled:   text-slate-400
+```
+
+#### Border Colors
+```
+Border Default:  border-slate-200
+Border Subtle:   border-slate-200/60
+Border Focus:    border-purple-500
+```
+
+### Using Dark Mode Classes
+Apply both light and dark mode styles using Tailwind's `dark:` prefix:
+```
+bg-white dark:bg-slate-900           (backgrounds)
+text-slate-900 dark:text-white       (text)
+border-slate-200 dark:border-slate-700  (borders)
 ```
 
 ### Accent Colors

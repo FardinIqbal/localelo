@@ -11,9 +11,9 @@ class ProfilesController < ApplicationController
                      .includes(match_participants: { profile: :user }, leaderboard: :organization)
                      .order(match_time: :desc)
                      .limit(5)
-    @elo_history = EloHistory.where(profile_id: @profile.id)
-                              .order(:recorded_at)
-                              .pluck(:recorded_at, :elo)
+    @rating_history = RatingHistory.where(profile_id: @profile.id)
+                                  .order(:created_at)
+                                  .pluck(:created_at, :rating)
 
     total_matches = Match.involving_profile(@profile.id).count
     total_wins = Match.won_by_profile(@profile.id).count

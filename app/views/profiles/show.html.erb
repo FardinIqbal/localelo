@@ -65,7 +65,10 @@
                     <%= rating.wins %> wins / <%= rating.losses %> losses
                   </div>
                 </div>
-                <div class="text-lg font-bold text-purple-400"><%= rating.rating %> Elo</div>
+                <div class="text-right">
+                  <div class="text-lg font-bold text-purple-400"><%= rating.rating.round %></div>
+                  <div class="text-xs text-slate-400">±<%= rating.rating_deviation.round %></div>
+                </div>
               </div>
             <% end %>
           </div>
