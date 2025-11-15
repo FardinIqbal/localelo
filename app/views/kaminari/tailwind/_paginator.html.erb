@@ -1,0 +1,18 @@
+<%= paginator.render do %>
+  <% base_button_classes = "relative inline-flex items-center px-3 py-2 text-sm font-medium border border-white/10 bg-slate-800 text-slate-300 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:z-10 transition" %>
+  <% current_button_classes = "relative inline-flex items-center px-3 py-2 text-sm font-semibold border border-purple-400/60 text-white bg-gradient-to-r from-purple-600 to-pink-500 shadow-md shadow-purple-500/30 focus:outline-none focus:ring-2 focus:ring-purple-400/60 focus:z-10" %>
+  <% disabled_button_classes = "relative inline-flex items-center px-3 py-2 text-sm font-medium border border-white/5 bg-slate-900 text-slate-500 cursor-not-allowed focus:outline-none focus:ring-0" %>
+  <% gap_button_classes = "relative inline-flex items-center px-3 py-2 text-sm font-medium border border-white/10 bg-slate-900 text-slate-500" %>
+
+  <nav class="inline-flex rounded-lg overflow-hidden shadow shadow-purple-900/20 isolate" role="navigation" aria-label="Pagination">
+    <%= prev_page_tag class: "#{base_button_classes} rounded-l-lg gap-2", disabled_class: "#{disabled_button_classes} rounded-l-lg gap-2", sr_label: t('views.pagination.previous') %>
+    <% each_page do |page| %>
+      <% if page.display_tag? %>
+        <%= page_tag page, class: base_button_classes, current_class: current_button_classes %>
+      <% elsif !page.was_truncated? %>
+        <%= gap_tag class: gap_button_classes %>
+      <% end %>
+    <% end %>
+    <%= next_page_tag class: "#{base_button_classes} rounded-r-lg gap-2", disabled_class: "#{disabled_button_classes} rounded-r-lg gap-2", sr_label: t('views.pagination.next') %>
+  </nav>
+<% end %>

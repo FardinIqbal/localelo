@@ -1,0 +1,12 @@
+<%
+  link_classes = local_assigns[:class] || ""
+  current_classes = local_assigns[:current_class] || link_classes
+  page_label = t('views.pagination.page', page: page, default: "Page #{page}")
+%>
+<% if page.current? %>
+  <span class="<%= current_classes %>" aria-current="page">
+    <span><%= page %></span>
+  </span>
+<% else %>
+  <%= link_to page, url, { remote: remote, rel: page.rel, class: link_classes, aria: { label: page_label } } %>
+<% end %>

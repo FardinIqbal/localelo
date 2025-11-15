@@ -1,0 +1,16 @@
+<%
+  link_classes = local_assigns[:class] || "relative inline-flex items-center px-3 py-2 text-sm font-medium border border-white/10 bg-slate-800 text-slate-300 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:z-10 transition"
+  disabled_classes = local_assigns[:disabled_class] || "relative inline-flex items-center px-3 py-2 text-sm font-medium border border-white/5 bg-slate-900 text-slate-500 cursor-not-allowed focus:outline-none focus:ring-0"
+  sr_label = t('views.pagination.first', default: 'First')
+%>
+<% if current_page.first? %>
+  <span class="<%= disabled_classes %>" aria-disabled="true">
+    <span class="sr-only"><%= sr_label %></span>
+    <span class="uppercase tracking-wide text-xs"><%= sr_label %></span>
+  </span>
+<% else %>
+  <%= link_to url, class: link_classes, remote: remote do %>
+    <span class="sr-only"><%= sr_label %></span>
+    <span class="uppercase tracking-wide text-xs"><%= sr_label %></span>
+  <% end %>
+<% end %>
