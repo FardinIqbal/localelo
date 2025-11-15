@@ -1,0 +1,14 @@
+<div class="mt-2 text-xs text-slate-300 space-y-1">
+  <div class="flex items-center gap-2">
+    <span class="text-slate-400">Head-to-head</span>
+    <span class="text-white"><%= head_to_head_label(entry[:matches_together]) %></span>
+  </div>
+  <div class="flex items-center gap-2">
+    <span class="text-slate-400">Last played</span>
+    <span class="text-white"><%= last_played_label(entry[:matches_together], entry[:last_played_at]) %></span>
+  </div>
+  <div class="flex items-center gap-2">
+    <span class="text-slate-400">Gym matches</span>
+    <span class="text-white"><%= pluralize(entry[:total_matches], 'match') %></span>
+  </div>
+</div>
