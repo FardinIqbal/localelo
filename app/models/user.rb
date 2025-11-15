@@ -193,14 +193,16 @@ class User < ApplicationRecord
   # == Validations ==
   validates :email, presence: true, uniqueness: { scope: :discarded_at }
 
-  private
-
+  # Returns the IDs for the user's approved profiles. This is used by
+  # controllers and other models, so it needs to remain public.
   def profile_ids
     @profile_ids ||= profiles
                        .joins(:organization_membership)
                        .merge(OrganizationMembership.approved)
                        .ids
   end
+
+  private
 
   def anonymize_user
     identifier = id
