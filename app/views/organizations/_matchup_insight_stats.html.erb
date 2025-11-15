@@ -1,14 +1,14 @@
-<div class="mt-2 text-xs text-slate-300 space-y-1">
-  <div class="flex items-center gap-2">
-    <span class="text-slate-400">Head-to-head</span>
-    <span class="text-white"><%= head_to_head_label(entry[:matches_together]) %></span>
-  </div>
-  <div class="flex items-center gap-2">
-    <span class="text-slate-400">Last played</span>
-    <span class="text-white"><%= last_played_label(entry[:matches_together], entry[:last_played_at]) %></span>
-  </div>
-  <div class="flex items-center gap-2">
-    <span class="text-slate-400">Gym matches</span>
-    <span class="text-white"><%= pluralize(entry[:total_matches], 'match') %></span>
-  </div>
+<div class="mt-2 flex flex-wrap gap-2 text-[11px] text-slate-300">
+  <span class="inline-flex items-center gap-1 rounded-full bg-slate-700/60 px-2.5 py-1">
+    <i class="fas fa-swords text-pink-300"></i>
+    <span>Head-to-head: <span class="text-white"><%= head_to_head_label(entry[:matches_together]) %></span></span>
+  </span>
+  <span class="inline-flex items-center gap-1 rounded-full bg-slate-700/60 px-2.5 py-1">
+    <i class="fas fa-clock text-purple-300"></i>
+    <span>Last played: <span class="text-white"><%= last_played_label(entry[:matches_together], entry[:last_played_at]) %></span></span>
+  </span>
+  <span class="inline-flex items-center gap-1 rounded-full bg-slate-700/60 px-2.5 py-1">
+    <i class="fas fa-dumbbell text-blue-300"></i>
+    <span>Gym matches: <span class="text-white"><%= pluralize(entry[:total_matches], 'match') %></span></span>
+  </span>
 </div>
