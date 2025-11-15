@@ -400,9 +400,7 @@ class OrganizationsController < ApplicationController
 
   def build_matchup_insights
     @viewer_profile = current_user.profile_for(@organization)
-    @rival_profile = nil
-    @rival_match_count = 0
-    @rival_last_played_at = nil
+    @top_rivals = []
     @ducking_opponents = []
 
     return unless @viewer_profile
@@ -439,15 +437,6 @@ class OrganizationsController < ApplicationController
                         .group(:profile_id)
                         .count
 
-    if opponent_counts.any?
-      rival_id, match_count = opponent_counts.max_by { |_, count| count }
-      if rival_id
-        @rival_profile = approved_profile_map[rival_id]
-        @rival_match_count = match_count
-        @rival_last_played_at = last_played_map[rival_id]
-      end
-    end
-
     insights_candidates = approved_profiles.reject { |profile| profile.id == @viewer_profile.id }.map do |profile|
       matches_together = opponent_counts[profile.id] || 0
       {
@@ -457,6 +446,17 @@ class OrganizationsController < ApplicationController
         last_played_at: last_played_map[profile.id]
       }
     end
+
+    @top_rivals = insights_candidates
+                    .select { |data| data[:matches_together].positive? }
+                    .sort_by do |data|
+                      [
+                        -data[:matches_together],
+                        -((data[:last_played_at]&.to_i) || 0),
+                        data[:profile].username.downcase
+                      ]
+                    end
+                    .first(3)
 
     never_played = insights_candidates
                      .select { |data| data[:matches_together].zero? }
@@ -472,9 +472,9 @@ class OrganizationsController < ApplicationController
                       ]
                     end
 
-    @ducking_opponents = never_played.first(5)
-    if @ducking_opponents.size < 5
-      @ducking_opponents += low_history.first(5 - @ducking_opponents.size)
+    @ducking_opponents = never_played.first(3)
+    if @ducking_opponents.size < 3
+      @ducking_opponents += low_history.first(3 - @ducking_opponents.size)
     end
   end
 

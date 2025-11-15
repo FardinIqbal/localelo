@@ -5,7 +5,7 @@ module OrganizationsHelper
 
   def last_played_label(match_count, last_played_at)
     if match_count.zero?
-      "Never"
+      "—"
     elsif last_played_at.present?
       "#{time_ago_in_words(last_played_at)} ago"
     else
