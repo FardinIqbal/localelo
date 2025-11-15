@@ -21,6 +21,19 @@
 
     <!-- Nav Links -->
     <div class="flex items-center gap-2">
+      <%= form_with url: search_path, method: :get, local: true, class: "mr-4" do |form| %>
+        <div class="flex items-center bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-full pl-4 pr-1 py-1.5 shadow-sm focus-within:ring-2 focus-within:ring-purple-500 transition">
+          <%= form.label :q, "Search", class: "sr-only" %>
+          <%= form.search_field :q,
+                                value: params[:q],
+                                placeholder: "Search",
+                                class: "bg-transparent text-sm text-slate-700 dark:text-slate-200 focus:outline-none w-40 xl:w-56",
+                                'aria-label': 'Global search' %>
+          <button type="submit" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-sm hover:shadow-md transition" aria-label="Submit search">
+            <i class="fas fa-search text-xs"></i>
+          </button>
+        </div>
+      <% end %>
       <% if user_signed_in? %>
         <%= link_to authenticated_root_path, class: active_nav_class(authenticated_root_path) do %>
           <i class="fas fa-home mr-2"></i>

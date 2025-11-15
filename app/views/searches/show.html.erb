@@ -1,0 +1,144 @@
+<div class="container mx-auto px-4 py-10">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl font-semibold text-slate-900 dark:text-white mb-6">Search</h1>
+
+    <%= form_with url: search_path, method: :get, local: true, class: "flex gap-3 mb-10" do |form| %>
+      <div class="flex-1">
+        <%= form.label :q, "Search term", class: "sr-only" %>
+        <%= form.search_field :q,
+                              value: @query,
+                              class: "w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500",
+                              placeholder: "Search organizations, players, or matches",
+                              'aria-label': 'Search term' %>
+      </div>
+      <%= form.button class: "inline-flex items-center px-5 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-500 text-white font-medium shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 transition" do %>
+        <i class="fas fa-search mr-2"></i>
+        Search
+      <% end %>
+    <% end %>
+
+    <div class="space-y-12">
+      <section>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">Organizations</h2>
+          <% if @organizations.present? %>
+            <span class="text-sm text-slate-500 dark:text-slate-400"><%= @organizations.total_count %> found</span>
+          <% end %>
+        </div>
+        <% if @query.blank? %>
+          <p class="text-slate-500 dark:text-slate-400">Enter a search to explore organizations.</p>
+        <% elsif @organizations.any? %>
+          <ul class="space-y-4">
+            <% @organizations.each do |organization| %>
+              <li class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-900/70 shadow-sm hover:border-purple-400 transition">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white">
+                      <%= link_to organization.name, organization_path(organization), class: "hover:text-purple-500 transition" %>
+                    </h3>
+                    <% if organization.location.present? %>
+                      <p class="text-sm text-slate-500 dark:text-slate-400"><i class="fas fa-map-marker-alt mr-2"></i><%= organization.location %></p>
+                    <% end %>
+                    <% if organization.description.present? %>
+                      <p class="text-sm text-slate-600 dark:text-slate-300 mt-2"><%= truncate(organization.description, length: 140) %></p>
+                    <% end %>
+                  </div>
+                  <%= link_to "View", organization_path(organization), class: "text-sm font-medium text-purple-600 dark:text-purple-400 hover:underline" %>
+                </div>
+              </li>
+            <% end %>
+          </ul>
+          <div class="mt-6">
+            <%= paginate @organizations, param_name: :organizations_page, params: request.query_parameters %>
+          </div>
+        <% else %>
+          <p class="text-slate-500 dark:text-slate-400">No organizations match that search.</p>
+        <% end %>
+      </section>
+
+      <section>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">Profiles</h2>
+          <% if @profiles.present? %>
+            <span class="text-sm text-slate-500 dark:text-slate-400"><%= @profiles.total_count %> found</span>
+          <% end %>
+        </div>
+        <% if @query.blank? %>
+          <p class="text-slate-500 dark:text-slate-400">Search to find players across organizations.</p>
+        <% elsif @profiles.any? %>
+          <ul class="space-y-4">
+            <% @profiles.each do |profile| %>
+              <li class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-900/70 shadow-sm hover:border-purple-400 transition">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white">
+                      <%= link_to profile.username, profile_path(profile), class: "hover:text-purple-500 transition" %>
+                    </h3>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">
+                      <i class="fas fa-users mr-2"></i>
+                      <%= profile.organization.name %>
+                    </p>
+                    <% if profile.first_name.present? || profile.last_name.present? %>
+                      <p class="text-sm text-slate-600 dark:text-slate-300 mt-2">
+                        <%= [profile.first_name, profile.last_name].compact_blank.join(" ") %>
+                      </p>
+                    <% end %>
+                  </div>
+                  <%= link_to "View", profile_path(profile), class: "text-sm font-medium text-purple-600 dark:text-purple-400 hover:underline" %>
+                </div>
+              </li>
+            <% end %>
+          </ul>
+          <div class="mt-6">
+            <%= paginate @profiles, param_name: :profiles_page, params: request.query_parameters %>
+          </div>
+        <% else %>
+          <p class="text-slate-500 dark:text-slate-400">No profiles match that search.</p>
+        <% end %>
+      </section>
+
+      <section>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">Matches</h2>
+          <% if @matches.present? %>
+            <span class="text-sm text-slate-500 dark:text-slate-400"><%= @matches.total_count %> found</span>
+          <% end %>
+        </div>
+        <% if @query.blank? %>
+          <p class="text-slate-500 dark:text-slate-400">Try searching to surface recent matches.</p>
+        <% elsif @matches.any? %>
+          <ul class="space-y-4">
+            <% @matches.each do |match| %>
+              <li class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-900/70 shadow-sm hover:border-purple-400 transition">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                      <i class="fas fa-trophy text-purple-500"></i>
+                      <%= link_to match.leaderboard.name, match_path(match), class: "hover:text-purple-500 transition" %>
+                    </h3>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">
+                      <i class="fas fa-users mr-2"></i>
+                      <%= match.leaderboard.organization.name %>
+                    </p>
+                    <p class="text-sm text-slate-600 dark:text-slate-300 mt-2">
+                      <%= match.match_participants.map { |participant| participant.profile.username }.to_sentence %>
+                    </p>
+                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-2">
+                      <%= l(match.created_at, format: :long) %>
+                    </p>
+                  </div>
+                  <%= link_to "View", match_path(match), class: "text-sm font-medium text-purple-600 dark:text-purple-400 hover:underline" %>
+                </div>
+              </li>
+            <% end %>
+          </ul>
+          <div class="mt-6">
+            <%= paginate @matches, param_name: :matches_page, params: request.query_parameters %>
+          </div>
+        <% else %>
+          <p class="text-slate-500 dark:text-slate-400">No matches match that search.</p>
+        <% end %>
+      </section>
+    </div>
+  </div>
+</div>
