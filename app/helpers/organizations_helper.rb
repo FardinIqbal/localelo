@@ -1,4 +1,18 @@
 module OrganizationsHelper
+  def head_to_head_label(match_count)
+    match_count.positive? ? pluralize(match_count, "match") : "None yet"
+  end
+
+  def last_played_label(match_count, last_played_at)
+    if match_count.zero?
+      "Never"
+    elsif last_played_at.present?
+      "#{time_ago_in_words(last_played_at)} ago"
+    else
+      "—"
+    end
+  end
+
   def rating_change_badge(participant)
     return unless participant&.elo_change
 
