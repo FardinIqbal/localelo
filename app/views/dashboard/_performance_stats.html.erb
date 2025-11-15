@@ -1,57 +1,33 @@
 <% stats ||= {} %>
 <% profile ||= nil %>
-<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-  <!-- Total Matches -->
-  <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl p-5 border border-slate-200 dark:border-slate-700 hover:border-purple-500/50 transition-all duration-300 group">
-    <div class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Total Matches</div>
-    <div class="text-3xl font-bold text-slate-900 dark:text-white mt-2 mb-3 group-hover:text-purple-500 dark:group-hover:text-purple-400 transition-colors duration-300">
-      <%= stats[:total_matches] || 0 %>
-    </div>
-    <div class="text-xs text-purple-400 flex items-center">
-      <i class="fas fa-chart-line mr-1"></i>
-      <span>All time</span>
-    </div>
+<div class="grid grid-cols-2 gap-4 md:grid-cols-4">
+  <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
+    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Total matches</p>
+    <p class="mt-3 text-3xl font-semibold text-slate-900"><%= stats[:total_matches] || 0 %></p>
+    <p class="mt-2 text-xs text-slate-500">All time</p>
   </div>
 
-  <!-- Win/Loss Ratio -->
   <% if @scoped_organization %>
-    <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl p-5 border border-slate-200 dark:border-slate-700 hover:border-purple-500/50 transition-all duration-300 group">
-      <div class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Win/Loss Ratio</div>
-      <div class="text-3xl font-bold text-slate-900 dark:text-white mt-2 mb-3 group-hover:text-pink-500 dark:group-hover:text-pink-400 transition-colors duration-300">
-        <%= stats[:win_loss_ratio] || "0.0" %>
-      </div>
-      <div class="text-xs text-pink-400 flex items-center">
-        <i class="fas fa-trophy mr-1"></i>
-        <span><%= stats[:total_wins] || 0 %> W / <%= stats[:total_losses] || 0 %> L</span>
-      </div>
+    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
+      <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Win / loss</p>
+      <p class="mt-3 text-3xl font-semibold text-slate-900"><%= stats[:win_loss_ratio] || "0.0" %></p>
+      <p class="mt-2 text-xs text-slate-500"><%= stats[:total_wins] || 0 %> W · <%= stats[:total_losses] || 0 %> L</p>
     </div>
   <% end %>
 
-  <!-- Highest Elo -->
   <% if @scoped_organization %>
-    <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl p-5 border border-slate-200 dark:border-slate-700 hover:border-purple-500/50 transition-all duration-300 group">
-      <div class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Highest Elo</div>
-      <div class="text-3xl font-bold text-slate-900 dark:text-white mt-2 mb-3 group-hover:text-purple-500 dark:group-hover:text-purple-400 transition-colors duration-300">
-        <%= stats[:highest_elo] || 1500 %>
-      </div>
-      <div class="text-xs text-purple-400 flex items-center">
-        <i class="fas fa-medal mr-1"></i>
-        <span>Peak rating</span>
-      </div>
+    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
+      <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Highest rating</p>
+      <p class="mt-3 text-3xl font-semibold text-slate-900"><%= stats[:highest_elo] || 1500 %></p>
+      <p class="mt-2 text-xs text-slate-500">Peak</p>
     </div>
   <% end %>
 
-  <!-- Average Elo -->
   <% if @scoped_organization %>
-    <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl p-5 border border-slate-200 dark:border-slate-700 hover:border-purple-500/50 transition-all duration-300 group">
-      <div class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Average Elo</div>
-      <div class="text-3xl font-bold text-slate-900 dark:text-white mt-2 mb-3 group-hover:text-pink-500 dark:group-hover:text-pink-400 transition-colors duration-300">
-        <%= stats[:average_elo] || 1500 %>
-      </div>
-      <div class="text-xs text-pink-400 flex items-center">
-        <i class="fas fa-calculator mr-1"></i>
-        <span>Across all gyms</span>
-      </div>
+    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
+      <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Average rating</p>
+      <p class="mt-3 text-3xl font-semibold text-slate-900"><%= stats[:average_elo] || 1500 %></p>
+      <p class="mt-2 text-xs text-slate-500">Across the organization</p>
     </div>
   <% end %>
 </div>
