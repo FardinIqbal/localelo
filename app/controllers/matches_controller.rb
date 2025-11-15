@@ -13,6 +13,10 @@ class MatchesController < ApplicationController
                            .page(params[:page])
                            .per(20)
 
+    if params[:return_to_organization_id].present?
+      @return_to_organization = current_user.organizations.find_by(id: params[:return_to_organization_id])
+    end
+
     respond_to do |format|
       format.html
       format.json { render json: @matches }
@@ -101,6 +105,57 @@ class MatchesController < ApplicationController
     end
   end
 
+  def elo_preview
+    leaderboard = Leaderboard.find_by(id: params[:leaderboard_id])
+
+    unless leaderboard
+      render json: { error: "Leaderboard not found" }, status: :not_found and return
+    end
+
+    unless current_user.organizations.exists?(id: leaderboard.organization_id)
+      render json: { error: "You do not have access to this leaderboard" }, status: :forbidden and return
+    end
+
+    profile1 = resolve_profile_for_preview(leaderboard)
+
+    unless profile1
+      render json: { error: "Profile not found for this organization" }, status: :unprocessable_entity and return
+    end
+
+    opponent_profile = Profile.find_by(id: params[:opponent_profile_id])
+
+    if opponent_profile.nil? || opponent_profile.organization_id != leaderboard.organization_id
+      render json: { error: "Opponent is not part of this leaderboard" }, status: :unprocessable_entity and return
+    end
+
+    is_draw = ActiveModel::Type::Boolean.new.cast(params[:is_draw])
+    winner_profile_id = params[:winner_profile_id].presence
+
+    if !is_draw && winner_profile_id.blank?
+      render json: { error: "Select a winner to preview rating changes" }, status: :unprocessable_entity and return
+    end
+
+    if !is_draw && ![profile1.id.to_s, opponent_profile.id.to_s].include?(winner_profile_id.to_s)
+      render json: { error: "Winner must be one of the selected players" }, status: :unprocessable_entity and return
+    end
+
+    player_rating = rating_for(leaderboard, profile1)
+    opponent_rating = rating_for(leaderboard, opponent_profile)
+
+    outcome_scores = preview_scores(profile1.id, opponent_profile.id, winner_profile_id, is_draw)
+    expected_player = preview_expected_score(player_rating, opponent_rating)
+    expected_opponent = preview_expected_score(opponent_rating, player_rating)
+
+    player_after = preview_new_rating(player_rating, outcome_scores[:player], expected_player)
+    opponent_after = preview_new_rating(opponent_rating, outcome_scores[:opponent], expected_opponent)
+
+    render json: {
+      player: preview_payload(player_rating, player_after),
+      opponent: preview_payload(opponent_rating, opponent_after),
+      draw: is_draw
+    }
+  end
+
   # POST /matches
   # Creates a match and immediately records the result
   def create
@@ -121,7 +176,10 @@ class MatchesController < ApplicationController
     if (match = @match_form.save)
       logger.info "[MATCH] Logged match #{match.id} by user #{current_user.id}"
       respond_to do |format|
-        format.html { redirect_to matches_path, notice: "Match successfully logged!" }
+        format.html do
+          redirect_to matches_path(return_to_organization_id: @leaderboard.organization_id),
+                      notice: "Match successfully logged!"
+        end
         format.json { render json: match, status: :created }
       end
     else
@@ -300,5 +358,50 @@ class MatchesController < ApplicationController
       format.json { render json: { error: "Profile not found" }, status: :unprocessable_entity }
     end
     false
+  end
+
+  def resolve_profile_for_preview(leaderboard)
+    return unless leaderboard
+
+    if params[:profile1_id].present?
+      profile = current_user.profiles.find_by(id: params[:profile1_id])
+      return profile if profile&.organization_id == leaderboard.organization_id
+    end
+
+    current_user.profile_for(leaderboard.organization_id)
+  end
+
+  def rating_for(leaderboard, profile)
+    return Match::DEFAULT_RATING unless leaderboard && profile
+
+    LeaderboardRating.find_by(leaderboard: leaderboard, profile: profile)&.rating || Match::DEFAULT_RATING
+  end
+
+  def preview_scores(player_profile_id, opponent_profile_id, winner_profile_id, is_draw)
+    return { player: 0.5, opponent: 0.5 } if is_draw
+
+    winner_id = winner_profile_id.to_i
+
+    {
+      player: winner_id == player_profile_id ? 1.0 : 0.0,
+      opponent: winner_id == opponent_profile_id ? 1.0 : 0.0
+    }
+  end
+
+  def preview_expected_score(rating, opponent_rating)
+    1.0 / (1 + 10**((opponent_rating.to_f - rating.to_f) / 400.0))
+  end
+
+  def preview_new_rating(current_rating, score, expected_score)
+    base_rating = current_rating.to_f
+    (base_rating + MatchRatingProcessor::K_FACTOR * (score - expected_score)).clamp(0, Float::INFINITY)
+  end
+
+  def preview_payload(before_rating, after_rating)
+    {
+      rating_before: before_rating.to_f.round(2),
+      rating_after: after_rating.to_f.round(2),
+      change: (after_rating.to_f - before_rating.to_f).round(2)
+    }
   end
 end

@@ -47,6 +47,7 @@ Rails.application.routes.draw do
     collection do
       get :recent                      # Recent match activity (for dashboard)
       get :update_opponents           # Dynamic Turbo update when changing leaderboard
+      get :elo_preview                # Preview Elo change before submitting a match
     end
   end
 
