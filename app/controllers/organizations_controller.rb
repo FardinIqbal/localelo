@@ -23,6 +23,17 @@ class OrganizationsController < ApplicationController
     @pending_member_memberships = pending_memberships
     @members = approved_memberships.map(&:profile)
     @pending_members = pending_memberships.map(&:profile)
+
+    @member_count = approved_memberships.size
+    @leaderboard_count = @leaderboards.size
+    @active_member_count = @organization.active_member_count
+    @total_matches_count = @organization.matches.active.count
+    @recent_matches = Match
+                        .includes(:winner_profile, match_participants: { profile: :user }, leaderboard: :organization)
+                        .active
+                        .where(leaderboards: { organization_id: @organization.id })
+                        .order(created_at: :desc)
+                        .limit(20)
   end
 
   # GET /organizations/new

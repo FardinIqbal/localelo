@@ -132,16 +132,16 @@
             <!-- Stats Cards -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
-                <div class="text-sm text-slate-400">Members</div>
-                <div class="text-2xl font-bold text-white mt-1"><%= @organization.users.count %></div>
+                <div class="text-sm text-slate-400">Active Players</div>
+                <div class="text-2xl font-bold text-white mt-1"><%= @active_member_count %></div>
                 <div class="mt-2 text-xs text-purple-400">
-                  <i class="fas fa-users mr-1"></i> Active users
+                  <i class="fas fa-users mr-1"></i> of <%= @member_count %> members
                 </div>
               </div>
 
               <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
                 <div class="text-sm text-slate-400">Leaderboards</div>
-                <div class="text-2xl font-bold text-white mt-1"><%= @leaderboards.count %></div>
+                <div class="text-2xl font-bold text-white mt-1"><%= @leaderboard_count %></div>
                 <div class="mt-2 text-xs text-pink-400">
                   <i class="fas fa-list-ol mr-1"></i> Ranking systems
                 </div>
@@ -149,7 +149,7 @@
 
               <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
                 <div class="text-sm text-slate-400">Total Matches</div>
-                <div class="text-2xl font-bold text-white mt-1"><%= @organization.matches.count %></div>
+                <div class="text-2xl font-bold text-white mt-1"><%= @total_matches_count %></div>
                 <div class="mt-2 text-xs text-purple-400">
                   <i class="fas fa-trophy mr-1"></i> All time
                 </div>
@@ -457,40 +457,75 @@
                 <% end %> </tr>
               </thead>
               <tbody class="divide-y divide-slate-700" id="matches-table-body">
-              <% Match.joins(:leaderboard).where(leaderboards: { organization_id: @organization.id }).order(created_at: :desc).limit(20).each do |match| %>
-                <tr class="hover:bg-slate-700/50 transition-colors">
-                  <td class="px-4 py-3">
-                    <div class="flex items-center">
-                      <div class="flex items-center">
-                        <div class="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 text-xs"> <%= match.profile1.username[0..1].upcase %> </div>
-                        <span class="mx-1 text-slate-500">vs</span>
-                        <div class="w-8 h-8 rounded-full bg-pink-500/20 flex items-center justify-center text-pink-400 text-xs"> <%= match.opponent_profile.username[0..1].upcase %> </div>
-                      </div>
-                      <div class="ml-3">
-                        <div class="text-white font-medium"> <%= link_to match.profile1.username, profile_path(match.profile1), class: "hover:text-purple-400" %>
-                          vs <%= link_to match.opponent_profile.username, profile_path(match.opponent_profile), class: "hover:text-purple-400" %> </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td class="px-4 py-3 text-slate-300"> <%= match.leaderboard.name %> </td>
-                  <td class="px-4 py-3">
-                    <% if match.is_draw %> <span class="text-yellow-400">Draw</span>
-                    <% elsif match.winner_profile_id.present? %>
-                      <span class="text-green-400"><%= match.winner_profile&.username %> won</span>
-                    <% else %> <span class="text-slate-400">No result</span>
-                    <% end %> </td>
-                  <td class="px-4 py-3 text-slate-400 text-sm"> <%= match.created_at.strftime("%b %d, %Y") %> </td>
-                  <% if @organization.admin?(current_user) %>
+              <% if @recent_matches.any? %>
+                <% @recent_matches.each do |match| %>
+                  <% primary_profile = match.profile1 %>
+                  <% opponent_profile = match.opponent_profile %>
+                  <% primary_participant = match.participant_for(primary_profile) %>
+                  <% opponent_participant = match.participant_for(opponent_profile) %>
+                  <tr class="hover:bg-slate-700/50 transition-colors">
                     <td class="px-4 py-3">
-                      <div class="flex items-center space-x-2"> <%= link_to match_path(match), class: "text-slate-400 hover:text-white transition-colors" do %>
-                          <i class="fas fa-eye"></i>
-                        <% end %>
-                        <%= link_to match_path(match), data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to remove this match?" }, class: "text-red-400 hover:text-red-300 transition-colors" do %>
-                          <i class="fas fa-trash"></i>
-                        <% end %>
+                      <div class="flex items-start">
+                        <div class="flex items-center">
+                          <div class="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 text-xs">
+                            <%= (primary_profile&.username || "?")[0..1].upcase %>
+                          </div>
+                          <span class="mx-1 text-slate-500">vs</span>
+                          <div class="w-8 h-8 rounded-full bg-pink-500/20 flex items-center justify-center text-pink-400 text-xs">
+                            <%= (opponent_profile&.username || "?")[0..1].upcase %>
+                          </div>
+                        </div>
+                        <div class="ml-3 text-white font-medium">
+                          <div class="flex items-center">
+                            <% if primary_profile %>
+                              <%= link_to primary_profile.username, profile_path(primary_profile), class: "hover:text-purple-400" %>
+                            <% else %>
+                              <span class="text-slate-400">Unknown</span>
+                            <% end %>
+                            <%= rating_change_badge(primary_participant) %>
+                          </div>
+                          <div class="text-xs text-slate-500 uppercase tracking-wider my-1">vs</div>
+                          <div class="flex items-center">
+                            <% if opponent_profile %>
+                              <%= link_to opponent_profile.username, profile_path(opponent_profile), class: "hover:text-purple-400" %>
+                            <% else %>
+                              <span class="text-slate-400">Unknown</span>
+                            <% end %>
+                            <%= rating_change_badge(opponent_participant) %>
+                          </div>
+                        </div>
                       </div>
                     </td>
-                  <% end %>
+                    <td class="px-4 py-3 text-slate-300"> <%= match.leaderboard.name %> </td>
+                    <td class="px-4 py-3">
+                      <% if match.is_draw %>
+                        <span class="text-yellow-400">Draw</span>
+                      <% elsif match.winner_profile_id.present? %>
+                        <span class="text-green-400"><%= match.winner_profile&.username %> won</span>
+                      <% else %>
+                        <span class="text-slate-400">No result</span>
+                      <% end %>
+                    </td>
+                    <td class="px-4 py-3 text-slate-400 text-sm"> <%= match.created_at.strftime("%b %d, %Y") %> </td>
+                    <% if @organization.admin?(current_user) %>
+                      <td class="px-4 py-3">
+                        <div class="flex items-center space-x-2">
+                          <%= link_to match_path(match), class: "text-slate-400 hover:text-white transition-colors" do %>
+                            <i class="fas fa-eye"></i>
+                          <% end %>
+                          <%= link_to match_path(match), data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to remove this match?" }, class: "text-red-400 hover:text-red-300 transition-colors" do %>
+                            <i class="fas fa-trash"></i>
+                          <% end %>
+                        </div>
+                      </td>
+                    <% end %>
+                  </tr>
+                <% end %>
+              <% else %>
+                <tr>
+                  <td colspan="<%= @organization.admin?(current_user) ? 5 : 4 %>" class="px-4 py-6 text-center text-slate-400">
+                    No matches have been logged yet.
+                  </td>
                 </tr>
               <% end %>
               </tbody>
