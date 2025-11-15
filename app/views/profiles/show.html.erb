@@ -1,103 +1,88 @@
-<div class="relative min-h-screen bg-slate-900 text-white">
-  <div class="absolute -top-20 -right-20 w-96 h-96 bg-purple-600/10 rounded-full filter blur-3xl animate-pulse-slow z-0"></div>
-  <div class="absolute -bottom-20 -left-20 w-64 h-64 bg-pink-600/10 rounded-full filter blur-3xl animate-pulse-slow z-0" style="animation-delay: 1.5s;"></div>
-
-  <div class="relative z-10 max-w-5xl mx-auto px-4 py-8 space-y-8">
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-      <div class="flex items-start gap-4">
-        <div class="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-3xl font-bold shadow-lg shadow-purple-500/20">
+<%= render "shared/layouts/page_shell",
+           title: @profile.username,
+           subtitle: "Match history and ratings across this organization." do %>
+  <div class="space-y-10">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex items-center gap-4">
+        <span class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-900 text-2xl font-semibold text-white">
           <%= @profile.username.first.upcase %>
+        </span>
+        <div class="text-sm text-slate-600">
+          <p><i class="fas fa-building mr-1 text-slate-400"></i><%= link_to @organization.name, organization_path(@organization), class: "text-slate-600 hover:text-slate-900" %></p>
+          <p class="mt-1"><i class="fas fa-envelope mr-1 text-slate-400"></i><%= @profile.user.email %></p>
         </div>
-        <div>
-          <h1 class="text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-            <%= @profile.username %>
-          </h1>
-          <p class="text-slate-300 mt-1">
-            <i class="fas fa-building mr-2"></i>
-            <%= link_to @organization.name, organization_path(@organization), class: "hover:text-purple-300 transition-colors" %>
-          </p>
-          <p class="text-slate-400 text-sm mt-2">
-            <i class="fas fa-envelope mr-2"></i>
-            <%= @profile.user.email %>
-          </p>
-        </div>
-      </div>
-
-      <%# Additional profile actions can go here %>
-    </div>
-
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
-        <div class="text-sm text-slate-400">Total Matches</div>
-        <div class="text-2xl font-bold text-white mt-1"><%= @profile_stats[:total_matches] %></div>
-      </div>
-      <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
-        <div class="text-sm text-slate-400">Wins</div>
-        <div class="text-2xl font-bold text-green-400 mt-1"><%= @profile_stats[:total_wins] %></div>
-      </div>
-      <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
-        <div class="text-sm text-slate-400">Losses</div>
-        <div class="text-2xl font-bold text-red-400 mt-1"><%= @profile_stats[:total_losses] %></div>
-      </div>
-      <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
-        <div class="text-sm text-slate-400">Win Rate</div>
-        <div class="text-2xl font-bold text-white mt-1"><%= @profile_stats[:win_rate] %>%</div>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-700 overflow-hidden">
-        <div class="flex items-center justify-between p-4 border-b border-slate-700">
-          <h2 class="text-xl font-bold text-white">Leaderboard Ratings</h2>
-          <% if @leaderboard_ratings.empty? && @profile.user == current_user %>
-            <%= link_to new_match_path(leaderboard_id: @organization.leaderboards.first&.id), class: "text-sm text-purple-400 hover:text-pink-400 transition-colors" do %>
-              <i class="fas fa-plus mr-1"></i> Log Match
-            <% end %>
+    <section>
+      <h2 class="text-lg font-semibold text-slate-900">Overview</h2>
+      <dl class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Matches</dt>
+          <dd class="mt-2 text-2xl font-semibold text-slate-900"><%= @profile_stats[:total_matches] %></dd>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Wins</dt>
+          <dd class="mt-2 text-2xl font-semibold text-emerald-600"><%= @profile_stats[:total_wins] %></dd>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Losses</dt>
+          <dd class="mt-2 text-2xl font-semibold text-rose-600"><%= @profile_stats[:total_losses] %></dd>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Win rate</dt>
+          <dd class="mt-2 text-2xl font-semibold text-slate-900"><%= @profile_stats[:win_rate] %>%</dd>
+        </div>
+      </dl>
+    </section>
+
+    <div class="grid gap-6 lg:grid-cols-2">
+      <section class="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-semibold text-slate-900">Leaderboard ratings</h2>
+          <% if @leaderboard_ratings.empty? && @profile.user == current_user && @organization.leaderboards.any? %>
+            <%= link_to "Log a match", new_match_path(leaderboard_id: @organization.leaderboards.first.id), class: "text-sm font-semibold text-slate-600 hover:text-slate-900" %>
           <% end %>
         </div>
         <% if @leaderboard_ratings.any? %>
-          <div class="divide-y divide-slate-700">
+          <ul class="space-y-3 text-sm text-slate-600">
             <% @leaderboard_ratings.each do |rating| %>
-              <div class="p-4 flex items-center justify-between hover:bg-slate-700/40 transition-colors">
-                <div>
-                  <div class="text-white font-medium"><%= rating.leaderboard.name %></div>
-                  <div class="text-xs text-slate-400 mt-1">
-                    <%= rating.wins %> wins / <%= rating.losses %> losses
+              <li class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="font-semibold text-slate-900"><%= rating.leaderboard.name %></p>
+                    <p class="text-xs text-slate-500"><%= rating.wins %> wins · <%= rating.losses %> losses</p>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-lg font-semibold text-slate-900"><%= rating.rating.round %></p>
+                    <p class="text-xs text-slate-500">±<%= rating.rating_deviation.round %></p>
                   </div>
                 </div>
-                <div class="text-right">
-                  <div class="text-lg font-bold text-purple-400"><%= rating.rating.round %></div>
-                  <div class="text-xs text-slate-400">±<%= rating.rating_deviation.round %></div>
-                </div>
-              </div>
+              </li>
             <% end %>
-          </div>
+          </ul>
         <% else %>
-          <div class="p-6 text-center text-slate-400">No leaderboard activity yet.</div>
+          <p class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-600">No leaderboard activity yet.</p>
         <% end %>
-      </div>
+      </section>
 
-      <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-700 overflow-hidden">
-        <div class="flex items-center justify-between p-4 border-b border-slate-700">
-          <h2 class="text-xl font-bold text-white">Recent Matches</h2>
-          <%= link_to matches_path, class: "text-sm text-purple-400 hover:text-pink-400 transition-colors" do %>
-            View All <i class="fas fa-arrow-right ml-1"></i>
-          <% end %>
+      <section class="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-semibold text-slate-900">Recent matches</h2>
+          <%= link_to "View all matches", matches_path, class: "text-sm font-semibold text-slate-600 hover:text-slate-900" %>
         </div>
         <% if @matches.any? %>
-          <div class="divide-y divide-slate-700">
+          <ul class="space-y-3 text-sm text-slate-600">
             <% @matches.each do |match| %>
               <% opponent = match.profile1_id == @profile.id ? match.opponent_profile : match.profile1 %>
-              <div class="p-4 flex items-center justify-between hover:bg-slate-700/40 transition-colors">
-                <div>
-                  <div class="text-white font-medium">
-                    <%= link_to opponent.username, profile_path(opponent), class: "hover:text-purple-300 transition-colors" %>
-                  </div>
-                  <div class="text-xs text-slate-400 mt-1">
-                    <%= match.leaderboard.name %> • <%= match.created_at.strftime("%b %d, %Y") %>
-                  </div>
+              <li class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <p class="font-semibold text-slate-900">
+                    <%= link_to opponent.username, profile_path(opponent), class: "hover:text-slate-700" %>
+                  </p>
+                  <p class="text-xs text-slate-500"><%= match.leaderboard.name %> · <%= match.created_at.strftime("%b %d, %Y") %></p>
                 </div>
-                <div class="text-sm font-semibold <%= match.is_draw ? 'text-yellow-400' : (match.winner_profile_id == @profile.id ? 'text-green-400' : 'text-red-400') %>">
+                <p class="text-xs text-slate-500">
                   <% if match.is_draw %>
                     Draw
                   <% elsif match.winner_profile_id == @profile.id %>
@@ -105,14 +90,14 @@
                   <% else %>
                     Lost
                   <% end %>
-                </div>
-              </div>
+                </p>
+              </li>
             <% end %>
-          </div>
+          </ul>
         <% else %>
-          <div class="p-6 text-center text-slate-400">No matches recorded yet.</div>
+          <p class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-600">No matches recorded yet.</p>
         <% end %>
-      </div>
+      </section>
     </div>
   </div>
-</div>
+<% end %>

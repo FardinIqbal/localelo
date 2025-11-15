@@ -1,496 +1,105 @@
-<!-- app/views/matches/new.html.erb - ULTRA-FAST REDESIGN -->
-<div class="relative min-h-screen">
-  <!-- Animated Background -->
-  <div class="absolute inset-0 overflow-hidden pointer-events-none">
-    <div class="absolute -top-40 -right-40 w-96 h-96 bg-purple-600/5 rounded-full filter blur-3xl animate-pulse-slow"></div>
-    <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-pink-600/5 rounded-full filter blur-3xl animate-pulse-slow" style="animation-delay: 2s;"></div>
-  </div>
+<% leaderboards_data = @leaderboards.map { |lb| { id: lb.id, name: lb.name, organization_id: lb.organization_id } } %>
+<% profiles_by_org = @user_profiles_by_org || {} %>
 
-  <!-- Main Content -->
-  <div class="relative z-10 max-w-3xl mx-auto px-4 py-8">
-    <!-- Header with Progress -->
-    <div class="mb-8">
-      <div class="flex items-center justify-between mb-4">
-        <h1 class="font-extrabold text-3xl md:text-4xl text-slate-900 dark:text-white">
-          Log a Match
-        </h1>
-        <div class="text-sm text-slate-500 dark:text-slate-400" id="step-indicator">
-          Step <span id="current-step" class="text-slate-900 dark:text-white font-bold">1</span> of 4
+<%= render "shared/layouts/page_shell",
+           title: "Log a match",
+           subtitle: "Record the result, choose the right leaderboard, and keep the standings up to date." do %>
+  <%= form_with(model: @match,
+                local: true,
+                html: { class: "space-y-8" },
+                data: {
+                  controller: "match-form",
+                  "match-form-leaderboards-value": leaderboards_data.to_json,
+                  "match-form-profiles-by-org-value": profiles_by_org.to_json,
+                  "match-form-opponents-url-value": update_opponents_matches_path
+                }) do |f| %>
+    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5 sm:p-6">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <p class="text-sm font-medium text-slate-600">Step <span data-match-form-target="stepIndicator" class="font-semibold text-slate-900">1</span> of 4</p>
+        <div class="h-2 w-full rounded-full bg-slate-200 sm:w-64">
+          <div class="h-2 rounded-full bg-slate-900 transition-all" style="width: 0%" data-match-form-target="progressBar"></div>
         </div>
-      </div>
-
-      <!-- Progress Bar -->
-      <div class="h-1 bg-slate-200 dark:bg-slate-700/50 rounded-full overflow-hidden">
-        <div id="progress-bar" class="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500 ease-out" style="width: 0%"></div>
       </div>
     </div>
 
-    <%= form_with(model: @match, local: true, html: { id: "match-form", class: "space-y-6" }) do |f| %>
-      <!-- Form Card -->
-      <div class="bg-white/80 dark:bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-slate-700/50 shadow-2xl overflow-hidden">
-        <div class="p-6 md:p-8 space-y-8">
+    <div class="grid gap-6">
+      <div>
+        <label for="organization-select" class="text-sm font-medium text-slate-700">Organization</label>
+        <%= select_tag :organization_id,
+                       options_for_select([["Select a gym…", ""]] + current_user.organizations.map { |org| [org.name, org.id] }, params[:organization_id]),
+                       id: "organization-select",
+                       class: "mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10",
+                       required: true,
+                       data: { action: "change->match-form#chooseOrganization", match_form_target: "organizationSelect" } %>
+      </div>
 
-          <!-- Step 1: Organization -->
-          <div class="step-container" data-step="1">
-            <label class="flex items-center text-base font-semibold text-slate-900 dark:text-white mb-3 group">
-              <span class="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 text-white text-sm mr-3 shadow-lg group-hover:scale-110 transition-transform">1</span>
-              <span class="group-hover:text-purple-400 transition-colors">Which gym?</span>
-            </label>
-            <%= select_tag :organization_id,
-                           options_for_select(
-                             [["Select your gym...", ""]] +
-                             current_user.organizations.map { |org| [org.name, org.id] },
-                             params[:organization_id]
-                           ),
-                           class: "w-full px-5 py-4 bg-slate-50 dark:bg-slate-900/70 border-2 border-slate-300 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-slate-900 dark:text-white text-lg transition-all duration-200 hover:border-slate-400 dark:hover:border-slate-500 cursor-pointer",
-                           id: "organization-select",
-                           required: true,
-                           autofocus: true %>
-            <div class="mt-2 text-xs text-slate-500 dark:text-slate-400 opacity-0 transition-opacity duration-300" id="org-hint">
-              <kbd class="px-2 py-1 bg-slate-200 dark:bg-slate-700 rounded text-xs">Tab</kbd> or <kbd class="px-2 py-1 bg-slate-200 dark:bg-slate-700 rounded text-xs">Enter</kbd> to continue
+      <div>
+        <%= f.label :leaderboard_id, "Leaderboard", class: "text-sm font-medium text-slate-700" %>
+        <%= f.select :leaderboard_id,
+                     [["Select a leaderboard…", ""]],
+                     {},
+                     class: "mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 disabled:bg-slate-100",
+                     disabled: true,
+                     required: true,
+                     data: { action: "change->match-form#chooseLeaderboard", match_form_target: "leaderboardSelect" } %>
+      </div>
+
+      <div>
+        <%= f.label :opponent_profile_id, "Opponent", class: "text-sm font-medium text-slate-700" %>
+        <%= f.select :opponent_profile_id,
+                     [["Select an opponent…", ""]],
+                     {},
+                     class: "mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 disabled:bg-slate-100",
+                     disabled: true,
+                     required: true,
+                     data: { action: "change->match-form#chooseOpponent", match_form_target: "opponentSelect" } %>
+      </div>
+
+      <%= hidden_field_tag :profile1_id, "", data: { match_form_target: "profileField" } %>
+
+      <fieldset class="space-y-3">
+        <legend class="text-sm font-medium text-slate-700">Result</legend>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <label class="block">
+            <%= f.radio_button :winner_profile_id,
+                               "",
+                               class: "peer sr-only",
+                               disabled: true,
+                               data: { match_form_target: "winnerMeRadio", action: "change->match-form#pickWinner" } %>
+            <div class="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-300 bg-white px-4 py-4 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-400 peer-checked:border-slate-900 peer-checked:bg-slate-900 peer-checked:text-white">
+              <span class="flex h-6 w-6 items-center justify-center rounded-full border border-slate-300 bg-slate-50 peer-checked:border-white peer-checked:bg-white/20">
+                <i class="fas fa-user text-xs text-slate-500 peer-checked:text-slate-900"></i>
+              </span>
+              I won
             </div>
-          </div>
-
-          <!-- Step 2: Leaderboard -->
-          <div class="step-container opacity-50 transition-all duration-300" data-step="2" id="step-2">
-            <label class="flex items-center text-base font-semibold text-slate-900 dark:text-white mb-3 group">
-              <span class="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 text-white text-sm mr-3 shadow-lg group-hover:scale-110 transition-transform">2</span>
-              <span class="group-hover:text-purple-400 transition-colors">Which game/sport?</span>
-            </label>
-            <%= f.select :leaderboard_id,
-                         [["First, select a gym above", ""]],
-                         {},
-                         { class: "w-full px-5 py-4 bg-slate-50 dark:bg-slate-900/70 border-2 border-slate-300 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-slate-900 dark:text-white text-lg transition-all duration-200 hover:border-slate-400 dark:hover:border-slate-500 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50",
-                           id: "leaderboard-select",
-                           required: true,
-                           disabled: true } %>
-            <div class="mt-2 text-xs text-slate-500 dark:text-slate-400 opacity-0 transition-opacity duration-300" id="leaderboard-hint">
-              <kbd class="px-2 py-1 bg-slate-200 dark:bg-slate-700 rounded text-xs">Tab</kbd> or <kbd class="px-2 py-1 bg-slate-200 dark:bg-slate-700 rounded text-xs">Enter</kbd> to continue
+          </label>
+          <label class="block">
+            <%= f.radio_button :winner_profile_id,
+                               "",
+                               class: "peer sr-only",
+                               disabled: true,
+                               data: { match_form_target: "winnerOpponentRadio", action: "change->match-form#pickWinner" } %>
+            <div class="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-300 bg-white px-4 py-4 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-400 peer-checked:border-slate-900 peer-checked:bg-slate-900 peer-checked:text-white">
+              <span class="flex h-6 w-6 items-center justify-center rounded-full border border-slate-300 bg-slate-50 peer-checked:border-white peer-checked:bg-white/20">
+                <i class="fas fa-user text-xs text-slate-500 peer-checked:text-slate-900"></i>
+              </span>
+              My opponent won
             </div>
-          </div>
-
-          <!-- Step 3: Opponent -->
-          <div class="step-container opacity-50 transition-all duration-300" data-step="3" id="step-3">
-            <label class="flex items-center text-base font-semibold text-slate-900 dark:text-white mb-3 group">
-              <span class="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 text-white text-sm mr-3 shadow-lg group-hover:scale-110 transition-transform">3</span>
-              <span class="group-hover:text-purple-400 transition-colors">Who did you play?</span>
-            </label>
-            <%= f.select :opponent_profile_id,
-                         [["First, select a game above", ""]],
-                         {},
-                         { class: "w-full px-5 py-4 bg-slate-50 dark:bg-slate-900/70 border-2 border-slate-300 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-slate-900 dark:text-white text-lg transition-all duration-200 hover:border-slate-400 dark:hover:border-slate-500 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50",
-                           id: "opponent-select",
-                           required: true,
-                           disabled: true } %>
-            <div class="mt-2 text-xs text-slate-500 dark:text-slate-400 opacity-0 transition-opacity duration-300" id="opponent-hint">
-              Select the result below
-            </div>
-          </div>
-
-          <!-- Hidden field for current user's profile -->
-          <%= hidden_field_tag :profile1_id, "", id: "profile1-id" %>
-
-          <!-- Step 4: Result -->
-          <div class="step-container opacity-50 transition-all duration-300" data-step="4" id="step-4">
-            <label class="flex items-center text-base font-semibold text-slate-900 dark:text-white mb-4 group">
-              <span class="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 text-white text-sm mr-3 shadow-lg group-hover:scale-110 transition-transform">4</span>
-              <span class="group-hover:text-purple-400 transition-colors">What was the result?</span>
-            </label>
-
-            <div class="grid grid-cols-2 gap-4">
-              <!-- I Won -->
-              <label class="relative cursor-pointer group" id="won-label">
-                <%= f.radio_button :winner_profile_id, "",
-                                   class: "peer sr-only",
-                                   id: "winner-me",
-                                   required: true,
-                                   disabled: true %>
-                <div class="h-full p-8 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/40 transition-all duration-200
-                            peer-checked:border-green-500 peer-checked:bg-green-500/10 peer-checked:shadow-lg peer-checked:shadow-green-500/20
-                            group-hover:border-slate-400 dark:group-hover:border-slate-500 group-hover:scale-105 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed
-                            peer-checked:animate-bounce-once">
-                  <div class="text-center">
-                    <div class="text-slate-900 dark:text-white font-bold text-xl mb-3">I Won</div>
-                    <div class="mt-3 w-6 h-6 rounded-full border-2 border-slate-300 dark:border-slate-600 mx-auto
-                                peer-checked:border-green-500 peer-checked:bg-green-500
-                                flex items-center justify-center transition-all duration-200">
-                      <svg class="w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
-                      </svg>
-                    </div>
-                    <div class="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                      Press <kbd class="px-2 py-1 bg-slate-200 dark:bg-slate-700 rounded text-xs">W</kbd>
-                    </div>
-                  </div>
-                </div>
-              </label>
-
-              <!-- I Lost -->
-              <label class="relative cursor-pointer group" id="lost-label">
-                <%= f.radio_button :winner_profile_id, "",
-                                   class: "peer sr-only",
-                                   id: "winner-opponent",
-                                   required: true,
-                                   disabled: true %>
-                <div class="h-full p-8 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/40 transition-all duration-200
-                            peer-checked:border-red-500 peer-checked:bg-red-500/10 peer-checked:shadow-lg peer-checked:shadow-red-500/20
-                            group-hover:border-slate-400 dark:group-hover:border-slate-500 group-hover:scale-105 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed
-                            peer-checked:animate-bounce-once">
-                  <div class="text-center">
-                    <div class="text-slate-900 dark:text-white font-bold text-xl mb-3">I Lost</div>
-                    <div class="mt-3 w-6 h-6 rounded-full border-2 border-slate-300 dark:border-slate-600 mx-auto
-                                peer-checked:border-red-500 peer-checked:bg-red-500
-                                flex items-center justify-center transition-all duration-200">
-                      <svg class="w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
-                      </svg>
-                    </div>
-                    <div class="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                      Press <kbd class="px-2 py-1 bg-slate-200 dark:bg-slate-700 rounded text-xs">L</kbd>
-                    </div>
-                  </div>
-                </div>
-              </label>
-            </div>
-          </div>
-
+          </label>
         </div>
-      </div>
+      </fieldset>
+    </div>
 
-      <!-- Submit Button -->
-      <div class="flex items-center justify-between">
-        <a href="<%= matches_path %>" class="text-slate-400 hover:text-white transition-colors">
-          Cancel
-        </a>
-        <button type="submit"
-                id="submit-btn"
-                disabled
-                class="px-8 py-4 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500
-                       text-white font-bold text-lg
-                       hover:shadow-lg hover:shadow-purple-500/50
-                       disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none
-                       transition-all duration-200 transform hover:scale-105 active:scale-95
-                       flex items-center space-x-2">
-          <span id="submit-text">Log Match</span>
-          <span id="submit-loading" class="hidden">
-            <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          </span>
-          <span class="text-xs opacity-70">or press <kbd class="px-2 py-1 bg-white/20 rounded">Enter</kbd></span>
-        </button>
-      </div>
-    <% end %>
-  </div>
-</div>
-
-<style>
-@keyframes bounce-once {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-
-.animate-bounce-once {
-  animation: bounce-once 0.5s ease;
-}
-
-@keyframes pulse-slow {
-  0%, 100% { opacity: 0.5; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.1); }
-}
-
-.animate-pulse-slow {
-  animation: pulse-slow 8s ease-in-out infinite;
-}
-</style>
-
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    console.log("Match form loaded");
-
-    // Get all form elements
-    const organizationSelect = document.getElementById("organization-select");
-    const leaderboardSelect = document.getElementById("leaderboard-select");
-    const opponentSelect = document.getElementById("opponent-select");
-    const profile1Input = document.getElementById("profile1-id");
-    const winnerMeRadio = document.getElementById("winner-me");
-    const winnerOpponentRadio = document.getElementById("winner-opponent");
-    const submitBtn = document.getElementById("submit-btn");
-    const matchForm = document.getElementById("match-form");
-    const progressBar = document.getElementById("progress-bar");
-    const currentStepText = document.getElementById("current-step");
-
-    // Store all data
-    <%
-      leaderboards_data = @leaderboards.map do |lb|
-        { id: lb.id, name: lb.name, org_id: lb.organization_id }
-      end
-    %>
-    const allData = <%= raw({ leaderboards: leaderboards_data, profiles_by_org: @user_profiles_by_org }.to_json) %>;
-
-    console.log("Form data loaded:", allData);
-
-    let currentStep = 1;
-
-    // Helper: Update progress bar
-    function updateProgress(step) {
-        currentStep = step;
-        const progress = (step / 4) * 100;
-        progressBar.style.width = progress + '%';
-        currentStepText.textContent = step;
-    }
-
-    // Helper: Enable/disable step with animation
-    function enableStep(stepNum) {
-        const stepContainer = document.getElementById(`step-${stepNum}`);
-        if (stepContainer) {
-            stepContainer.classList.remove('opacity-50');
-            stepContainer.classList.add('animate-fade-in');
-
-            // Show hint
-            const hint = document.getElementById(`${getHintId(stepNum)}-hint`);
-            if (hint) {
-                setTimeout(() => hint.classList.remove('opacity-0'), 200);
-            }
-        }
-    }
-
-    function disableStep(stepNum) {
-        const stepContainer = document.getElementById(`step-${stepNum}`);
-        if (stepContainer) {
-            stepContainer.classList.add('opacity-50');
-        }
-    }
-
-    function getHintId(stepNum) {
-        const map = { 2: 'leaderboard', 3: 'opponent' };
-        return map[stepNum] || 'org';
-    }
-
-    // Helper: Auto-focus next field
-    function focusNext(element) {
-        setTimeout(() => {
-            element.focus();
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 300);
-    }
-
-    // Step 1: Organization changes → Update leaderboards
-    organizationSelect.addEventListener("change", function() {
-        const orgId = this.value;
-        console.log("Organization selected:", orgId);
-
-        // Hide hint
-        document.getElementById('org-hint').classList.add('opacity-0');
-
-        leaderboardSelect.innerHTML = '<option value="">Select game/sport...</option>';
-        opponentSelect.innerHTML = '<option value="">Select opponent...</option>';
-
-        if (!orgId) {
-            leaderboardSelect.disabled = true;
-            opponentSelect.disabled = true;
-            disableStep(2);
-            disableStep(3);
-            disableStep(4);
-            updateProgress(1);
-            return;
-        }
-
-        // Filter leaderboards for this org
-        const orgLeaderboards = allData.leaderboards.filter(lb => lb.org_id == orgId);
-
-        if (orgLeaderboards.length === 0) {
-            leaderboardSelect.innerHTML = '<option value="">No games available</option>';
-            leaderboardSelect.disabled = true;
-            return;
-        }
-
-        orgLeaderboards.forEach(lb => {
-            const option = new Option(lb.name, lb.id);
-            leaderboardSelect.add(option);
-        });
-
-        leaderboardSelect.disabled = false;
-        enableStep(2);
-        updateProgress(2);
-
-        // Set profile1_id for this org
-        const profileId = allData.profiles_by_org[orgId];
-        profile1Input.value = profileId || "";
-        winnerMeRadio.value = profileId || "";
-
-        console.log("Set profile1_id:", profileId);
-
-        // Auto-focus next field
-        focusNext(leaderboardSelect);
-    });
-
-    // Step 2: Leaderboard changes → Fetch opponents
-    leaderboardSelect.addEventListener("change", function() {
-        const leaderboardId = this.value;
-        console.log("Leaderboard selected:", leaderboardId);
-
-        // Hide hint
-        document.getElementById('leaderboard-hint').classList.add('opacity-0');
-
-        opponentSelect.innerHTML = '<option value="">Loading...</option>';
-        opponentSelect.disabled = true;
-
-        if (!leaderboardId) {
-            opponentSelect.innerHTML = '<option value="">Select opponent...</option>';
-            disableStep(3);
-            disableStep(4);
-            updateProgress(2);
-            return;
-        }
-
-        // Fetch opponents for this leaderboard
-        fetch(`/matches/update_opponents?leaderboard_id=${leaderboardId}`, {
-            headers: {
-                "Accept": "application/json",
-                "X-Requested-With": "XMLHttpRequest"
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log("Opponents loaded:", data);
-
-            opponentSelect.innerHTML = '<option value="">Select opponent...</option>';
-
-            if (!data.opponents || data.opponents.length === 0) {
-                opponentSelect.innerHTML = '<option value="">No opponents available</option>';
-                return;
-            }
-
-            data.opponents.forEach(opp => {
-                const option = new Option(opp.username, opp.id);
-                opponentSelect.add(option);
-            });
-
-            opponentSelect.disabled = false;
-            enableStep(3);
-            updateProgress(3);
-
-            // Auto-focus next field
-            focusNext(opponentSelect);
-        })
-        .catch(error => {
-            console.error("Error fetching opponents:", error);
-            opponentSelect.innerHTML = '<option value="">Error loading opponents</option>';
-        });
-    });
-
-    // Step 3: Opponent changes → Update winner radio values
-    opponentSelect.addEventListener("change", function() {
-        const opponentId = this.value;
-        console.log("Opponent selected:", opponentId);
-
-        // Hide hint
-        document.getElementById('opponent-hint').classList.add('opacity-0');
-
-        winnerOpponentRadio.value = opponentId || "";
-
-        if (opponentId) {
-            // Enable result buttons
-            winnerMeRadio.disabled = false;
-            winnerOpponentRadio.disabled = false;
-            enableStep(4);
-            updateProgress(4);
-
-            // Auto-focus first result button
-            setTimeout(() => {
-                document.getElementById('won-label').scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 300);
-        } else {
-            winnerMeRadio.disabled = true;
-            winnerOpponentRadio.disabled = true;
-            disableStep(4);
-            submitBtn.disabled = true;
-        }
-    });
-
-    // Result selection → Enable submit
-    [winnerMeRadio, winnerOpponentRadio].forEach(radio => {
-        radio.addEventListener("change", function() {
-            if (this.checked) {
-                submitBtn.disabled = false;
-                setTimeout(() => {
-                    submitBtn.scrollIntoView({ behavior: 'smooth', block: 'end' });
-                }, 300);
-            }
-        });
-    });
-
-    // Keyboard shortcuts
-    document.addEventListener("keydown", function(e) {
-        // W key = I Won
-        if ((e.key === 'w' || e.key === 'W') && !winnerMeRadio.disabled && !e.ctrlKey && !e.metaKey) {
-            e.preventDefault();
-            winnerMeRadio.checked = true;
-            winnerMeRadio.dispatchEvent(new Event('change'));
-        }
-
-        // L key = I Lost
-        if ((e.key === 'l' || e.key === 'L') && !winnerOpponentRadio.disabled && !e.ctrlKey && !e.metaKey) {
-            e.preventDefault();
-            winnerOpponentRadio.checked = true;
-            winnerOpponentRadio.dispatchEvent(new Event('change'));
-        }
-    });
-
-    // Form submission
-    matchForm.addEventListener("submit", function(e) {
-        e.preventDefault();
-
-        // Validate
-        if (!organizationSelect.value) {
-            alert("Please select a gym");
-            organizationSelect.focus();
-            return;
-        }
-        if (!leaderboardSelect.value) {
-            alert("Please select a game/sport");
-            leaderboardSelect.focus();
-            return;
-        }
-        if (!opponentSelect.value) {
-            alert("Please select an opponent");
-            opponentSelect.focus();
-            return;
-        }
-        if (!winnerMeRadio.checked && !winnerOpponentRadio.checked) {
-            alert("Please select who won");
-            return;
-        }
-
-        // Show loading
-        submitBtn.disabled = true;
-        document.getElementById("submit-text").classList.add("hidden");
-        document.getElementById("submit-loading").classList.remove("hidden");
-
-        // Log what we're sending
-        const formData = new FormData(matchForm);
-        console.log("Submitting form:", {
-            leaderboard_id: formData.get("match[leaderboard_id]"),
-            opponent_profile_id: formData.get("match[opponent_profile_id]"),
-            winner_profile_id: formData.get("match[winner_profile_id]"),
-            profile1_id: formData.get("profile1_id")
-        });
-
-        // Submit
-        matchForm.submit();
-    });
-
-    // Keyboard shortcut (Enter key) to submit
-    matchForm.addEventListener("keypress", function(e) {
-        if (e.key === "Enter" && !e.shiftKey && !submitBtn.disabled) {
-            e.preventDefault();
-            submitBtn.click();
-        }
-    });
-
-    // Auto-focus first field
-    organizationSelect.focus();
-});
-</script>
+    <div class="flex items-center justify-between">
+      <%= link_to matches_path, class: "text-sm font-semibold text-slate-500 hover:text-slate-700" do %>
+        Cancel
+      <% end %>
+      <button type="submit"
+              class="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+              data-match-form-target="submitButton"
+              disabled>
+        Log match
+      </button>
+    </div>
+  <% end %>
+<% end %>

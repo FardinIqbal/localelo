@@ -19,6 +19,9 @@ import GreetingController from "./greeting_controller"
 import StatsCardController from "./stats_card_controller"
 import CountdownController from "./countdown_controller"
 import PerformanceStatsController from "./performance_stats_controller"  // NEW
+import OrganizationFiltersController from "./organization_filters_controller"
+import MatchesFiltersController from "./matches_filters_controller"
+import MatchFormController from "./match_form_controller"
 
 // === Optional / Future (uncomment when needed)
 // import TableController from "./table_controller"
@@ -42,6 +45,9 @@ application.register("greeting", GreetingController)
 application.register("stats-card", StatsCardController)
 application.register("countdown", CountdownController)
 application.register("performance-stats", PerformanceStatsController)  // NEW
+application.register("organization-filters", OrganizationFiltersController)
+application.register("matches-filters", MatchesFiltersController)
+application.register("match-form", MatchFormController)
 
 // Uncomment to enable these:
 // application.register("table", TableController)

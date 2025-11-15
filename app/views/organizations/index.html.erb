@@ -1,214 +1,104 @@
-<!-- app/views/organizations/index.html.erb -->
-
-<div class="relative">
-  <!-- Decorative background elements -->
-  <div class="absolute -top-20 -right-20 w-96 h-96 bg-purple-600/10 rounded-full filter blur-3xl animate-pulse-slow z-0"></div>
-  <div class="absolute -bottom-20 -left-20 w-64 h-64 bg-pink-600/10 rounded-full filter blur-3xl animate-pulse-slow z-0" style="animation-delay: 1.5s;"></div>
-
-  <!-- Main Content -->
-  <div class="relative z-10">
-    <!-- Page Header -->
-    <div class="mb-8">
-      <h1 class="font-extrabold text-4xl md:text-5xl bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-3">
-        Find an Organization
-      </h1>
-      <p class="text-slate-600 dark:text-slate-400 text-lg">
-        Browse organizations and request to join private ones or instantly join public ones.
-      </p>
-    </div>
-
-    <!-- Search & Filter Bar -->
-    <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl border border-slate-200 dark:border-slate-700 p-6 mb-8 transition-all duration-300 hover:border-purple-500/30">
-      <div class="flex flex-col md:flex-row gap-4">
-        <!-- Search Input -->
-        <div class="relative flex-grow">
-          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <i class="fas fa-search text-slate-500 dark:text-slate-400"></i>
-          </div>
-          <input
-            type="text"
-            id="search"
-            placeholder="Search organizations..."
-            class="w-full px-4 py-3 pl-11 bg-slate-50 dark:bg-slate-900/70 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200"
-            onkeyup="filterOrganizations()"
-          >
+<%= render "shared/layouts/page_shell",
+           title: "Find an organization",
+           subtitle: "Browse clubs that are already active or start a new one in a few seconds." do %>
+  <section data-controller="organization-filters" class="space-y-8">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div class="flex-1">
+        <label for="organization-search" class="text-sm font-medium text-slate-700">Search</label>
+        <div class="mt-2 flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+          <i class="fas fa-search text-slate-400"></i>
+          <input id="organization-search"
+                 type="search"
+                 placeholder="Search by name or location"
+                 class="w-full border-0 p-0 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-0"
+                 data-organization-filters-target="query"
+                 data-action="input->organization-filters#filter">
         </div>
-
-        <!-- Filter by Visibility -->
-        <div class="relative min-w-[200px]">
-          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <i class="fas fa-filter text-slate-500 dark:text-slate-400"></i>
-          </div>
-          <select
-            id="visibility-filter"
-            onchange="filterOrganizations()"
-            class="w-full px-4 py-3 pl-11 pr-10 bg-slate-50 dark:bg-slate-900/70 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 appearance-none transition-all duration-200"
-          >
-            <option value="">All Organizations</option>
+      </div>
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div>
+          <label for="organization-visibility" class="text-sm font-medium text-slate-700">Visibility</label>
+          <select id="organization-visibility"
+                  class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+                  data-organization-filters-target="visibility"
+                  data-action="change->organization-filters#filter">
+            <option value="">All organizations</option>
             <option value="open">Public</option>
             <option value="restricted">Private</option>
           </select>
-          <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-            <i class="fas fa-chevron-down text-slate-500 dark:text-slate-400 text-xs"></i>
-          </div>
         </div>
-
-        <!-- Create Organization Button -->
         <%= link_to new_organization_path,
-                    class: "inline-flex items-center justify-center px-6 py-3 rounded-lg font-medium text-white bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-500 hover:to-pink-400 shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 transform hover:-translate-y-0.5 active:scale-98 transition-all duration-200" do %>
+                    class: "sm:ml-4 inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700" do %>
           <i class="fas fa-plus mr-2"></i>
-          Create Gym
+          Create gym
         <% end %>
       </div>
     </div>
 
-    <!-- Organizations Grid -->
-    <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl border border-slate-200 dark:border-slate-700 p-6 transition-all duration-300 hover:border-purple-500/30">
-      <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-6">Available Organizations</h2>
-
-      <% if @organizations.present? %>
-        <div id="organizations-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <% @organizations.each do |organization| %>
-            <div class="organization-item group bg-white dark:bg-slate-900/70 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg overflow-hidden hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-300 hover:-translate-y-1 hover:border-purple-500/50"
-                 data-name="<%= organization.name.downcase %>"
-                 data-location="<%= organization.location&.downcase || '' %>"
-                 data-visibility="<%= organization.visibility %>">
-
-              <!-- Card Header with Background -->
-              <div class="h-32 bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-900/50 dark:to-purple-900/50 flex items-center justify-center relative overflow-hidden">
-                <% if organization.name.present? %>
-                  <div class="text-6xl font-bold text-slate-900/10 dark:text-white/10 absolute inset-0 flex items-center justify-center">
-                    <%= organization.name.first.upcase %>
-                  </div>
-                <% end %>
-
-                <!-- Visibility Badge -->
-                <div class="absolute top-3 right-3">
-                  <% if organization.open? %>
-                    <span class="bg-green-900/70 text-green-300 text-xs px-2 py-1 rounded-md backdrop-blur-sm">
-                      <i class="fas fa-lock-open mr-1"></i> Public
-                    </span>
-                  <% else %>
-                    <span class="bg-yellow-900/70 text-yellow-300 text-xs px-2 py-1 rounded-md backdrop-blur-sm">
-                      <i class="fas fa-lock mr-1"></i> Private
-                    </span>
+    <% if @organizations.present? %>
+      <div data-organization-filters-target="list" class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+        <% @organizations.each do |organization| %>
+          <article class="flex h-full flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+                   data-organization-filters-target="item"
+                   data-name="<%= organization.name.to_s.downcase %>"
+                   data-location="<%= organization.location.to_s.downcase %>"
+                   data-visibility="<%= organization.visibility %>">
+            <div class="space-y-3">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <h2 class="text-lg font-semibold text-slate-900"><%= organization.name %></h2>
+                  <% if organization.location.present? %>
+                    <p class="text-sm text-slate-500"><i class="fas fa-map-marker-alt mr-1 text-slate-400"></i><%= organization.location %></p>
                   <% end %>
                 </div>
-
-                <!-- Location Badge -->
-                <% if organization.location.present? %>
-                  <div class="absolute bottom-3 left-3 bg-white/90 dark:bg-slate-900/80 backdrop-blur-sm rounded-md px-2 py-1 text-xs text-slate-700 dark:text-slate-300 flex items-center">
-                    <i class="fas fa-map-marker-alt mr-1.5 text-pink-500"></i>
-                    <%= organization.location %>
-                  </div>
-                <% end %>
+                <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+                  <%= organization.open? ? "Public" : "Private" %>
+                </span>
               </div>
-
-              <!-- Card Content -->
-              <div class="p-5">
-                <h3 class="text-xl font-bold text-slate-900 dark:text-white group-hover:text-pink-500 transition-colors duration-300 mb-2">
-                  <%= organization.name %>
-                </h3>
-
-                <% if organization.description.present? %>
-                  <p class="text-slate-600 dark:text-slate-400 text-sm mb-4 line-clamp-2">
-                    <%= organization.description %>
-                  </p>
-                <% end %>
-
-                <!-- Stats Row -->
-                <div class="flex items-center justify-between mb-4">
-                  <div class="flex items-center text-slate-600 dark:text-slate-400 text-sm">
-                    <i class="fas fa-users mr-1.5 text-indigo-500 dark:text-indigo-400"></i>
-                    <%= organization.organization_memberships.count %> members
-                  </div>
-
-                  <div class="flex items-center text-slate-600 dark:text-slate-400 text-sm">
-                    <i class="fas fa-trophy mr-1.5 text-indigo-500 dark:text-indigo-400"></i>
-                    <%= organization.leaderboards.count %> leaderboards
-                  </div>
-                </div>
-
-                <!-- Join Button -->
-                <% if organization.open? %>
-                  <%= link_to join_organization_path(organization),
-                              data: { turbo_method: :post },
-                              class: "w-full inline-flex items-center justify-center font-medium rounded-lg transition-all duration-300 py-2.5 px-4 text-white bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 shadow-lg shadow-green-500/20 hover:shadow-green-500/40 transform hover:-translate-y-1" do %>
-                    <i class="fas fa-sign-in-alt mr-2"></i> Join Now
-                  <% end %>
-                <% else %>
-                  <%= link_to join_organization_path(organization),
-                              data: { turbo_method: :post },
-                              class: "w-full inline-flex items-center justify-center font-medium rounded-lg transition-all duration-300 py-2.5 px-4 text-white bg-gradient-to-r from-yellow-600 to-amber-500 hover:from-yellow-500 hover:to-amber-400 shadow-lg shadow-yellow-500/20 hover:shadow-yellow-500/40 transform hover:-translate-y-1" do %>
-                    <i class="fas fa-paper-plane mr-2"></i> Request to Join
-                  <% end %>
-                <% end %>
-              </div>
+              <% if organization.description.present? %>
+                <p class="text-sm leading-6 text-slate-600"><%= truncate(organization.description, length: 130) %></p>
+              <% end %>
             </div>
-          <% end %>
+            <dl class="mt-6 grid grid-cols-2 gap-3 text-sm text-slate-600">
+              <div class="rounded-xl border border-slate-200 px-3 py-2">
+                <dt class="text-xs uppercase tracking-wide text-slate-500">Members</dt>
+                <dd class="mt-1 font-semibold text-slate-900"><%= organization.organization_memberships.count %></dd>
+              </div>
+              <div class="rounded-xl border border-slate-200 px-3 py-2">
+                <dt class="text-xs uppercase tracking-wide text-slate-500">Leaderboards</dt>
+                <dd class="mt-1 font-semibold text-slate-900"><%= organization.leaderboards.count %></dd>
+              </div>
+            </dl>
+            <div class="mt-6">
+              <% if organization.open? %>
+                <%= link_to join_organization_path(organization),
+                            data: { turbo_method: :post },
+                            class: "inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600" do %>
+                  <i class="fas fa-user-plus"></i>
+                  Join now
+                <% end %>
+              <% else %>
+                <%= link_to join_organization_path(organization),
+                            data: { turbo_method: :post },
+                            class: "inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700" do %>
+                  <i class="fas fa-envelope"></i>
+                  Request access
+                <% end %>
+              <% end %>
+            </div>
+          </article>
+        <% end %>
+      </div>
+      <div data-organization-filters-target="empty" class="hidden rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center text-slate-500">
+        <p>No organizations match those filters yet.</p>
+      </div>
+    <% else %>
+      <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center text-slate-600">
+        <p class="text-base">No organizations available yet. Be the first to create one.</p>
+        <div class="mt-4">
+          <%= link_to "Create a gym", new_organization_path, class: "inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700" %>
         </div>
-
-        <!-- No Results Message (Hidden by Default) -->
-        <div id="no-results" class="py-12 text-center hidden">
-          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 mb-4">
-            <i class="fas fa-search text-2xl"></i>
-          </div>
-          <p class="text-slate-600 dark:text-slate-400">No organizations found matching your search.</p>
-        </div>
-      <% else %>
-        <!-- Empty State -->
-        <div class="py-12 text-center">
-          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 mb-4">
-            <i class="fas fa-dumbbell text-2xl"></i>
-          </div>
-          <p class="text-slate-600 dark:text-slate-400 mb-4">No organizations available yet.</p>
-          <p class="text-slate-500 dark:text-slate-500 mb-6">Be the first to create a gym or fitness club!</p>
-          <%= link_to new_organization_path,
-                      class: "inline-flex items-center justify-center font-medium rounded-xl transition-all duration-300 px-5 py-3
-                      text-white bg-gradient-to-r from-purple-600 to-pink-500
-                      hover:bg-gradient-to-r hover:from-purple-500 hover:to-pink-400
-                      shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40
-                      transform hover:-translate-y-1" do %>
-            <i class="fas fa-plus mr-2"></i> Create Gym
-          <% end %>
-        </div>
-      <% end %>
-    </div>
-  </div>
-</div>
-
-<script>
-    function filterOrganizations() {
-        let query = document.getElementById('search').value.toLowerCase().trim();
-        let visibilityFilter = document.getElementById('visibility-filter').value.toLowerCase();
-        let organizations = document.querySelectorAll('.organization-item');
-        let noResults = document.getElementById('no-results');
-        let visibleCount = 0;
-
-        organizations.forEach(org => {
-            let name = org.getAttribute('data-name');
-            let location = org.getAttribute('data-location');
-            let visibility = org.getAttribute('data-visibility');
-            let matchesQuery = name.includes(query) || location.includes(query);
-            let matchesVisibility = visibilityFilter === "" || visibility === visibilityFilter;
-
-            if (matchesQuery && matchesVisibility) {
-                org.style.display = "block";
-                visibleCount++;
-            } else {
-                org.style.display = "none";
-            }
-        });
-
-        // Show/hide no results message
-        if (visibleCount === 0 && document.querySelectorAll('.organization-item').length > 0) {
-            noResults.style.display = "block";
-        } else {
-            noResults.style.display = "none";
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
-        filterOrganizations();
-    });
-</script>
+      </div>
+    <% end %>
+  </section>
+<% end %>
