@@ -1,29 +1,30 @@
 <% if flash.any? %>
   <div
     id="flash-container"
-    class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 max-w-xl w-full space-y-2 pointer-events-none"
+    class="retro-flash-container fixed top-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-xl space-y-3 pointer-events-none"
     data-controller="flash"
   >
     <% flash.each do |type, message| %>
-      <% flash_class, icon_class = case type.to_s
-                                   when "notice" then ["bg-indigo-900/50 text-indigo-300 border-indigo-500", "fas fa-info-circle text-indigo-400"]
-                                   when "alert"  then ["bg-red-900/50 text-red-300 border-red-500", "fas fa-exclamation-circle text-red-400"]
-                                   when "success" then ["bg-green-900/50 text-green-300 border-green-500", "fas fa-check-circle text-green-400"]
-                                   else ["bg-slate-800/50 text-slate-300 border-slate-500", "fas fa-bell text-slate-400"]
-                                   end %>
-
+      <% variant, icon = case type.to_s
+                         when "notice" then ["retro-flash--notice", "fas fa-info-circle"]
+                         when "alert"  then ["retro-flash--alert", "fas fa-exclamation-circle"]
+                         when "success" then ["retro-flash--success", "fas fa-check-circle"]
+                         else ["", "fas fa-bell"]
+                         end %>
       <div
-        class="flash-message flex items-center justify-between rounded-xl px-4 py-3 border-l-4 shadow-md backdrop-blur-md transition-all duration-500 transform opacity-100 translate-y-0 <%= flash_class %>"
-        role="alert"
+        class="retro-flash <%= variant %> opacity-100 translate-y-0 transition-all duration-500"
+        role="status"
         data-flash-target="message"
       >
-        <div class="flex items-center">
-          <i class="<%= icon_class %> mr-3"></i>
-          <p class="font-medium"><%= message %></p>
+        <div class="retro-flash__content">
+          <i class="retro-flash__icon <%= icon %>"></i>
+          <span><%= message %></span>
         </div>
         <button
-          class="close-flash text-lg hover:text-white transition-colors duration-300"
+          type="button"
+          class="retro-flash__close"
           data-action="click->flash#close"
+          aria-label="Dismiss message"
         >
           &times;
         </button>
