@@ -19,6 +19,7 @@ import GreetingController from "./greeting_controller"
 import StatsCardController from "./stats_card_controller"
 import CountdownController from "./countdown_controller"
 import PerformanceStatsController from "./performance_stats_controller"  // NEW
+import OrganizationTabsController from "./organization_tabs_controller"
 
 // === Optional / Future (uncomment when needed)
 // import TableController from "./table_controller"
@@ -42,6 +43,7 @@ application.register("greeting", GreetingController)
 application.register("stats-card", StatsCardController)
 application.register("countdown", CountdownController)
 application.register("performance-stats", PerformanceStatsController)  // NEW
+application.register("organization-tabs", OrganizationTabsController)
 
 // Uncomment to enable these:
 // application.register("table", TableController)

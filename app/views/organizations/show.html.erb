@@ -165,102 +165,105 @@
             </div>
           </div>
 
+          <!-- Sidebar -->
           <div class="space-y-6">
+            <!-- Top Rivals -->
             <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-700 p-5">
-              <div class="flex items-center justify-between">
+              <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-semibold text-white">Top Rivals</h3>
                 <i class="fas fa-fire text-pink-400"></i>
               </div>
 
               <% if @viewer_profile.nil? %>
-                <p class="mt-3 text-sm text-slate-300">
-                  Become an approved member of this gym to unlock rivalry insights.
-                </p>
+                <div class="text-center py-6">
+                  <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-pink-500/10 text-pink-400 mb-3">
+                    <i class="fas fa-lock"></i>
+                  </div>
+                  <p class="text-sm text-slate-400">
+                    Join this gym to discover your top rivals
+                  </p>
+                </div>
               <% elsif @top_rivals.present? %>
-                <ul class="mt-6 grid grid-cols-1 gap-4">
+                <div class="space-y-3">
                   <% @top_rivals.each_with_index do |entry, index| %>
-                    <li class="group relative overflow-hidden rounded-2xl border border-pink-500/15 bg-slate-900/60 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-pink-400/40 hover:shadow-lg hover:shadow-pink-500/20">
-                      <div class="pointer-events-none absolute -right-20 -top-24 h-40 w-40 rounded-full bg-gradient-to-br from-pink-500/30 via-purple-500/10 to-transparent blur-3xl opacity-0 transition-opacity duration-300 group-hover:opacity-80"></div>
-
-                      <div class="relative flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-                        <div class="flex items-start gap-4">
-                          <div class="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-pink-500 to-purple-500 text-base font-semibold text-white shadow-lg shadow-pink-500/20">
+                    <div class="group bg-slate-900/40 rounded-lg p-3 border border-slate-700/50 hover:border-pink-500/30 transition-all">
+                      <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-3">
+                          <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center text-sm font-bold">
                             <%= index + 1 %>
                           </div>
                           <div>
-                            <div class="flex items-center gap-2">
-                              <%= link_to entry[:profile].username, profile_path(entry[:profile]), class: "text-lg font-semibold text-white transition-colors hover:text-pink-300" %>
-                              <span class="rounded-full border border-pink-500/30 bg-pink-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-pink-200">Rival</span>
-                            </div>
-                            <p class="mt-1 text-xs text-slate-400">Keep tabs on the players who keep pushing you to level up.</p>
+                            <%= link_to entry[:profile].username, profile_path(entry[:profile]), class: "font-medium text-slate-200 hover:text-pink-400 transition-colors" %>
                             <%= render "organizations/matchup_insight_stats", entry: entry %>
                           </div>
                         </div>
-
-                        <div class="flex flex-col gap-2 md:items-end">
-                          <%= link_to new_match_path(opponent_profile_id: entry[:profile].id, return_to_organization_id: @organization.id),
-                                      class: "inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 via-purple-500 to-purple-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-pink-500/20 transition-all hover:shadow-pink-500/30 focus:outline-none focus:ring-2 focus:ring-pink-400/60 focus:ring-offset-2 focus:ring-offset-slate-900" do %>
-                            <i class="fas fa-swords text-[13px]"></i>
-                            Challenge Now
-                          <% end %>
-                        </div>
                       </div>
-                    </li>
+                      <%= link_to new_match_path(opponent_profile_id: entry[:profile].id, return_to_organization_id: @organization.id),
+                                  class: "w-full mt-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-pink-500 to-purple-500 text-slate-100 text-xs font-medium hover:shadow-lg hover:shadow-pink-500/20 transition-all text-center block" do %>
+                        <i class="fas fa-swords mr-1"></i> Challenge
+                      <% end %>
+                    </div>
                   <% end %>
-                </ul>
+                </div>
               <% else %>
-                <p class="mt-3 text-sm text-slate-300">
-                  Log a match to discover who your fiercest rivals are inside this organization.
-                </p>
+                <div class="text-center py-6">
+                  <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-700 text-slate-500 mb-3">
+                    <i class="fas fa-user-friends"></i>
+                  </div>
+                  <p class="text-sm text-slate-400">
+                    Log matches to discover your rivals
+                  </p>
+                </div>
               <% end %>
             </div>
 
+            <!-- Challengers You're Ducking -->
             <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-700 p-5">
-              <div class="flex items-center justify-between">
+              <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-semibold text-white">Challengers You're Ducking</h3>
                 <i class="fas fa-running text-purple-400"></i>
               </div>
 
               <% if @viewer_profile.nil? %>
-                <p class="mt-3 text-sm text-slate-300">
-                  Once you're approved, we'll highlight the players you should square off with next.
-                </p>
+                <div class="text-center py-6">
+                  <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/10 text-purple-400 mb-3">
+                    <i class="fas fa-lock"></i>
+                  </div>
+                  <p class="text-sm text-slate-400">
+                    Join to see who you haven't faced yet
+                  </p>
+                </div>
               <% elsif @ducking_opponents.present? %>
-                <ul class="mt-6 grid grid-cols-1 gap-4">
+                <div class="space-y-3">
                   <% @ducking_opponents.each_with_index do |entry, index| %>
-                    <li class="group relative overflow-hidden rounded-2xl border border-purple-500/15 bg-slate-900/60 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-purple-400/40 hover:shadow-lg hover:shadow-purple-500/20">
-                      <div class="pointer-events-none absolute -left-16 -bottom-24 h-40 w-40 rounded-full bg-gradient-to-br from-blue-500/10 via-purple-500/20 to-transparent blur-3xl opacity-0 transition-opacity duration-300 group-hover:opacity-80"></div>
-
-                      <div class="relative flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-                        <div class="flex items-start gap-4">
-                          <div class="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-500 text-base font-semibold text-white shadow-lg shadow-purple-500/20">
+                    <div class="group bg-slate-900/40 rounded-lg p-3 border border-slate-700/50 hover:border-purple-500/30 transition-all">
+                      <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-3">
+                          <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-sm font-bold">
                             <%= index + 1 %>
                           </div>
                           <div>
-                            <div class="flex items-center gap-2">
-                              <%= link_to entry[:profile].username, profile_path(entry[:profile]), class: "text-lg font-semibold text-white transition-colors hover:text-purple-300" %>
-                              <span class="rounded-full border border-purple-500/30 bg-purple-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-purple-200">Challenger</span>
-                            </div>
-                            <p class="mt-1 text-xs text-slate-400">These players are itching for a match—don't keep them waiting.</p>
+                            <%= link_to entry[:profile].username, profile_path(entry[:profile]), class: "font-medium text-slate-200 hover:text-purple-400 transition-colors" %>
                             <%= render "organizations/matchup_insight_stats", entry: entry %>
                           </div>
                         </div>
-
-                        <div class="flex flex-col gap-2 md:items-end">
-                          <%= link_to new_match_path(opponent_profile_id: entry[:profile].id, return_to_organization_id: @organization.id),
-                                      class: "inline-flex items-center justify-center gap-2 rounded-xl bg-slate-800/80 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-slate-900/40 transition-all hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-purple-400/60 focus:ring-offset-2 focus:ring-offset-slate-900" do %>
-                            <i class="fas fa-bolt text-[13px]"></i>
-                            Issue Challenge
-                          <% end %>
-                        </div>
                       </div>
-                    </li>
+                      <%= link_to new_match_path(opponent_profile_id: entry[:profile].id, return_to_organization_id: @organization.id),
+                                  class: "w-full mt-2 px-3 py-1.5 rounded-lg bg-slate-700 text-slate-200 text-xs font-medium hover:bg-slate-600 transition-all text-center block" do %>
+                        <i class="fas fa-bolt mr-1"></i> Face Them
+                      <% end %>
+                    </div>
                   <% end %>
-                </ul>
+                </div>
               <% else %>
-                <p class="mt-3 text-sm text-slate-300">
-                  Nice work—you've been keeping up with everyone in this gym recently.
-                </p>
+                <div class="text-center py-6">
+                  <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-500/10 text-green-400 mb-3">
+                    <i class="fas fa-check-circle"></i>
+                  </div>
+                  <p class="text-sm text-slate-400">
+                    You've faced everyone recently!
+                  </p>
+                </div>
               <% end %>
             </div>
           </div>
@@ -475,8 +478,8 @@
                   </td>
                   <td class="px-4 py-3 text-purple-400 font-medium">
                     <%= (LeaderboardRating.joins(:leaderboard)
-                                         .where(profile_id: membership.profile_id, leaderboards: { organization_id: @organization.id })
-                                         .maximum(:rating) || 1500).round %>
+                                          .where(profile_id: membership.profile_id, leaderboards: { organization_id: @organization.id })
+                                          .maximum(:rating) || 1500).round %>
                   </td>
                   <% if @organization.admin?(current_user) %>
                     <td class="px-4 py-3">
@@ -709,29 +712,39 @@
     </div>
   </div>
 </div>
+
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    function initializeOrganizationTabs() {
         // Tab functionality
         const tabButtons = document.querySelectorAll('[data-tabs-target]');
         const tabContents = document.querySelectorAll('#gym-content > div');
 
         tabButtons.forEach(button => {
+            // Guard to avoid duplicate bindings across Turbo visits
+            if (button.dataset.tabsBound === "true") return;
+            button.dataset.tabsBound = "true";
+
             button.addEventListener('click', function () {
                 const target = this.dataset.tabsTarget;
 
                 // Hide all tab contents
                 tabContents.forEach(content => {
                     content.classList.add('hidden');
+                    content.classList.remove('block');
                 });
 
-                // Remove active class from all buttons
-                tabButtons.forEach(btn => {
+                // Remove active class from all buttons (fresh query to include any clones)
+                document.querySelectorAll('[data-tabs-target]').forEach(btn => {
                     btn.classList.remove('active', 'text-purple-400', 'border-purple-500');
                     btn.classList.add('border-transparent');
                 });
 
                 // Show the selected tab content
-                document.getElementById(target).classList.remove('hidden');
+                const targetEl = document.getElementById(target);
+                if (targetEl) {
+                    targetEl.classList.remove('hidden');
+                    targetEl.classList.add('block');
+                }
 
                 // Add active class to clicked button
                 this.classList.add('active', 'text-purple-400', 'border-purple-500');
@@ -742,12 +755,16 @@
         // Search functionality for members
         const memberSearch = document.getElementById('member-search');
         if (memberSearch) {
-            memberSearch.addEventListener('input', function () {
+            // Remove existing listeners
+            const newSearch = memberSearch.cloneNode(true);
+            memberSearch.parentNode.replaceChild(newSearch, memberSearch);
+            
+            newSearch.addEventListener('input', function () {
                 const searchTerm = this.value.toLowerCase();
                 const rows = document.querySelectorAll('#members-table-body tr');
 
                 rows.forEach(row => {
-                    const username = row.querySelector('td:first-child .text-white').textContent.toLowerCase();
+                    const username = row.querySelector('td:first-child .text-white')?.textContent.toLowerCase() || '';
                     row.style.display = username.includes(searchTerm) ? '' : 'none';
                 });
             });
@@ -756,7 +773,11 @@
         // Filter functionality for members
         const memberStatusFilter = document.getElementById('member-status-filter');
         if (memberStatusFilter) {
-            memberStatusFilter.addEventListener('change', function () {
+            // Remove existing listeners
+            const newFilter = memberStatusFilter.cloneNode(true);
+            memberStatusFilter.parentNode.replaceChild(newFilter, memberStatusFilter);
+            
+            newFilter.addEventListener('change', function () {
                 const status = this.value;
                 const rows = document.querySelectorAll('#members-table-body tr');
 
@@ -766,7 +787,7 @@
                     });
                 } else {
                     rows.forEach(row => {
-                        const memberStatus = row.querySelector('td:nth-child(2) span').textContent.toLowerCase();
+                        const memberStatus = row.querySelector('td:nth-child(2) span')?.textContent.toLowerCase() || '';
                         row.style.display = (memberStatus === status) ? '' : 'none';
                     });
                 }
@@ -776,7 +797,11 @@
         // Filter functionality for matches
         const matchLeaderboardFilter = document.getElementById('match-leaderboard-filter');
         if (matchLeaderboardFilter) {
-            matchLeaderboardFilter.addEventListener('change', function () {
+            // Remove existing listeners
+            const newFilter = matchLeaderboardFilter.cloneNode(true);
+            matchLeaderboardFilter.parentNode.replaceChild(newFilter, matchLeaderboardFilter);
+            
+            newFilter.addEventListener('change', function () {
                 const leaderboardId = this.value;
                 const rows = document.querySelectorAll('#matches-table-body tr');
 
@@ -785,13 +810,20 @@
                         row.style.display = '';
                     });
                 } else {
+                    const selectedOption = this.querySelector(`option[value="${leaderboardId}"]`);
+                    const matchLeaderboard = selectedOption ? selectedOption.textContent.trim() : '';
+                    
                     rows.forEach(row => {
-                        const leaderboardName = row.querySelector('td:nth-child(2)').textContent.trim();
-                        const matchLeaderboard = document.querySelector(`option[value="${leaderboardId}"]`).textContent;
+                        const leaderboardName = row.querySelector('td:nth-child(2)')?.textContent.trim() || '';
                         row.style.display = (leaderboardName === matchLeaderboard) ? '' : 'none';
                     });
                 }
             });
         }
-    });
+    }
+
+    // Initialize on both DOMContentLoaded and turbo:load
+    document.addEventListener('DOMContentLoaded', initializeOrganizationTabs);
+    document.addEventListener('turbo:load', initializeOrganizationTabs);
+    document.addEventListener('turbo:render', initializeOrganizationTabs);
 </script>
