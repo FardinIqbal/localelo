@@ -22,12 +22,20 @@ export default class extends Controller {
   changeTab(event) {
     event.preventDefault()
     event.stopPropagation()
+    
     const targetId = event.currentTarget.dataset.tabsTarget
-    if (!targetId) return
+    if (!targetId) {
+      console.warn("No tabsTarget found on button")
+      return
+    }
 
-    // Get all buttons and content - use targets if available, otherwise querySelector
-    const buttons = this.hasButtonTarget ? this.buttonTargets : this.element.querySelectorAll('[data-organization-tabs-target="button"]')
-    const contents = this.hasContentTarget ? this.contentTargets : this.element.querySelectorAll('[data-organization-tabs-target="content"]')
+    this.switchToTab(targetId, event.currentTarget)
+  }
+
+  switchToTab(targetId, clickedButton) {
+    // Get all buttons and content
+    const buttons = this.element.querySelectorAll('[data-tabs-target]')
+    const contents = this.element.querySelectorAll('[role="tabpanel"]')
 
     // Hide all tab contents
     contents.forEach((content) => {
@@ -37,8 +45,9 @@ export default class extends Controller {
 
     // Remove active state from all buttons
     buttons.forEach((btn) => {
-      btn.classList.remove("active", "text-purple-400", "border-purple-500")
-      btn.classList.add("border-transparent")
+      btn.classList.remove("active", "text-purple-400", "border-purple-500", "font-semibold")
+      btn.classList.add("border-transparent", "text-slate-400")
+      btn.setAttribute("aria-selected", "false")
     })
 
     // Show the selected tab content
@@ -49,8 +58,11 @@ export default class extends Controller {
     }
 
     // Add active state to clicked button
-    event.currentTarget.classList.add("active", "text-purple-400", "border-purple-500")
-    event.currentTarget.classList.remove("border-transparent")
+    if (clickedButton) {
+      clickedButton.classList.add("active", "text-purple-400", "border-purple-500", "font-semibold")
+      clickedButton.classList.remove("border-transparent", "text-slate-400")
+      clickedButton.setAttribute("aria-selected", "true")
+    }
   }
 
   filterMembersSearch(event) {
@@ -96,9 +108,9 @@ export default class extends Controller {
   }
 
   showInitialTab() {
-    // Get buttons and content - use targets if available, otherwise querySelector
-    const buttons = this.hasButtonTarget ? Array.from(this.buttonTargets) : Array.from(this.element.querySelectorAll('[data-organization-tabs-target="button"]'))
-    const contents = this.hasContentTarget ? Array.from(this.contentTargets) : Array.from(this.element.querySelectorAll('[data-organization-tabs-target="content"]'))
+    // Get buttons using the data-tabs-target attribute
+    const buttons = Array.from(this.element.querySelectorAll('[data-tabs-target]'))
+    const contents = Array.from(this.element.querySelectorAll('[role="tabpanel"]'))
     
     if (buttons.length === 0 || contents.length === 0) return
 
@@ -110,27 +122,6 @@ export default class extends Controller {
     const targetId = activeButton.dataset.tabsTarget
     if (!targetId) return
 
-    // Hide all content
-    contents.forEach((content) => {
-      content.classList.add("hidden")
-      content.classList.remove("block")
-    })
-
-    // Remove active state from all buttons
-    buttons.forEach((btn) => {
-      btn.classList.remove("active", "text-purple-400", "border-purple-500")
-      btn.classList.add("border-transparent")
-    })
-
-    // Show the target content
-    const targetEl = document.getElementById(targetId)
-    if (targetEl) {
-      targetEl.classList.remove("hidden")
-      targetEl.classList.add("block")
-    }
-
-    // Set active state on the button
-    activeButton.classList.add("active", "text-purple-400", "border-purple-500")
-    activeButton.classList.remove("border-transparent")
+    this.switchToTab(targetId, activeButton)
   }
 }

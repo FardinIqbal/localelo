@@ -1,14 +1,14 @@
 <!-- File #1 content (Hero Section) -->
 <section class="relative text-white overflow-hidden min-h-screen bg-gradient-to-br from-indigo-900 via-purple-800 to-indigo-900">
-  <!-- Enhanced Decorative Elements -->
-  <div class="absolute w-72 h-72 -top-24 -left-24 rounded-full bg-purple-500/30 blur-3xl animate-pulse-slow"></div>
-  <div class="absolute w-96 h-96 -bottom-32 -right-32 rounded-full bg-indigo-500/20 blur-3xl animate-pulse-slow" style="animation-delay: 2s;"></div>
-  <div class="absolute w-48 h-48 top-1/4 right-1/4 rounded-full bg-pink-500/25 blur-3xl animate-pulse-slow" style="animation-delay: 1s;"></div>
+  <!-- Enhanced Decorative Elements - Hidden on mobile for performance -->
+  <div class="decorative-blur absolute w-72 h-72 -top-24 -left-24 rounded-full bg-purple-500/30 blur-3xl animate-pulse-slow"></div>
+  <div class="decorative-blur absolute w-96 h-96 -bottom-32 -right-32 rounded-full bg-indigo-500/20 blur-3xl animate-pulse-slow delay-2000"></div>
+  <div class="decorative-blur absolute w-48 h-48 top-1/4 right-1/4 rounded-full bg-pink-500/25 blur-3xl animate-pulse-slow delay-1000"></div>
 
-  <!-- Floating Elements -->
-  <div class="absolute top-1/3 left-1/5 w-6 h-6 bg-white/10 rounded-full backdrop-blur-sm animate-float"></div>
-  <div class="absolute bottom-1/4 right-1/3 w-8 h-8 bg-white/10 rounded-full backdrop-blur-sm animate-float" style="animation-delay: 1.5s;"></div>
-  <div class="absolute top-2/3 left-1/4 w-4 h-4 bg-white/10 rounded-full backdrop-blur-sm animate-float" style="animation-delay: 2.5s;"></div>
+  <!-- Floating Elements - Hidden on mobile for performance -->
+  <div class="decorative-blur absolute top-1/3 left-1/5 w-6 h-6 bg-white/10 rounded-full backdrop-blur-sm animate-float"></div>
+  <div class="decorative-blur absolute bottom-1/4 right-1/3 w-8 h-8 bg-white/10 rounded-full backdrop-blur-sm animate-float delay-1500"></div>
+  <div class="decorative-blur absolute top-2/3 left-1/4 w-4 h-4 bg-white/10 rounded-full backdrop-blur-sm animate-float delay-2500"></div>
 
   <!-- Main Hero Content -->
   <div class="relative z-10 container mx-auto px-6 py-16 flex flex-col lg:flex-row items-center justify-between min-h-[85vh] parallax-container">
@@ -35,14 +35,14 @@
       </h1>
 
       <!-- Enhanced Subheading -->
-      <p class="text-xl md:text-2xl font-medium text-white/90 max-w-xl mx-auto lg:mx-0 leading-relaxed animate-fade-in-up" style="animation-delay: 0.2s;">
+      <p class="text-xl md:text-2xl font-medium text-white/90 max-w-xl mx-auto lg:mx-0 leading-relaxed animate-fade-in-up delay-200">
         Our elite Elo ranking system
         <span class="underline decoration-pink-500 decoration-4 underline-offset-2">boosts engagement by 32%</span>
         and turns casual players into devoted rivals across any 1v1 sport.
       </p>
 
       <!-- Enhanced Social Proof -->
-      <div class="flex flex-wrap justify-center lg:justify-start gap-4 mt-8 animate-fade-in-up" style="animation-delay: 0.4s;">
+      <div class="flex flex-wrap justify-center lg:justify-start gap-4 mt-8 animate-fade-in-up delay-400">
         <div class="bg-white/5 backdrop-blur-md rounded-xl p-4 border border-white/10 shadow-xl hover:shadow-purple-500/20 hover:bg-white/10 transition-all duration-300">
           <div class="text-4xl font-black bg-gradient-to-r from-white to-purple-300 bg-clip-text text-transparent">500+</div>
           <div class="text-sm text-purple-300">Active Clubs</div>
@@ -58,7 +58,7 @@
       </div>
 
       <!-- Enhanced Testimonial -->
-      <div class="bg-white/5 backdrop-blur-md p-4 rounded-xl border border-white/10 shadow-xl mt-8 animate-fade-in-up" style="animation-delay: 0.6s;">
+      <div class="bg-white/5 backdrop-blur-md p-4 rounded-xl border border-white/10 shadow-xl mt-8 animate-fade-in-up delay-600">
         <div class="flex items-center gap-4">
           <div class="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
             JD
@@ -73,7 +73,7 @@
       </div>
 
       <!-- Enhanced CTA Buttons -->
-      <div class="flex flex-col sm:flex-row justify-center lg:justify-start space-y-4 sm:space-y-0 sm:space-x-6 mt-8 animate-fade-in-up" style="animation-delay: 0.8s;">
+      <div class="flex flex-col sm:flex-row justify-center lg:justify-start space-y-4 sm:space-y-0 sm:space-x-6 mt-8 animate-fade-in-up delay-800">
         <a href="/users/sign_up" class="group relative inline-flex items-center px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-500 rounded-xl font-bold text-lg transition duration-300 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 overflow-hidden">
           <span class="relative z-10">Sign Up</span>
           <div class="absolute inset-0 bg-gradient-to-r from-pink-500 to-purple-600 transform scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500"></div>
@@ -87,7 +87,7 @@
     </div>
 
     <!-- Right Column: Enhanced Interactive Demo -->
-    <div class="lg:w-1/2 flex justify-center lg:justify-end relative animate-fade-in-up parallax-content" style="animation-delay: 0.5s;">
+    <div class="lg:w-1/2 flex justify-center lg:justify-end relative animate-fade-in-up parallax-content delay-500">
       <div class="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-gradient-to-r from-pink-500/30 to-purple-500/30 backdrop-blur-md parallax-bg"></div>
 
       <!-- Enhanced Live Demo Interface -->

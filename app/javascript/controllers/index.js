@@ -18,8 +18,9 @@ import ThemeController from "./theme_controller"
 import GreetingController from "./greeting_controller"
 import StatsCardController from "./stats_card_controller"
 import CountdownController from "./countdown_controller"
-import PerformanceStatsController from "./performance_stats_controller"  // NEW
+import PerformanceStatsController from "./performance_stats_controller"
 import OrganizationTabsController from "./organization_tabs_controller"
+import OrganizationSearchController from "./organization_search_controller"
 
 // === Optional / Future (uncomment when needed)
 // import TableController from "./table_controller"
@@ -42,8 +43,9 @@ application.register("theme", ThemeController)
 application.register("greeting", GreetingController)
 application.register("stats-card", StatsCardController)
 application.register("countdown", CountdownController)
-application.register("performance-stats", PerformanceStatsController)  // NEW
+application.register("performance-stats", PerformanceStatsController)
 application.register("organization-tabs", OrganizationTabsController)
+application.register("organization-search", OrganizationSearchController)
 
 // Uncomment to enable these:
 // application.register("table", TableController)

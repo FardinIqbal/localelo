@@ -1,7 +1,7 @@
 <div class="relative min-h-screen">
-  <!-- Decorative Background Elements -->
-  <div class="absolute -top-20 -right-20 w-96 h-96 bg-purple-600/10 rounded-full filter blur-3xl animate-pulse-slow z-0"></div>
-  <div class="absolute -bottom-20 -left-20 w-64 h-64 bg-pink-600/10 rounded-full filter blur-3xl animate-pulse-slow z-0" style="animation-delay: 1.5s;"></div>
+  <!-- Decorative Background Elements - Hidden on mobile -->
+  <div class="decorative-blur absolute -top-20 -right-20 w-96 h-96 bg-purple-600/10 rounded-full filter blur-3xl animate-pulse z-0"></div>
+  <div class="decorative-blur absolute -bottom-20 -left-20 w-64 h-64 bg-pink-600/10 rounded-full filter blur-3xl animate-pulse z-0 delay-1000"></div>
 
   <!-- Main Content -->
   <div class="relative z-10 max-w-7xl mx-auto px-4 py-6">
@@ -79,20 +79,86 @@
       </div>
     </div>
 
-    <!-- Rankings Table -->
-    <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-700 overflow-hidden">
+    <!-- Rankings Section -->
+    <div class="bg-slate-800/70 rounded-xl border border-slate-700 overflow-hidden">
       <div class="flex justify-between items-center p-4 border-b border-slate-700">
         <h2 class="text-xl font-bold text-white">Leaderboard Rankings</h2>
 
         <% if current_user && @organization.organization_memberships.approved.by_user(current_user.id).exists? %>
-          <%= link_to new_match_path(leaderboard_id: @leaderboard.id), class: "text-purple-400 text-sm hover:text-pink-400 transition-colors" do %>
+          <%= link_to new_match_path(leaderboard_id: @leaderboard.id), class: "px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-medium hover:shadow-lg transition-all touch-target" do %>
             <i class="fas fa-plus mr-1"></i> Log Match
           <% end %>
         <% end %>
       </div>
 
       <% if @leaderboard.leaderboard_ratings.any? %>
-        <div class="overflow-x-auto">
+        <!-- Mobile Card View -->
+        <div class="md:hidden divide-y divide-slate-700">
+          <% @leaderboard.leaderboard_ratings.order(rating: :desc).each_with_index do |rating, index| %>
+            <div class="p-4 <%= rating.profile.user == current_user ? 'bg-purple-900/20' : '' %>">
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center">
+                  <!-- Rank -->
+                  <% if index < 3 %>
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg mr-3
+                                <%= index == 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-white' :
+                                                  index == 1 ? 'bg-gradient-to-br from-slate-300 to-slate-500 text-white' :
+                                                  'bg-gradient-to-br from-amber-600 to-amber-800 text-white' %>">
+                      <%= index + 1 %>
+                    </div>
+                  <% else %>
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center bg-slate-700 text-slate-300 font-bold text-lg mr-3">
+                      <%= index + 1 %>
+                    </div>
+                  <% end %>
+                  
+                  <!-- Player Info -->
+                  <div>
+                    <div class="font-medium text-white text-lg">
+                      <%= link_to rating.profile.username, profile_path(rating.profile), class: "hover:text-purple-300 transition-colors" %>
+                    </div>
+                    <% if rating.profile.user == current_user %>
+                      <span class="text-xs text-purple-400">You</span>
+                    <% end %>
+                  </div>
+                </div>
+                
+                <!-- Rating -->
+                <div class="text-right">
+                  <div class="font-bold text-2xl text-purple-400"><%= rating.rating.round %></div>
+                  <div class="text-xs text-slate-400">±<%= rating.rating_deviation.round %></div>
+                </div>
+              </div>
+              
+              <!-- Stats Row -->
+              <div class="grid grid-cols-3 gap-2 mb-3">
+                <div class="bg-slate-900/50 rounded-lg p-2 text-center">
+                  <div class="text-xs text-slate-400">Wins</div>
+                  <div class="text-lg font-bold text-green-400"><%= rating.wins %></div>
+                </div>
+                <div class="bg-slate-900/50 rounded-lg p-2 text-center">
+                  <div class="text-xs text-slate-400">Losses</div>
+                  <div class="text-lg font-bold text-red-400"><%= rating.losses %></div>
+                </div>
+                <div class="bg-slate-900/50 rounded-lg p-2 text-center">
+                  <div class="text-xs text-slate-400">Win %</div>
+                  <% win_percentage = rating.wins + rating.losses > 0 ? (rating.wins.to_f / (rating.wins + rating.losses) * 100).round : 0 %>
+                  <div class="text-lg font-bold text-slate-300"><%= win_percentage %>%</div>
+                </div>
+              </div>
+              
+              <!-- Challenge Button -->
+              <% if current_user && rating.profile.user != current_user && @organization.organization_memberships.approved.by_user(current_user.id).exists? %>
+                <%= link_to new_match_path(opponent_profile_id: rating.profile.id, leaderboard_id: @leaderboard.id), class: "w-full flex items-center justify-center px-4 py-3 rounded-lg bg-slate-700 text-white font-medium hover:bg-slate-600 transition-colors touch-target touch-active" do %>
+                  <i class="fas fa-gamepad mr-2"></i> Challenge
+                <% end %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+        
+        <!-- Desktop Table View -->
+        <div class="hidden md:block overflow-x-auto">
           <table class="w-full text-left">
             <thead class="bg-slate-700/50 text-slate-300 text-sm">
             <tr>
@@ -112,8 +178,8 @@
                   <% if index < 3 %>
                     <div class="w-8 h-8 rounded-full mx-auto flex items-center justify-center
                                 <%= index == 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-white' :
-                                                                      index == 1 ? 'bg-gradient-to-br from-slate-300 to-slate-500 text-white' :
-                                                                        'bg-gradient-to-br from-amber-600 to-amber-800 text-white' %>">
+                                                  index == 1 ? 'bg-gradient-to-br from-slate-300 to-slate-500 text-white' :
+                                                  'bg-gradient-to-br from-amber-600 to-amber-800 text-white' %>">
                       <%= index + 1 %>
                     </div>
                   <% else %>
@@ -168,7 +234,7 @@
           </div>
           <p class="text-slate-400 mb-4">No players in this leaderboard yet</p>
           <% if current_user && @organization.organization_memberships.approved.by_user(current_user.id).exists? %>
-            <%= link_to new_match_path(leaderboard_id: @leaderboard.id), class: "px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:shadow-lg hover:shadow-purple-500/20 transition-all" do %>
+            <%= link_to new_match_path(leaderboard_id: @leaderboard.id), class: "px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:shadow-lg hover:shadow-purple-500/20 transition-all touch-target" do %>
               <i class="fas fa-plus mr-2"></i> Log First Match
             <% end %>
           <% end %>

@@ -6,3 +6,212 @@
   /* Optional: Set default color scheme */
   --color-scheme: dark light;
 }
+
+/* ========================================
+   MOBILE PERFORMANCE OPTIMIZATIONS
+   ======================================== */
+
+/* Touch optimizations - improve tap responsiveness */
+@layer base {
+  /* Faster taps on mobile by removing 300ms delay */
+  a, button, input, select, textarea, [role="button"] {
+    touch-action: manipulation;
+  }
+
+  /* Improve tap feedback with purple highlight */
+  * {
+    -webkit-tap-highlight-color: rgba(139, 92, 246, 0.2);
+  }
+
+  /* Prevent text selection on interactive elements */
+  button, [role="button"], .no-select {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
+
+/* Mobile-first backdrop blur - lighter on mobile for performance */
+@layer utilities {
+  /* Use reduced blur on mobile, full blur on desktop */
+  .mobile-blur {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  
+  @media (min-width: 768px) {
+    .mobile-blur {
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+  }
+
+  /* Hide decorative elements on mobile for performance */
+  .decorative-blur {
+    display: none;
+  }
+  
+  @media (min-width: 768px) {
+    .decorative-blur {
+      display: block;
+    }
+  }
+
+  /* Smooth scrolling for scrollable containers */
+  .scroll-smooth-touch {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Minimum touch target utility */
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* Active state for better touch feedback */
+  .touch-active:active {
+    transform: scale(0.97);
+    opacity: 0.9;
+  }
+}
+
+/* Performance hints for animations */
+@layer utilities {
+  .gpu-accelerated {
+    transform: translateZ(0);
+    will-change: transform;
+  }
+}
+
+/* Focus visible styles for accessibility */
+@layer utilities {
+  .focus-ring {
+    outline: none;
+  }
+  
+  .focus-ring:focus-visible {
+    outline: 2px solid rgb(139, 92, 246);
+    outline-offset: 2px;
+  }
+}
+
+/* Enhanced focus states for all interactive elements */
+@layer base {
+  /* Better focus visibility on buttons and links */
+  a:focus-visible,
+  button:focus-visible,
+  [role="button"]:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid rgb(139, 92, 246);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Remove default focus outline on click (keep for keyboard) */
+  a:focus:not(:focus-visible),
+  button:focus:not(:focus-visible) {
+    outline: none;
+  }
+}
+
+/* Screen reader only utility */
+@layer utilities {
+  .sr-only-focusable:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: inherit;
+    margin: inherit;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .decorative-blur {
+    display: none !important;
+  }
+}
+
+/* Animation delay utilities */
+@layer utilities {
+  .delay-0 { animation-delay: 0ms; }
+  .delay-200 { animation-delay: 200ms; }
+  .delay-400 { animation-delay: 400ms; }
+  .delay-500 { animation-delay: 500ms; }
+  .delay-600 { animation-delay: 600ms; }
+  .delay-800 { animation-delay: 800ms; }
+  .delay-1000 { animation-delay: 1000ms; }
+  .delay-1500 { animation-delay: 1500ms; }
+  .delay-2000 { animation-delay: 2000ms; }
+  .delay-2500 { animation-delay: 2500ms; }
+}
+
+/* Animation keyframes */
+@layer utilities {
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  @keyframes pulse-slow {
+    0%, 100% {
+      opacity: 0.5;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.05);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.6s ease-out forwards;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-pulse-slow {
+    animation: pulse-slow 8s ease-in-out infinite;
+  }
+}

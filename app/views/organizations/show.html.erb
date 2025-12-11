@@ -1,8 +1,8 @@
 <!-- app/views/organizations/show.html.erb -->
-<div class="relative min-h-screen bg-slate-900 text-white">
-  <!-- Decorative Background Elements -->
-  <div class="absolute -top-20 -right-20 w-96 h-96 bg-purple-600/10 rounded-full filter blur-3xl animate-pulse-slow z-0"></div>
-  <div class="absolute -bottom-20 -left-20 w-64 h-64 bg-pink-600/10 rounded-full filter blur-3xl animate-pulse-slow z-0" style="animation-delay: 1.5s;"></div>
+<div class="relative min-h-screen bg-slate-900 text-white" data-controller="organization-tabs">
+  <!-- Decorative Background Elements - Hidden on mobile for performance -->
+  <div class="decorative-blur absolute -top-20 -right-20 w-96 h-96 bg-purple-600/10 rounded-full filter blur-3xl animate-pulse z-0"></div>
+  <div class="decorative-blur absolute -bottom-20 -left-20 w-64 h-64 bg-pink-600/10 rounded-full filter blur-3xl animate-pulse z-0 delay-1000"></div>
 
   <!-- Main Content -->
   <div class="relative z-10 max-w-7xl mx-auto px-4 py-6">
@@ -36,14 +36,14 @@
       </div>
 
       <!-- Mobile Action Buttons - Horizontal Scrollable -->
-      <div class="mt-4 md:hidden overflow-x-auto pb-2 -mx-4 px-4">
+      <div class="mt-4 md:hidden overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide scroll-smooth-touch">
         <div class="flex space-x-3 w-max">
           <% if @organization.owner?(current_user) || @organization.admin?(current_user) %>
-            <%= link_to edit_organization_path(@organization), class: "whitespace-nowrap px-4 py-2 rounded-lg bg-slate-700 text-white font-medium hover:bg-slate-600 transition-all flex items-center" do %>
+            <%= link_to edit_organization_path(@organization), class: "whitespace-nowrap px-5 py-3 rounded-xl bg-slate-700 text-white font-medium hover:bg-slate-600 transition-all flex items-center touch-target touch-active" do %>
               <i class="fas fa-edit mr-2"></i> Edit Gym
             <% end %>
 
-            <%= link_to new_organization_leaderboard_path(@organization), class: "whitespace-nowrap px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:shadow-lg hover:shadow-purple-500/20 transition-all flex items-center" do %>
+            <%= link_to new_organization_leaderboard_path(@organization), class: "whitespace-nowrap px-5 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium shadow-lg shadow-purple-500/20 transition-all flex items-center touch-target touch-active" do %>
               <i class="fas fa-plus mr-2"></i> Add Leaderboard
             <% end %>
           <% end %>
@@ -51,7 +51,7 @@
           <% unless @organization.member?(current_user) %>
             <%= link_to join_organization_path(@organization),
                         data: { turbo_method: :post },
-                        class: "whitespace-nowrap px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:shadow-lg hover:shadow-purple-500/20 transition-all flex items-center" do %>
+                        class: "whitespace-nowrap px-5 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium shadow-lg shadow-purple-500/20 transition-all flex items-center touch-target touch-active" do %>
               <i class="fas fa-user-plus mr-2"></i> <%= @organization.open? ? "Join Gym" : "Request to Join" %>
             <% end %>
           <% end %>
@@ -81,35 +81,63 @@
     </div>
 
 
-    <!-- Tab Navigation -->
-    <div class="mb-6 border-b border-slate-700">
-      <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="gym-tabs" role="tablist">
-        <li class="mr-2" role="presentation">
-          <button class="inline-block p-4 border-b-2 border-purple-500 rounded-t-lg text-purple-400 active" id="overview-tab" data-tabs-target="overview" type="button" role="tab" aria-controls="overview" aria-selected="true">Overview</button>
-        </li>
-        <li class="mr-2" role="presentation">
-          <button class="inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-purple-400 hover:border-purple-400" id="leaderboards-tab" data-tabs-target="leaderboards" type="button" role="tab" aria-controls="leaderboards" aria-selected="false">Leaderboards</button>
-        </li>
-        <li class="mr-2" role="presentation">
-          <button class="inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-purple-400 hover:border-purple-400" id="members-tab" data-tabs-target="members" type="button" role="tab" aria-controls="members" aria-selected="false">Members</button>
-        </li>
-        <li class="mr-2" role="presentation">
-          <button class="inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-purple-400 hover:border-purple-400" id="matches-tab" data-tabs-target="matches" type="button" role="tab" aria-controls="matches" aria-selected="false">Recent
-            Matches
-          </button>
-        </li>
-        <% if @organization.owner?(current_user) || @organization.admin?(current_user) %>
+    <!-- Tab Navigation - Horizontally scrollable on mobile -->
+    <div class="mb-6 border-b border-slate-700 -mx-4 px-4 md:mx-0 md:px-0">
+      <div class="overflow-x-auto scrollbar-hide scroll-smooth-touch">
+        <ul class="flex -mb-px text-sm font-medium min-w-max" id="gym-tabs" role="tablist">
           <li role="presentation">
-            <button class="inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-purple-400 hover:border-purple-400" id="manage-tab" data-tabs-target="manage" type="button" role="tab" aria-controls="manage" aria-selected="false">Manage</button>
+            <button class="inline-flex items-center justify-center px-4 py-3 md:px-5 md:py-4 border-b-2 border-purple-500 text-purple-400 font-semibold whitespace-nowrap touch-target active transition-colors" 
+                    id="overview-tab" data-tabs-target="overview" data-organization-tabs-target="button" data-action="click->organization-tabs#changeTab" type="button" role="tab" aria-controls="overview" aria-selected="true">
+              <i class="fas fa-home mr-2 md:hidden"></i>
+              <span>Overview</span>
+            </button>
           </li>
-        <% end %>
-      </ul>
+          <li role="presentation">
+            <button class="inline-flex items-center justify-center px-4 py-3 md:px-5 md:py-4 border-b-2 border-transparent text-slate-400 hover:text-purple-400 hover:border-purple-400/50 whitespace-nowrap touch-target transition-colors" 
+                    id="leaderboards-tab" data-tabs-target="leaderboards" data-organization-tabs-target="button" data-action="click->organization-tabs#changeTab" type="button" role="tab" aria-controls="leaderboards" aria-selected="false">
+              <i class="fas fa-trophy mr-2 md:hidden"></i>
+              <span>Leaderboards</span>
+            </button>
+          </li>
+          <li role="presentation">
+            <button class="inline-flex items-center justify-center px-4 py-3 md:px-5 md:py-4 border-b-2 border-transparent text-slate-400 hover:text-purple-400 hover:border-purple-400/50 whitespace-nowrap touch-target transition-colors" 
+                    id="members-tab" data-tabs-target="members" data-organization-tabs-target="button" data-action="click->organization-tabs#changeTab" type="button" role="tab" aria-controls="members" aria-selected="false">
+              <i class="fas fa-users mr-2 md:hidden"></i>
+              <span>Members</span>
+            </button>
+          </li>
+          <li role="presentation">
+            <button class="inline-flex items-center justify-center px-4 py-3 md:px-5 md:py-4 border-b-2 border-transparent text-slate-400 hover:text-purple-400 hover:border-purple-400/50 whitespace-nowrap touch-target transition-colors" 
+                    id="matches-tab" data-tabs-target="matches" data-organization-tabs-target="button" data-action="click->organization-tabs#changeTab" type="button" role="tab" aria-controls="matches" aria-selected="false">
+              <i class="fas fa-gamepad mr-2 md:hidden"></i>
+              <span>Matches</span>
+            </button>
+          </li>
+          <% if @organization.owner?(current_user) || @organization.admin?(current_user) %>
+            <li role="presentation">
+              <button class="inline-flex items-center justify-center px-4 py-3 md:px-5 md:py-4 border-b-2 border-transparent text-slate-400 hover:text-purple-400 hover:border-purple-400/50 whitespace-nowrap touch-target transition-colors" 
+                      id="manage-tab" data-tabs-target="manage" data-organization-tabs-target="button" data-action="click->organization-tabs#changeTab" type="button" role="tab" aria-controls="manage" aria-selected="false">
+                <i class="fas fa-cog mr-2 md:hidden"></i>
+                <span>Manage</span>
+              </button>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+      <!-- Scroll indicator for mobile -->
+      <div class="md:hidden flex justify-center mt-1">
+        <div class="flex space-x-1">
+          <div class="w-1 h-1 rounded-full bg-slate-600"></div>
+          <div class="w-1 h-1 rounded-full bg-slate-600"></div>
+          <div class="w-1 h-1 rounded-full bg-slate-600"></div>
+        </div>
+      </div>
     </div>
 
     <!-- Tab Content -->
     <div id="gym-content">
       <!-- Overview Tab -->
-      <div class="block" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+      <div class="block" id="overview" role="tabpanel" aria-labelledby="overview-tab" data-organization-tabs-target="content">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <!-- Gym Info & Stats -->
           <div class="lg:col-span-2">
@@ -289,7 +317,7 @@
       </div>
 
       <!-- Leaderboards Tab -->
-      <div class="hidden" id="leaderboards" role="tabpanel" aria-labelledby="leaderboards-tab">
+      <div class="hidden" id="leaderboards" role="tabpanel" aria-labelledby="leaderboards-tab" data-organization-tabs-target="content">
         <div class="mb-6 flex justify-between items-center">
           <h2 class="text-2xl font-bold text-white">All Leaderboards</h2>
           <% if @organization.admin?(current_user) %>
@@ -404,19 +432,22 @@
       </div>
 
       <!-- Members Tab -->
-      <div class="hidden" id="members" role="tabpanel" aria-labelledby="members-tab">
-        <div class="mb-6 flex justify-between items-center">
+      <div class="hidden" id="members" role="tabpanel" aria-labelledby="members-tab" data-organization-tabs-target="content">
+        <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <h2 class="text-2xl font-bold text-white">Members</h2>
-          <div class="flex space-x-2">
-            <div class="relative">
-              <input type="text" id="member-search" placeholder="Search members..." class="bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+          <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+            <div class="relative flex-grow sm:flex-grow-0">
+              <input type="text" id="member-search" placeholder="Search members..." 
+                     class="w-full bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent touch-target"
+                     data-action="input->organization-tabs#filterMembersSearch">
               <div class="absolute inset-y-0 right-0 flex items-center pr-3">
                 <i class="fas fa-search text-slate-400"></i>
               </div>
             </div>
 
             <% if @organization.admin?(current_user) %>
-              <select id="member-status-filter" class="bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+              <select id="member-status-filter" class="bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent touch-target"
+                      data-action="change->organization-tabs#filterMembersStatus">
                 <option value="all">All Members</option>
                 <option value="approved">Approved</option>
                 <option value="pending">Pending</option>
@@ -429,7 +460,96 @@
           Membership status determines access, while admin and owner roles are granted separately once a member is approved.
         </p>
 
-        <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-700 overflow-hidden">
+        <!-- Mobile Card View -->
+        <div class="md:hidden space-y-3" id="members-cards">
+          <% @organization.organization_memberships.includes(:organization_role, profile: :user).each do |membership| %>
+            <div class="bg-slate-800/70 rounded-xl border border-slate-700 p-4 member-card"
+                 data-username="<%= membership.profile.username.to_s.downcase %>"
+                 data-status="<%= membership.status %>">
+              <div class="flex items-start justify-between mb-3">
+                <div class="flex items-center">
+                  <div class="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center text-white font-bold text-lg">
+                    <%= membership.profile.username.to_s[0..1].upcase %>
+                  </div>
+                  <div class="ml-3">
+                    <div class="text-white font-medium text-lg">
+                      <%= link_to membership.profile.username, profile_path(membership.profile), class: "hover:text-purple-300 transition-colors" %>
+                    </div>
+                    <div class="text-xs text-slate-400"><%= membership.profile.user&.email || "User unavailable" %></div>
+                  </div>
+                </div>
+                <% if membership.status == "approved" %>
+                  <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-400/20 text-green-400">Approved</span>
+                <% elsif membership.status == "pending" %>
+                  <span class="px-2 py-1 rounded-full text-xs font-medium bg-yellow-400/20 text-yellow-400">Pending</span>
+                <% end %>
+              </div>
+              
+              <div class="grid grid-cols-3 gap-3 text-center mb-3">
+                <div class="bg-slate-900/50 rounded-lg p-2">
+                  <div class="text-xs text-slate-400">Matches</div>
+                  <div class="text-sm font-bold text-white">
+                    <%= Match.joins(:leaderboard, :match_participants)
+                             .where(leaderboards: { organization_id: @organization.id })
+                             .where(match_participants: { profile_id: membership.profile_id })
+                             .distinct
+                             .count %>
+                  </div>
+                </div>
+                <div class="bg-slate-900/50 rounded-lg p-2">
+                  <div class="text-xs text-slate-400">Rating</div>
+                  <div class="text-sm font-bold text-purple-400">
+                    <%= (LeaderboardRating.joins(:leaderboard)
+                                          .where(profile_id: membership.profile_id, leaderboards: { organization_id: @organization.id })
+                                          .maximum(:rating) || 1500).round %>
+                  </div>
+                </div>
+                <div class="bg-slate-900/50 rounded-lg p-2">
+                  <div class="text-xs text-slate-400">Joined</div>
+                  <div class="text-sm font-medium text-slate-300"><%= membership.created_at.strftime("%b %Y") %></div>
+                </div>
+              </div>
+              
+              <% if @organization.admin?(current_user) %>
+                <div class="flex items-center justify-between pt-3 border-t border-slate-700">
+                  <div>
+                    <% if @organization.owner?(membership.profile.user) %>
+                      <span class="px-2 py-1 rounded-full text-xs font-medium bg-purple-400/20 text-purple-400">Owner</span>
+                    <% elsif membership.admin? %>
+                      <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-400/20 text-blue-400">Admin</span>
+                    <% else %>
+                      <span class="px-2 py-1 rounded-full text-xs font-medium bg-slate-400/20 text-slate-400">Member</span>
+                    <% end %>
+                  </div>
+                  <div class="flex items-center space-x-3">
+                    <% if membership.status == "pending" %>
+                      <%= link_to approve_member_organization_path(@organization, user_id: membership.user&.id), data: { turbo_method: :patch }, class: "w-10 h-10 flex items-center justify-center rounded-full bg-green-400/20 text-green-400 hover:bg-green-400/30 transition-colors touch-target" do %>
+                        <i class="fas fa-check"></i>
+                      <% end %>
+                    <% end %>
+                    <% if !@organization.owner?(membership.user) && membership.user&.id != current_user.id %>
+                      <% if membership.admin? %>
+                        <button class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-400/20 text-blue-400 hover:bg-blue-400/30 transition-colors demote-admin-btn touch-target" data-user-id="<%= membership.user&.id %>">
+                          <i class="fas fa-arrow-down"></i>
+                        </button>
+                      <% else %>
+                        <button class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors promote-admin-btn touch-target" data-user-id="<%= membership.user&.id %>">
+                          <i class="fas fa-arrow-up"></i>
+                        </button>
+                      <% end %>
+                      <button class="w-10 h-10 flex items-center justify-center rounded-full bg-red-400/20 text-red-400 hover:bg-red-400/30 transition-colors remove-member-btn touch-target" data-user-id="<%= membership.user&.id %>">
+                        <i class="fas fa-user-minus"></i>
+                      </button>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Desktop Table View -->
+        <div class="hidden md:block bg-slate-800/70 rounded-xl border border-slate-700 overflow-hidden">
           <div class="overflow-x-auto">
             <table class="w-full text-left">
               <thead class="bg-slate-700/50 text-xs uppercase text-slate-400">
@@ -526,18 +646,20 @@
       </div>
 
       <!-- Matches Tab -->
-      <div class="hidden" id="matches" role="tabpanel" aria-labelledby="matches-tab">
-        <div class="mb-6 flex justify-between items-center">
+      <div class="hidden" id="matches" role="tabpanel" aria-labelledby="matches-tab" data-organization-tabs-target="content">
+        <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <h2 class="text-2xl font-bold text-white">Recent Matches</h2>
-          <div class="flex space-x-2">
-            <div class="relative">
-              <input type="text" id="match-search" placeholder="Search matches..." class="bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+          <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+            <div class="relative flex-grow sm:flex-grow-0">
+              <input type="text" id="match-search" placeholder="Search matches..." 
+                     class="w-full bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent touch-target">
               <div class="absolute inset-y-0 right-0 flex items-center pr-3">
                 <i class="fas fa-search text-slate-400"></i>
               </div>
             </div>
 
-            <select id="match-leaderboard-filter" class="bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+            <select id="match-leaderboard-filter" class="bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent touch-target"
+                    data-action="change->organization-tabs#filterMatches">
               <option value="all">All Leaderboards</option>
               <% @leaderboards.each do |leaderboard| %>
                 <option value="<%= leaderboard.id %>"><%= leaderboard.name %></option>
@@ -546,7 +668,92 @@
           </div>
         </div>
 
-        <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-700 overflow-hidden">
+        <!-- Mobile Card View for Matches -->
+        <div class="md:hidden space-y-3" id="matches-cards">
+          <% if @recent_matches.any? %>
+            <% @recent_matches.each do |match| %>
+              <% primary_profile = match.profile1 %>
+              <% opponent_profile = match.opponent_profile %>
+              <% primary_participant = match.participant_for(primary_profile) %>
+              <% opponent_participant = match.participant_for(opponent_profile) %>
+              <div class="bg-slate-800/70 rounded-xl border border-slate-700 p-4 match-card"
+                   data-leaderboard="<%= match.leaderboard.name.downcase %>">
+                <!-- Match Header -->
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-xs text-slate-400"><%= match.created_at.strftime("%b %d, %Y") %></span>
+                  <span class="px-2 py-1 rounded-full text-xs font-medium bg-slate-700 text-slate-300">
+                    <%= match.leaderboard.name %>
+                  </span>
+                </div>
+                
+                <!-- Players -->
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center flex-1">
+                    <div class="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 font-bold">
+                      <%= (primary_profile&.username || "?")[0..1].upcase %>
+                    </div>
+                    <div class="ml-2">
+                      <% if primary_profile %>
+                        <%= link_to primary_profile.username, profile_path(primary_profile), class: "text-white font-medium hover:text-purple-400 block" %>
+                      <% else %>
+                        <span class="text-slate-400">Unknown</span>
+                      <% end %>
+                      <%= rating_change_badge(primary_participant) %>
+                    </div>
+                  </div>
+                  
+                  <div class="px-3 text-slate-500 font-bold">vs</div>
+                  
+                  <div class="flex items-center flex-1 justify-end">
+                    <div class="mr-2 text-right">
+                      <% if opponent_profile %>
+                        <%= link_to opponent_profile.username, profile_path(opponent_profile), class: "text-white font-medium hover:text-pink-400 block" %>
+                      <% else %>
+                        <span class="text-slate-400">Unknown</span>
+                      <% end %>
+                      <%= rating_change_badge(opponent_participant) %>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-pink-500/20 flex items-center justify-center text-pink-400 font-bold">
+                      <%= (opponent_profile&.username || "?")[0..1].upcase %>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Result & Actions -->
+                <div class="flex items-center justify-between pt-3 border-t border-slate-700">
+                  <div>
+                    <% if match.is_draw %>
+                      <span class="px-3 py-1 rounded-full text-sm font-medium bg-yellow-400/20 text-yellow-400">Draw</span>
+                    <% elsif match.winner_profile_id.present? %>
+                      <span class="px-3 py-1 rounded-full text-sm font-medium bg-green-400/20 text-green-400">
+                        <i class="fas fa-trophy mr-1"></i> <%= match.winner_profile&.username %> won
+                      </span>
+                    <% else %>
+                      <span class="text-slate-400 text-sm">No result</span>
+                    <% end %>
+                  </div>
+                  <% if @organization.admin?(current_user) %>
+                    <div class="flex items-center space-x-2">
+                      <%= link_to match_path(match), class: "w-10 h-10 flex items-center justify-center rounded-full bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors touch-target" do %>
+                        <i class="fas fa-eye"></i>
+                      <% end %>
+                      <%= link_to match_path(match), data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to remove this match?" }, class: "w-10 h-10 flex items-center justify-center rounded-full bg-red-400/20 text-red-400 hover:bg-red-400/30 transition-colors touch-target" do %>
+                        <i class="fas fa-trash"></i>
+                      <% end %>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          <% else %>
+            <div class="bg-slate-800/70 rounded-xl border border-slate-700 p-8 text-center">
+              <p class="text-slate-400">No matches have been logged yet.</p>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Desktop Table View for Matches -->
+        <div class="hidden md:block bg-slate-800/70 rounded-xl border border-slate-700 overflow-hidden">
           <div class="overflow-x-auto">
             <table class="w-full text-left">
               <thead class="bg-slate-700/50 text-xs uppercase text-slate-400">
@@ -639,7 +846,7 @@
 
       <!-- Manage Tab (Admin Only) -->
       <% if @organization.owner?(current_user) || @organization.admin?(current_user) %>
-        <div class="hidden" id="manage" role="tabpanel" aria-labelledby="manage-tab">
+        <div class="hidden" id="manage" role="tabpanel" aria-labelledby="manage-tab" data-organization-tabs-target="content">
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- Gym Settings -->
             <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-700 overflow-hidden">
@@ -713,117 +920,53 @@
   </div>
 </div>
 
+<!-- Fallback script in case Stimulus controller doesn't load -->
 <script>
-    function initializeOrganizationTabs() {
-        // Tab functionality
-        const tabButtons = document.querySelectorAll('[data-tabs-target]');
-        const tabContents = document.querySelectorAll('#gym-content > div');
-
-        tabButtons.forEach(button => {
-            // Guard to avoid duplicate bindings across Turbo visits
-            if (button.dataset.tabsBound === "true") return;
-            button.dataset.tabsBound = "true";
-
-            button.addEventListener('click', function () {
-                const target = this.dataset.tabsTarget;
-
-                // Hide all tab contents
-                tabContents.forEach(content => {
-                    content.classList.add('hidden');
-                    content.classList.remove('block');
-                });
-
-                // Remove active class from all buttons (fresh query to include any clones)
-                document.querySelectorAll('[data-tabs-target]').forEach(btn => {
-                    btn.classList.remove('active', 'text-purple-400', 'border-purple-500');
-                    btn.classList.add('border-transparent');
-                });
-
-                // Show the selected tab content
-                const targetEl = document.getElementById(target);
-                if (targetEl) {
-                    targetEl.classList.remove('hidden');
-                    targetEl.classList.add('block');
-                }
-
-                // Add active class to clicked button
-                this.classList.add('active', 'text-purple-400', 'border-purple-500');
-                this.classList.remove('border-transparent');
-            });
+(function() {
+  function initTabs() {
+    const tabButtons = document.querySelectorAll('#gym-tabs [data-tabs-target]');
+    const tabContents = document.querySelectorAll('#gym-content > div[role="tabpanel"]');
+    
+    if (tabButtons.length === 0) return;
+    
+    tabButtons.forEach(function(button) {
+      button.addEventListener('click', function(e) {
+        e.preventDefault();
+        const targetId = this.dataset.tabsTarget;
+        
+        // Hide all tab contents
+        tabContents.forEach(function(content) {
+          content.classList.add('hidden');
+          content.classList.remove('block');
         });
-
-        // Search functionality for members
-        const memberSearch = document.getElementById('member-search');
-        if (memberSearch) {
-            // Remove existing listeners
-            const newSearch = memberSearch.cloneNode(true);
-            memberSearch.parentNode.replaceChild(newSearch, memberSearch);
-            
-            newSearch.addEventListener('input', function () {
-                const searchTerm = this.value.toLowerCase();
-                const rows = document.querySelectorAll('#members-table-body tr');
-
-                rows.forEach(row => {
-                    const username = row.querySelector('td:first-child .text-white')?.textContent.toLowerCase() || '';
-                    row.style.display = username.includes(searchTerm) ? '' : 'none';
-                });
-            });
+        
+        // Remove active state from all buttons
+        tabButtons.forEach(function(btn) {
+          btn.classList.remove('active', 'text-purple-400', 'border-purple-500', 'font-semibold');
+          btn.classList.add('border-transparent', 'text-slate-400');
+        });
+        
+        // Show the selected tab content
+        const targetEl = document.getElementById(targetId);
+        if (targetEl) {
+          targetEl.classList.remove('hidden');
+          targetEl.classList.add('block');
         }
-
-        // Filter functionality for members
-        const memberStatusFilter = document.getElementById('member-status-filter');
-        if (memberStatusFilter) {
-            // Remove existing listeners
-            const newFilter = memberStatusFilter.cloneNode(true);
-            memberStatusFilter.parentNode.replaceChild(newFilter, memberStatusFilter);
-            
-            newFilter.addEventListener('change', function () {
-                const status = this.value;
-                const rows = document.querySelectorAll('#members-table-body tr');
-
-                if (status === 'all') {
-                    rows.forEach(row => {
-                        row.style.display = '';
-                    });
-                } else {
-                    rows.forEach(row => {
-                        const memberStatus = row.querySelector('td:nth-child(2) span')?.textContent.toLowerCase() || '';
-                        row.style.display = (memberStatus === status) ? '' : 'none';
-                    });
-                }
-            });
-        }
-
-        // Filter functionality for matches
-        const matchLeaderboardFilter = document.getElementById('match-leaderboard-filter');
-        if (matchLeaderboardFilter) {
-            // Remove existing listeners
-            const newFilter = matchLeaderboardFilter.cloneNode(true);
-            matchLeaderboardFilter.parentNode.replaceChild(newFilter, matchLeaderboardFilter);
-            
-            newFilter.addEventListener('change', function () {
-                const leaderboardId = this.value;
-                const rows = document.querySelectorAll('#matches-table-body tr');
-
-                if (leaderboardId === 'all') {
-                    rows.forEach(row => {
-                        row.style.display = '';
-                    });
-                } else {
-                    const selectedOption = this.querySelector(`option[value="${leaderboardId}"]`);
-                    const matchLeaderboard = selectedOption ? selectedOption.textContent.trim() : '';
-                    
-                    rows.forEach(row => {
-                        const leaderboardName = row.querySelector('td:nth-child(2)')?.textContent.trim() || '';
-                        row.style.display = (leaderboardName === matchLeaderboard) ? '' : 'none';
-                    });
-                }
-            });
-        }
-    }
-
-    // Initialize on both DOMContentLoaded and turbo:load
-    document.addEventListener('DOMContentLoaded', initializeOrganizationTabs);
-    document.addEventListener('turbo:load', initializeOrganizationTabs);
-    document.addEventListener('turbo:render', initializeOrganizationTabs);
+        
+        // Add active state to clicked button
+        this.classList.add('active', 'text-purple-400', 'border-purple-500', 'font-semibold');
+        this.classList.remove('border-transparent', 'text-slate-400');
+      });
+    });
+  }
+  
+  // Initialize on various events to ensure it works
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTabs);
+  } else {
+    initTabs();
+  }
+  document.addEventListener('turbo:load', initTabs);
+  document.addEventListener('turbo:render', initTabs);
+})();
 </script>

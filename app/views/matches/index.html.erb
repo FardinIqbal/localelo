@@ -31,24 +31,24 @@
   <% end %>
 
   <!-- Filters and Search -->
-  <div class="bg-slate-800/80 backdrop-blur-xl rounded-xl p-5 mb-6 border border-slate-700 transition-all duration-300 hover:border-purple-500/30">
-    <div class="flex flex-col md:flex-row gap-4">
+  <div class="bg-slate-800/80 mobile-blur rounded-xl p-4 md:p-5 mb-6 border border-slate-700 transition-all duration-300 hover:border-purple-500/30">
+    <div class="flex flex-col gap-3 md:flex-row md:gap-4">
       <div class="flex-grow">
         <div class="relative">
           <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <i class="fas fa-search text-slate-400"></i>
           </div>
-          <input type="text" id="search-input" placeholder="Search matches..." class="w-full px-4 py-3 pl-11 bg-slate-900/70 border-2 border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200">
+          <input type="text" id="search-input" placeholder="Search matches..." class="w-full px-4 py-3 pl-11 bg-slate-900/70 border-2 border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 touch-target">
         </div>
       </div>
-      <div class="flex flex-col sm:flex-row gap-3">
-        <select id="leaderboard-filter" class="px-4 py-3 bg-slate-900/70 border-2 border-slate-700 rounded-lg text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200">
+      <div class="grid grid-cols-2 gap-3 md:flex md:gap-3">
+        <select id="leaderboard-filter" class="px-3 py-3 bg-slate-900/70 border-2 border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 touch-target">
           <option value="all">All Leaderboards</option>
           <% @leaderboards&.each do |leaderboard| %>
             <option value="<%= leaderboard.id %>"><%= leaderboard.name %></option>
           <% end %>
         </select>
-        <select id="time-filter" class="px-4 py-3 bg-slate-900/70 border-2 border-slate-700 rounded-lg text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200">
+        <select id="time-filter" class="px-3 py-3 bg-slate-900/70 border-2 border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 touch-target">
           <option value="all">All Time</option>
           <option value="month">This Month</option>
           <option value="week">This Week</option>
@@ -59,8 +59,8 @@
   </div>
 
   <% if @matches.present? %>
-    <!-- Matches List -->
-    <div class="bg-slate-800/80 backdrop-blur-xl rounded-xl border border-slate-700 overflow-hidden transition-all duration-300 hover:border-purple-500/30">
+    <!-- Matches List - Desktop Table (hidden on mobile) -->
+    <div class="hidden md:block bg-slate-800/80 mobile-blur rounded-xl border border-slate-700 overflow-hidden transition-all duration-300 hover:border-purple-500/30">
       <div class="overflow-x-auto">
         <table class="w-full data-table" id="matches-table">
           <thead>
@@ -141,67 +141,69 @@
     </div>
 
     <!-- Mobile Card View (visible on small screens only) -->
-    <div class="md:hidden mt-4 space-y-4" id="mobile-matches-container">
+    <div class="md:hidden space-y-3" id="mobile-matches-container">
       <% @matches.each do |match| %>
         <% participants = match_participants_for_display(match, current_user) %>
         <% fallback_opponent_name = match.user1_id == current_user.id ? match.opponent&.username : match.user1&.username %>
         <% display_opponent_name = participant_username(participants[:opponent], fallback: fallback_opponent_name.presence || "Opponent") %>
         <% user_badge = rating_change_badge(participants[:current]) %>
         <% opponent_badge = rating_change_badge(participants[:opponent]) %>
-        <div class="match-card bg-slate-800/30 backdrop-blur-md rounded-xl border border-white/10 p-4"
+        <div class="match-card bg-slate-800/70 rounded-xl border border-slate-700 p-4"
              data-leaderboard-id="<%= match.leaderboard_id %>"
              data-date="<%= match.created_at.to_i %>"
              data-opponent="<%= display_opponent_name %>">
-          <div class="flex justify-between items-start mb-3">
+          <!-- Header with date and leaderboard -->
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs text-slate-400"><%= match.created_at.strftime("%b %d, %Y") %></span>
+            <span class="px-2 py-1 rounded-full text-xs font-medium bg-slate-700 text-slate-300">
+              <%= match.leaderboard.name %>
+            </span>
+          </div>
+          
+          <!-- Opponent info -->
+          <div class="flex items-center justify-between mb-3">
             <div class="flex items-center">
-              <div class="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center mr-3 border border-white/10">
-                <i class="fas fa-user text-white/70"></i>
+              <div class="w-12 h-12 bg-slate-700 rounded-full flex items-center justify-center mr-3 border border-white/10">
+                <i class="fas fa-user text-white/70 text-lg"></i>
               </div>
               <div>
-                <div class="font-medium text-white">
+                <div class="font-medium text-white text-lg">
                   <%= display_opponent_name %>
                 </div>
-                <div class="text-xs text-slate-400">
-                  <%= match.leaderboard.name %>
-                </div>
+                <div class="text-xs text-slate-400">Opponent</div>
               </div>
             </div>
             <div>
               <% if match.winner_id == current_user.id %>
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/30 text-green-300 border border-green-500/30">
-                  <i class="fas fa-trophy mr-1 text-green-400"></i> Win
+                <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-green-900/30 text-green-300 border border-green-500/30">
+                  <i class="fas fa-trophy mr-1.5 text-green-400"></i> Win
                 </span>
               <% else %>
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-900/30 text-red-300 border border-red-500/30">
-                  <i class="fas fa-times mr-1 text-red-400"></i> Loss
+                <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-red-900/30 text-red-300 border border-red-500/30">
+                  <i class="fas fa-times mr-1.5 text-red-400"></i> Loss
                 </span>
               <% end %>
             </div>
           </div>
+          
+          <!-- Rating changes -->
           <% if user_badge || opponent_badge %>
-            <div class="mb-3 space-y-1 text-xs text-slate-400">
-              <% if user_badge %>
-                <div class="flex items-center">
-                  <span class="text-slate-400">You</span>
-                  <%= user_badge %>
-                </div>
-              <% end %>
-              <% if opponent_badge %>
-                <div class="flex items-center">
-                  <span class="text-slate-400"><%= display_opponent_name %></span>
-                  <%= opponent_badge %>
-                </div>
-              <% end %>
+            <div class="grid grid-cols-2 gap-3 p-3 bg-slate-900/50 rounded-lg mb-3">
+              <div class="text-center">
+                <div class="text-xs text-slate-400 mb-1">You</div>
+                <%= user_badge || '<span class="text-slate-500">--</span>'.html_safe %>
+              </div>
+              <div class="text-center">
+                <div class="text-xs text-slate-400 mb-1"><%= display_opponent_name %></div>
+                <%= opponent_badge || '<span class="text-slate-500">--</span>'.html_safe %>
+              </div>
             </div>
           <% end %>
-          <div class="flex justify-between items-center text-sm">
-            <div class="text-slate-300">
-              <%= match.created_at.strftime("%b %d, %Y") %>
-            </div>
-            <%= link_to match_path(match), class: "text-indigo-400 hover:text-pink-400 transition-colors" do %>
-              <i class="fas fa-eye"></i>
-            <% end %>
-          </div>
+          
+          <!-- View button -->
+          <%= link_to match_path(match), class: "w-full flex items-center justify-center px-4 py-3 rounded-lg bg-slate-700 text-white font-medium hover:bg-slate-600 transition-colors touch-target touch-active" do %>
+            <i class="fas fa-eye mr-2"></i> View Details
+          <% end %>
         </div>
       <% end %>
     </div>

@@ -5,7 +5,13 @@
       <!-- Player 1 -->
       <div class="flex flex-col items-center relative">
         <div class="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center mb-1.5 text-lg font-bold <%= match.user1_id == current_user.id ? 'ring-2 ring-purple-400' : '' %> <%= match.winner_id == match.user1_id ? 'ring-2 ring-green-400' : '' %>">
-          <%= match.user1.first_name&.first || match.user1.username.first %>
+          <% if match.user1 %>
+            <%= match.user1.first_name&.first || match.user1.username&.first || match.profile1&.username&.first || '?' %>
+          <% elsif match.profile1 %>
+            <%= match.profile1.username&.first || '?' %>
+          <% else %>
+            ?
+          <% end %>
           <% if match.winner_id == match.user1_id %>
             <div class="absolute -top-1 -right-1 bg-green-500 rounded-full w-5 h-5 flex items-center justify-center">
               <i class="fas fa-crown text-xs text-white"></i>
@@ -13,7 +19,13 @@
           <% end %>
         </div>
         <span class="text-sm font-medium truncate max-w-[80px] text-center text-slate-900 dark:text-white">
-          <%= match.user1.first_name || match.user1.username %>
+          <% if match.user1 %>
+            <%= match.user1.first_name || match.user1.username || 'Unknown' %>
+          <% elsif match.profile1 %>
+            <%= match.profile1.username || 'Unknown' %>
+          <% else %>
+            Unknown
+          <% end %>
         </span>
       </div>
 
@@ -36,7 +48,13 @@
       <!-- Player 2 -->
       <div class="flex flex-col items-center relative">
         <div class="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center mb-1.5 text-lg font-bold <%= match.opponent_id == current_user.id ? 'ring-2 ring-purple-400' : '' %> <%= match.winner_id == match.opponent_id ? 'ring-2 ring-green-400' : '' %>">
-          <%= match.opponent.first_name&.first || match.opponent.username.first %>
+          <% if match.opponent %>
+            <%= match.opponent.first_name&.first || match.opponent.username&.first || match.opponent_profile&.username&.first || '?' %>
+          <% elsif match.opponent_profile %>
+            <%= match.opponent_profile.username&.first || '?' %>
+          <% else %>
+            ?
+          <% end %>
           <% if match.winner_id == match.opponent_id %>
             <div class="absolute -top-1 -right-1 bg-green-500 rounded-full w-5 h-5 flex items-center justify-center">
               <i class="fas fa-crown text-xs text-white"></i>
@@ -44,7 +62,13 @@
           <% end %>
         </div>
         <span class="text-sm font-medium truncate max-w-[80px] text-center text-slate-900 dark:text-white">
-          <%= match.opponent.first_name || match.opponent.username %>
+          <% if match.opponent %>
+            <%= match.opponent.first_name || match.opponent.username || 'Unknown' %>
+          <% elsif match.opponent_profile %>
+            <%= match.opponent_profile.username || 'Unknown' %>
+          <% else %>
+            Unknown
+          <% end %>
         </span>
       </div>
     </div>
@@ -82,15 +106,28 @@
           </div>
         <% else %>
           <div class="flex items-center bg-slate-200 dark:bg-slate-600/50 px-4 py-1.5 rounded-full">
-            <% if match.winner_id == match.user1_id %>
-              <span class="font-medium text-green-600 dark:text-green-400"><%= match.user1.first_name || match.user1.username %></span>
-              <span class="text-slate-500 dark:text-slate-400 mx-2">defeated</span>
-              <span class="font-medium text-slate-700 dark:text-slate-300"><%= match.opponent.first_name || match.opponent.username %></span>
-            <% else %>
-              <span class="font-medium text-green-600 dark:text-green-400"><%= match.opponent.first_name || match.opponent.username %></span>
-              <span class="text-slate-500 dark:text-slate-400 mx-2">defeated</span>
-              <span class="font-medium text-slate-700 dark:text-slate-300"><%= match.user1.first_name || match.user1.username %></span>
-            <% end %>
+            <% 
+              winner_name = if match.winner_profile
+                match.winner_profile.user&.first_name || match.winner_profile.user&.username || match.winner_profile.username || 'Winner'
+              elsif match.user1 && match.winner_id == match.user1_id
+                match.user1.first_name || match.user1.username || match.profile1&.username || 'Winner'
+              elsif match.opponent && match.winner_id == match.opponent_id
+                match.opponent.first_name || match.opponent.username || match.opponent_profile&.username || 'Winner'
+              else
+                'Winner'
+              end
+              
+              loser_name = if match.user1 && match.winner_id == match.user1_id
+                match.opponent&.first_name || match.opponent&.username || match.opponent_profile&.username || 'Opponent'
+              elsif match.opponent && match.winner_id == match.opponent_id
+                match.user1&.first_name || match.user1&.username || match.profile1&.username || 'Opponent'
+              else
+                'Opponent'
+              end
+            %>
+            <span class="font-medium text-green-600 dark:text-green-400"><%= winner_name %></span>
+            <span class="text-slate-500 dark:text-slate-400 mx-2">defeated</span>
+            <span class="font-medium text-slate-700 dark:text-slate-300"><%= loser_name %></span>
           </div>
         <% end %>
       <% end %>

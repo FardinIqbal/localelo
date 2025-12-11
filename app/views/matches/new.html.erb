@@ -1,17 +1,17 @@
 <!-- app/views/matches/new.html.erb - ULTRA-FAST REDESIGN -->
 <div class="relative min-h-screen">
-  <!-- Animated Background -->
+  <!-- Animated Background - Hidden on mobile for performance -->
   <div class="absolute inset-0 overflow-hidden pointer-events-none">
-    <div class="absolute -top-40 -right-40 w-96 h-96 bg-purple-600/5 rounded-full filter blur-3xl animate-pulse-slow"></div>
-    <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-pink-600/5 rounded-full filter blur-3xl animate-pulse-slow" style="animation-delay: 2s;"></div>
+    <div class="decorative-blur absolute -top-40 -right-40 w-96 h-96 bg-purple-600/5 rounded-full filter blur-3xl animate-pulse"></div>
+    <div class="decorative-blur absolute -bottom-40 -left-40 w-96 h-96 bg-pink-600/5 rounded-full filter blur-3xl animate-pulse delay-1000"></div>
   </div>
 
   <!-- Main Content -->
-  <div class="relative z-10 max-w-3xl mx-auto px-4 py-8">
+  <div class="relative z-10 max-w-3xl mx-auto px-4 py-6 md:py-8">
     <!-- Header with Progress -->
-    <div class="mb-8">
+    <div class="mb-6 md:mb-8">
       <div class="flex items-center justify-between mb-4">
-        <h1 class="font-extrabold text-3xl md:text-4xl text-slate-900 dark:text-white">
+        <h1 class="font-extrabold text-2xl md:text-4xl text-slate-900 dark:text-white">
           Log a Match
         </h1>
         <div class="text-sm text-slate-500 dark:text-slate-400" id="step-indicator">
@@ -20,15 +20,15 @@
       </div>
 
       <!-- Progress Bar -->
-      <div class="h-1 bg-slate-200 dark:bg-slate-700/50 rounded-full overflow-hidden">
-        <div id="progress-bar" class="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500 ease-out" style="width: 0%"></div>
+      <div class="h-1.5 md:h-1 bg-slate-200 dark:bg-slate-700/50 rounded-full overflow-hidden">
+        <div id="progress-bar" class="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500 ease-out gpu-accelerated" style="width: 0%"></div>
       </div>
     </div>
 
     <%= form_with(model: @match, local: true, html: { id: "match-form", class: "space-y-6" }) do |f| %>
       <!-- Form Card -->
-      <div class="bg-white/80 dark:bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-slate-700/50 shadow-2xl overflow-hidden">
-        <div class="p-6 md:p-8 space-y-8">
+      <div class="bg-white/80 dark:bg-slate-800/50 mobile-blur rounded-2xl border border-slate-200 dark:border-slate-700/50 shadow-2xl overflow-hidden">
+        <div class="p-5 md:p-8 space-y-6 md:space-y-8">
 
           <!-- Step 1: Organization -->
           <div class="step-container" data-step="1">
