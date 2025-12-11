@@ -455,7 +455,7 @@
                       </div>
                       <div class="ml-3">
                         <div class="text-white font-medium"><%= link_to membership.profile.username, profile_path(membership.profile), class: "hover:text-purple-300 transition-colors" %></div>
-                        <div class="text-xs text-slate-400"><%= membership.profile.user.email %></div>
+                        <div class="text-xs text-slate-400"><%= membership.profile.user&.email || "User unavailable" %></div>
                       </div>
                     </div>
                   </td>
