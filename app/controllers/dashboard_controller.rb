@@ -26,7 +26,9 @@ class DashboardController < ApplicationController
     @profile = if params[:profile_id].present?
                  @profiles.find_by(id: params[:profile_id])
                end
-    @profile ||= @profiles.first
+    # Only default to first profile if viewing a specific organization
+    # When viewing "All Organizations", we want to aggregate across all profiles
+    @profile ||= @scoped_organization ? @profiles.first : nil
 
     profile_ids = if @profile
                      [@profile.id]
@@ -101,7 +103,7 @@ class DashboardController < ApplicationController
     ranking_profile_ids = if @scoped_organization
                             profile_ids
                           else
-                            profile_ids.presence || @user.profile_ids
+                            profile_ids.presence || @user.profiles.ids
                           end
 
     @user_rankings = LeaderboardRating.joins(:profile, :leaderboard)
@@ -120,8 +122,18 @@ class DashboardController < ApplicationController
     @total_wins = ratings.sum(:wins)
     @total_losses = ratings.sum(:losses)
     @win_loss_ratio = @total_losses > 0 ? (@total_wins.to_f / @total_losses).round(2) : (@total_wins > 0 ? "∞" : "0.0")
+    
+    # == Total Matches Count (from actual matches, not just ratings) ==
+    total_matches_scope = if profile_ids.any?
+                            Match.involving_profiles(profile_ids)
+                          else
+                            Match.none
+                          end
+    total_matches_scope = total_matches_scope.where(leaderboard_id: scoped_leaderboard_ids) if @scoped_organization
+    @total_matches_count = total_matches_scope.count
+    
     @profile_stats = {
-      total_matches: @total_wins + @total_losses,
+      total_matches: @total_matches_count,
       total_wins: @total_wins,
       total_losses: @total_losses,
       win_loss_ratio: @win_loss_ratio,
@@ -237,7 +249,7 @@ class DashboardController < ApplicationController
     scope = if profile
               profile.leaderboard_ratings
             else
-              LeaderboardRating.where(profile_id: current_user.profile_ids)
+              LeaderboardRating.where(profile_id: current_user.profiles.ids)
             end
 
     scope = scope.includes(:leaderboard)
