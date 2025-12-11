@@ -196,101 +196,172 @@
           <!-- Sidebar -->
           <div class="space-y-6">
             <!-- Top Rivals -->
-            <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-700 p-5">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-white">Top Rivals</h3>
-                <i class="fas fa-fire text-pink-400"></i>
+            <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-700 overflow-hidden">
+              <div class="flex items-center justify-between p-4 border-b border-slate-700 bg-gradient-to-r from-pink-500/10 to-purple-500/10">
+                <div class="flex items-center gap-2">
+                  <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-orange-500 flex items-center justify-center">
+                    <i class="fas fa-fire text-white text-sm"></i>
+                  </div>
+                  <h3 class="text-lg font-bold text-white">Top Rivals</h3>
+                </div>
+                <span class="text-xs text-slate-400 bg-slate-700/50 px-2 py-1 rounded-full">Most played</span>
               </div>
 
               <% if @viewer_profile.nil? %>
-                <div class="text-center py-6">
-                  <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-pink-500/10 text-pink-400 mb-3">
-                    <i class="fas fa-lock"></i>
+                <div class="p-6 text-center">
+                  <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 text-pink-400 mb-3">
+                    <i class="fas fa-lock text-xl"></i>
                   </div>
-                  <p class="text-sm text-slate-400">
+                  <p class="text-sm text-slate-400 mb-4">
                     Join this gym to discover your top rivals
                   </p>
+                  <%= link_to join_organization_path(@organization),
+                              data: { turbo_method: :post },
+                              class: "inline-flex items-center px-4 py-2 rounded-lg bg-gradient-to-r from-pink-500 to-purple-500 text-white text-sm font-medium hover:shadow-lg hover:shadow-pink-500/20 transition-all" do %>
+                    <i class="fas fa-user-plus mr-2"></i> Join Gym
+                  <% end %>
                 </div>
               <% elsif @top_rivals.present? %>
-                <div class="space-y-3">
+                <div class="divide-y divide-slate-700/50">
                   <% @top_rivals.each_with_index do |entry, index| %>
-                    <div class="group bg-slate-900/40 rounded-lg p-3 border border-slate-700/50 hover:border-pink-500/30 transition-all">
-                      <div class="flex items-center justify-between mb-2">
-                        <div class="flex items-center gap-3">
-                          <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center text-sm font-bold">
-                            <%= index + 1 %>
-                          </div>
-                          <div>
-                            <%= link_to entry[:profile].username, profile_path(entry[:profile]), class: "font-medium text-slate-200 hover:text-pink-400 transition-colors" %>
-                            <%= render "organizations/matchup_insight_stats", entry: entry %>
+                    <div class="p-4 hover:bg-slate-700/30 transition-colors group">
+                      <div class="flex items-start gap-3">
+                        <!-- Rank Badge -->
+                        <div class="flex-shrink-0">
+                          <div class="w-10 h-10 rounded-xl <%= index == 0 ? 'bg-gradient-to-br from-yellow-400 to-orange-500 shadow-lg shadow-orange-500/30' : (index == 1 ? 'bg-gradient-to-br from-slate-300 to-slate-400' : 'bg-gradient-to-br from-amber-600 to-amber-700') %> flex items-center justify-center text-white font-bold text-sm">
+                            <% if index == 0 %>
+                              <i class="fas fa-crown"></i>
+                            <% else %>
+                              <%= index + 1 %>
+                            <% end %>
                           </div>
                         </div>
+                        
+                        <!-- Player Info -->
+                        <div class="flex-1 min-w-0">
+                          <div class="flex items-center gap-2 mb-1">
+                            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-bold">
+                              <%= entry[:profile].username[0..1].upcase %>
+                            </div>
+                            <%= link_to entry[:profile].username, profile_path(entry[:profile]), class: "font-semibold text-white hover:text-pink-400 transition-colors truncate" %>
+                          </div>
+                          
+                          <!-- Stats Row -->
+                          <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400 mb-3">
+                            <span class="inline-flex items-center">
+                              <i class="fas fa-swords text-pink-400 mr-1"></i>
+                              <%= head_to_head_label(entry[:matches_together]) %>
+                            </span>
+                            <span class="inline-flex items-center">
+                              <i class="fas fa-clock text-purple-400 mr-1"></i>
+                              <%= last_played_label(entry[:matches_together], entry[:last_played_at]) %>
+                            </span>
+                          </div>
+                          
+                          <!-- Challenge Button -->
+                          <%= link_to new_match_path(opponent_profile_id: entry[:profile].id, return_to_organization_id: @organization.id),
+                                      class: "inline-flex items-center px-4 py-2 rounded-lg bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs font-semibold hover:shadow-lg hover:shadow-pink-500/25 hover:scale-[1.02] active:scale-[0.98] transition-all" do %>
+                            <i class="fas fa-swords mr-1.5"></i> Challenge
+                          <% end %>
+                        </div>
                       </div>
-                      <%= link_to new_match_path(opponent_profile_id: entry[:profile].id, return_to_organization_id: @organization.id),
-                                  class: "w-full mt-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-pink-500 to-purple-500 text-slate-100 text-xs font-medium hover:shadow-lg hover:shadow-pink-500/20 transition-all text-center block" do %>
-                        <i class="fas fa-swords mr-1"></i> Challenge
-                      <% end %>
                     </div>
                   <% end %>
                 </div>
               <% else %>
-                <div class="text-center py-6">
-                  <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-700 text-slate-500 mb-3">
-                    <i class="fas fa-user-friends"></i>
+                <div class="p-6 text-center">
+                  <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-slate-700/50 text-slate-500 mb-3">
+                    <i class="fas fa-user-friends text-xl"></i>
                   </div>
-                  <p class="text-sm text-slate-400">
-                    Log matches to discover your rivals
-                  </p>
+                  <p class="text-sm text-slate-400 mb-1">No rivals yet</p>
+                  <p class="text-xs text-slate-500">Log matches to discover your rivals</p>
                 </div>
               <% end %>
             </div>
 
             <!-- Challengers You're Ducking -->
-            <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-700 p-5">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-white">Challengers You're Ducking</h3>
-                <i class="fas fa-running text-purple-400"></i>
+            <div class="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-700 overflow-hidden">
+              <div class="flex items-center justify-between p-4 border-b border-slate-700 bg-gradient-to-r from-blue-500/10 to-purple-500/10">
+                <div class="flex items-center gap-2">
+                  <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                    <i class="fas fa-running text-white text-sm"></i>
+                  </div>
+                  <h3 class="text-lg font-bold text-white">Who You're Ducking</h3>
+                </div>
+                <span class="text-xs text-slate-400 bg-slate-700/50 px-2 py-1 rounded-full">Least faced</span>
               </div>
 
               <% if @viewer_profile.nil? %>
-                <div class="text-center py-6">
-                  <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/10 text-purple-400 mb-3">
-                    <i class="fas fa-lock"></i>
+                <div class="p-6 text-center">
+                  <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-blue-400 mb-3">
+                    <i class="fas fa-lock text-xl"></i>
                   </div>
-                  <p class="text-sm text-slate-400">
+                  <p class="text-sm text-slate-400 mb-4">
                     Join to see who you haven't faced yet
                   </p>
+                  <%= link_to join_organization_path(@organization),
+                              data: { turbo_method: :post },
+                              class: "inline-flex items-center px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm font-medium hover:shadow-lg hover:shadow-blue-500/20 transition-all" do %>
+                    <i class="fas fa-user-plus mr-2"></i> Join Gym
+                  <% end %>
                 </div>
               <% elsif @ducking_opponents.present? %>
-                <div class="space-y-3">
+                <div class="divide-y divide-slate-700/50">
                   <% @ducking_opponents.each_with_index do |entry, index| %>
-                    <div class="group bg-slate-900/40 rounded-lg p-3 border border-slate-700/50 hover:border-purple-500/30 transition-all">
-                      <div class="flex items-center justify-between mb-2">
-                        <div class="flex items-center gap-3">
-                          <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-sm font-bold">
+                    <div class="p-4 hover:bg-slate-700/30 transition-colors group">
+                      <div class="flex items-start gap-3">
+                        <!-- Rank Badge -->
+                        <div class="flex-shrink-0">
+                          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold text-sm">
                             <%= index + 1 %>
                           </div>
-                          <div>
-                            <%= link_to entry[:profile].username, profile_path(entry[:profile]), class: "font-medium text-slate-200 hover:text-purple-400 transition-colors" %>
-                            <%= render "organizations/matchup_insight_stats", entry: entry %>
+                        </div>
+                        
+                        <!-- Player Info -->
+                        <div class="flex-1 min-w-0">
+                          <div class="flex items-center gap-2 mb-1">
+                            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
+                              <%= entry[:profile].username[0..1].upcase %>
+                            </div>
+                            <%= link_to entry[:profile].username, profile_path(entry[:profile]), class: "font-semibold text-white hover:text-blue-400 transition-colors truncate" %>
                           </div>
+                          
+                          <!-- Stats Row -->
+                          <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400 mb-3">
+                            <span class="inline-flex items-center">
+                              <i class="fas fa-swords text-blue-400 mr-1"></i>
+                              <%= head_to_head_label(entry[:matches_together]) %>
+                            </span>
+                            <% if entry[:last_played_at].present? %>
+                              <span class="inline-flex items-center">
+                                <i class="fas fa-clock text-cyan-400 mr-1"></i>
+                                <%= last_played_label(entry[:matches_together], entry[:last_played_at]) %>
+                              </span>
+                            <% else %>
+                              <span class="inline-flex items-center text-yellow-400">
+                                <i class="fas fa-exclamation-triangle mr-1"></i>
+                                Never played!
+                              </span>
+                            <% end %>
+                          </div>
+                          
+                          <!-- Face Them Button -->
+                          <%= link_to new_match_path(opponent_profile_id: entry[:profile].id, return_to_organization_id: @organization.id),
+                                      class: "inline-flex items-center px-4 py-2 rounded-lg bg-slate-700 text-white text-xs font-semibold hover:bg-slate-600 border border-slate-600 hover:border-blue-500/50 hover:scale-[1.02] active:scale-[0.98] transition-all" do %>
+                            <i class="fas fa-bolt mr-1.5 text-yellow-400"></i> Face Them
+                          <% end %>
                         </div>
                       </div>
-                      <%= link_to new_match_path(opponent_profile_id: entry[:profile].id, return_to_organization_id: @organization.id),
-                                  class: "w-full mt-2 px-3 py-1.5 rounded-lg bg-slate-700 text-slate-200 text-xs font-medium hover:bg-slate-600 transition-all text-center block" do %>
-                        <i class="fas fa-bolt mr-1"></i> Face Them
-                      <% end %>
                     </div>
                   <% end %>
                 </div>
               <% else %>
-                <div class="text-center py-6">
-                  <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-500/10 text-green-400 mb-3">
-                    <i class="fas fa-check-circle"></i>
+                <div class="p-6 text-center">
+                  <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-green-500/20 text-green-400 mb-3">
+                    <i class="fas fa-check-circle text-xl"></i>
                   </div>
-                  <p class="text-sm text-slate-400">
-                    You've faced everyone recently!
-                  </p>
+                  <p class="text-sm text-white font-medium mb-1">Great job!</p>
+                  <p class="text-xs text-slate-400">You've faced everyone recently</p>
                 </div>
               <% end %>
             </div>
