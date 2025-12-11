@@ -205,19 +205,18 @@ class OrganizationsController < ApplicationController
   def approve_member
     membership = membership_for_user(params[:user_id], status: :pending)
 
-    unless user
+    unless membership&.user
       respond_to do |format|
         format.html {
-          flash[:alert] = "User not found."
-          redirect_to members_organization_path(@organization)
+          flash[:alert] = "User not found or membership request not found."
+          redirect_to @organization, status: :see_other
         }
-        format.json { render json: { error: "User not found" }, status: :not_found }
+        format.json { render json: { error: "User not found or membership request not found" }, status: :not_found }
       end
       return
     end
 
-    profile = nil
-    membership = nil
+    user = membership.user
 
     begin
       ActiveRecord::Base.transaction do
@@ -227,30 +226,41 @@ class OrganizationsController < ApplicationController
         profile.last_name ||= user.last_name
         profile.save!
 
-        membership = @organization.organization_memberships.find_or_initialize_by(profile: profile)
+        membership.profile = profile if membership.profile.nil?
         membership.status = :approved
         membership.save!
 
         add_user_to_leaderboards(user, @organization)
       end
 
+      # Check if there are remaining pending requests
+      @remaining_pending = @organization.organization_memberships.where(status: :pending).includes(profile: :user)
+      @user = user
+      
       respond_to do |format|
+        format.turbo_stream {
+          flash[:notice] = "#{membership.profile.username} has been approved to join #{@organization.name} and added to all leaderboards."
+        }
         format.html {
-          flash[:notice] = "#{profile.username} has been approved to join #{@organization.name} and added to all leaderboards."
-          redirect_to members_organization_path(@organization)
+          flash[:notice] = "#{membership.profile.username} has been approved to join #{@organization.name} and added to all leaderboards."
+          redirect_to @organization, status: :see_other
         }
         format.json do
           render json: {
             membership: membership.as_json(include: { organization_role: { only: [:admin, :owner] } }),
-            profile: profile
+            profile: membership.profile
           }, status: :ok
         end
       end
     rescue ActiveRecord::RecordInvalid => e
       respond_to do |format|
+        format.turbo_stream {
+          flash[:alert] = e.record.errors.full_messages.to_sentence.presence || "Unable to approve member."
+          render 'approve_member_error'
+        }
         format.html {
           flash[:alert] = e.record.errors.full_messages.to_sentence.presence || "Unable to approve member."
-          redirect_to members_organization_path(@organization)
+          redirect_to @organization, status: :see_other
         }
         format.json { render json: { error: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity }
       end

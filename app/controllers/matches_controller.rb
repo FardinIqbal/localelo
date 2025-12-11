@@ -143,15 +143,33 @@ class MatchesController < ApplicationController
     opponent_rating = rating_for(leaderboard, opponent_profile)
 
     outcome_scores = preview_scores(profile1.id, opponent_profile.id, winner_profile_id, is_draw)
-    expected_player = preview_expected_score(player_rating, opponent_rating)
-    expected_opponent = preview_expected_score(opponent_rating, player_rating)
+    calculator = Rating::Glicko2Calculator.new
 
-    player_after = preview_new_rating(player_rating, outcome_scores[:player], expected_player)
-    opponent_after = preview_new_rating(opponent_rating, outcome_scores[:opponent], expected_opponent)
+    player_after = calculator.update(
+      player_rating,
+      [
+        Rating::Glicko2Calculator::Result.new(
+          opponent_rating: opponent_rating[:rating],
+          opponent_rd: opponent_rating[:rating_deviation],
+          score: outcome_scores[:player]
+        )
+      ]
+    )[:rating]
+
+    opponent_after = calculator.update(
+      opponent_rating,
+      [
+        Rating::Glicko2Calculator::Result.new(
+          opponent_rating: player_rating[:rating],
+          opponent_rd: player_rating[:rating_deviation],
+          score: outcome_scores[:opponent]
+        )
+      ]
+    )[:rating]
 
     render json: {
-      player: preview_payload(player_rating, player_after),
-      opponent: preview_payload(opponent_rating, opponent_after),
+      player: preview_payload(player_rating[:rating], player_after),
+      opponent: preview_payload(opponent_rating[:rating], opponent_after),
       draw: is_draw
     }
   end
@@ -372,9 +390,18 @@ class MatchesController < ApplicationController
   end
 
   def rating_for(leaderboard, profile)
-    return Match::DEFAULT_RATING unless leaderboard && profile
+    return default_rating_state unless leaderboard && profile
 
-    LeaderboardRating.find_by(leaderboard: leaderboard, profile: profile)&.rating || Match::DEFAULT_RATING
+    record = LeaderboardRating.find_by(leaderboard: leaderboard, profile: profile)
+    if record
+      {
+        rating: record.rating.to_f,
+        rating_deviation: record.rating_deviation.to_f,
+        volatility: record.volatility.to_f
+      }
+    else
+      default_rating_state
+    end
   end
 
   def preview_scores(player_profile_id, opponent_profile_id, winner_profile_id, is_draw)
@@ -388,20 +415,19 @@ class MatchesController < ApplicationController
     }
   end
 
-  def preview_expected_score(rating, opponent_rating)
-    1.0 / (1 + 10**((opponent_rating.to_f - rating.to_f) / 400.0))
-  end
-
-  def preview_new_rating(current_rating, score, expected_score)
-    base_rating = current_rating.to_f
-    (base_rating + MatchRatingProcessor::K_FACTOR * (score - expected_score)).clamp(0, Float::INFINITY)
-  end
-
   def preview_payload(before_rating, after_rating)
     {
       rating_before: before_rating.to_f.round(2),
       rating_after: after_rating.to_f.round(2),
       change: (after_rating.to_f - before_rating.to_f).round(2)
+    }
+  end
+
+  def default_rating_state
+    {
+      rating: Match::DEFAULT_RATING,
+      rating_deviation: 350.0,
+      volatility: 0.06
     }
   end
 end

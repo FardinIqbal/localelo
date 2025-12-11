@@ -494,9 +494,9 @@
                     <td class="px-4 py-3">
                       <div class="flex items-center space-x-2">
                         <% if membership.status == "pending" %>
-                          <button class="text-green-400 hover:text-green-300 transition-colors approve-member-btn" data-user-id="<%= membership.user&.id %>">
+                          <%= link_to approve_member_organization_path(@organization, user_id: membership.user&.id), data: { turbo_method: :patch }, class: "text-green-400 hover:text-green-300 transition-colors" do %>
                             <i class="fas fa-check"></i>
-                          </button>
+                          <% end %>
                         <% end %>
 
                         <% if !@organization.owner?(membership.user) && membership.user&.id != current_user.id %>
@@ -673,9 +673,9 @@
               <% pending_requests = @organization.organization_memberships.where(status: :pending).includes(profile: :user) %>
 
               <% if pending_requests.any? %>
-                <div class="divide-y divide-slate-700">
+                <div class="divide-y divide-slate-700" id="pending-requests-list">
                   <% pending_requests.each do |request| %>
-                    <div class="p-4 flex justify-between items-center">
+                    <div id="pending-request-<%= request.user&.id %>" class="p-4 flex justify-between items-center">
                       <div class="flex items-center">
                         <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-white font-bold">
                           <%= request.profile.username[0..1].upcase %>
@@ -689,7 +689,7 @@
                       </div>
 
                       <div class="flex space-x-2">
-                        <%= link_to approve_member_organization_path(@organization, user_id: request.user&.id), method: :patch, class: "px-2 py-1 rounded bg-green-400/20 text-green-400 hover:bg-green-400/30 transition-colors" do %>
+                        <%= link_to approve_member_organization_path(@organization, user_id: request.user&.id), data: { turbo_method: :patch }, class: "px-2 py-1 rounded bg-green-400/20 text-green-400 hover:bg-green-400/30 transition-colors" do %>
                           <i class="fas fa-check mr-1"></i> Approve
                         <% end %>
 
@@ -701,7 +701,7 @@
                   <% end %>
                 </div>
               <% else %>
-                <div class="p-8 text-center">
+                <div id="pending-requests-list" class="p-8 text-center">
                   <p class="text-slate-400">No pending membership requests</p>
                 </div>
               <% end %>

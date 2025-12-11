@@ -1,0 +1,9 @@
+<%= turbo_stream.remove "pending-request-#{@user.id}" %>
+<%= turbo_stream.replace "flash-container" do %>
+  <%= render 'shared/system/flash_messages' %>
+<% end %>
+<% if @remaining_pending.empty? %>
+  <%= turbo_stream.replace "pending-requests-list" do %>
+    <%= render 'organizations/pending_requests_empty' %>
+  <% end %>
+<% end %>
