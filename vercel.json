@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/weekly-league-reset",
+      "schedule": "0 0 * * 1"
+    },
+    {
+      "path": "/api/cron/streak-reminders",
+      "schedule": "0 * * * *"
+    }
+  ]
+}
