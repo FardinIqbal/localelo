@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { QrCode, Copy, Check, Share2, Loader2, X } from "lucide-react";
+import { QrCode, Copy, Check, Share2, Loader2 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 
 interface InviteModalProps {
@@ -14,8 +14,27 @@ interface InviteModalProps {
 
 export function InviteModal({ organizationId, orgName, isOpen, onClose }: InviteModalProps) {
   const [copied, setCopied] = useState(false);
+  const [qrLoaded, setQrLoaded] = useState(false);
+  const [qrError, setQrError] = useState(false);
 
   const createInvite = trpc.invites.create.useMutation();
+
+  // Reset QR state when modal opens, with timeout fallback
+  useEffect(() => {
+    if (isOpen) {
+      setQrLoaded(false);
+      setQrError(false);
+
+      // Timeout after 5 seconds - show fallback if QR doesn't load
+      const timeout = setTimeout(() => {
+        if (!qrLoaded) {
+          setQrError(true);
+        }
+      }, 5000);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [isOpen, qrLoaded]);
 
   const inviteUrl = createInvite.data
     ? `${typeof window !== "undefined" ? window.location.origin : ""}/invite/${createInvite.data.code}`
@@ -98,13 +117,29 @@ export function InviteModal({ organizationId, orgName, isOpen, onClose }: Invite
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ delay: 0.1 }}
-                      className="rounded-2xl bg-white p-4"
+                      className="rounded-2xl bg-white p-4 relative"
                     >
-                      <img
-                        src={qrCodeUrl}
-                        alt="Scan to join"
-                        className="h-[180px] w-[180px]"
-                      />
+                      {!qrLoaded && !qrError && (
+                        <div className="h-[180px] w-[180px] flex items-center justify-center">
+                          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                        </div>
+                      )}
+                      {qrError ? (
+                        <div className="h-[180px] w-[180px] flex flex-col items-center justify-center bg-gray-100 rounded-lg">
+                          <QrCode className="h-12 w-12 text-gray-400 mb-2" />
+                          <p className="text-[12px] text-gray-500 text-center px-4">
+                            Share the link below
+                          </p>
+                        </div>
+                      ) : (
+                        <img
+                          src={qrCodeUrl!}
+                          alt="Scan to join"
+                          className={`h-[180px] w-[180px] ${qrLoaded ? '' : 'hidden'}`}
+                          onLoad={() => setQrLoaded(true)}
+                          onError={() => setQrError(true)}
+                        />
+                      )}
                     </motion.div>
                   </div>
 
