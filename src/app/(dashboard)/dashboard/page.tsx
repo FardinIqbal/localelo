@@ -287,33 +287,34 @@ function OrgCard({
 
       <Link href={`/org/${slug}`}>
         {(rank || rating) && (
-          <div className="mt-4 flex items-center gap-4 border-t border-border/50 pt-4">
-            {rank && (
-              <div className="flex items-center gap-2">
-                <span className={`text-[13px] font-medium ${rank <= 3 ? colors.gold : colors.muted}`}>
-                  #{rank}
-                </span>
-                <span className="text-[12px] text-muted-foreground/70">rank</span>
-              </div>
-            )}
-            {rating && (
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-[15px] font-semibold text-foreground">
-                  {Math.round(rating)}
-                </span>
-                {recentChange !== undefined && recentChange !== 0 && (
-                  <span
-                    className={`text-[12px] font-medium ${
-                      recentChange > 0 ? colors.emerald : colors.loss
-                    }`}
-                  >
-                    {recentChange > 0 ? "+" : ""}
-                    {recentChange}
+          <div className="mt-4 flex items-center justify-between border-t border-border/50 pt-4">
+            <div className="flex items-center gap-3">
+              {rank && (
+                <div className="flex items-center gap-1.5">
+                  <span className={`text-[14px] font-semibold ${rank <= 3 ? colors.gold : "text-foreground"}`}>
+                    #{rank}
                   </span>
-                )}
-              </div>
-            )}
-            {streak && streak >= 3 && (
+                </div>
+              )}
+              {rating && (
+                <div className="flex items-center gap-1.5">
+                  <span className="font-mono text-[14px] text-muted-foreground">
+                    {Math.round(rating)}
+                  </span>
+                  {typeof recentChange === "number" && recentChange !== 0 && (
+                    <span
+                      className={`text-[12px] font-medium ${
+                        recentChange > 0 ? colors.emerald : colors.loss
+                      }`}
+                    >
+                      {recentChange > 0 ? "+" : ""}
+                      {recentChange}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+            {typeof streak === "number" && streak >= 3 && (
               <div className="flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5">
                 <Flame className="h-3 w-3 text-amber-400" />
                 <span className="text-[11px] font-medium text-amber-400">{streak}</span>
