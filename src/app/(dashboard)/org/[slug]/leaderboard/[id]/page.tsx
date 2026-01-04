@@ -409,9 +409,24 @@ export default function LeaderboardPage() {
   if (leaderboardLoading) {
     return (
       <div className="mx-auto max-w-xl py-12">
-        <div className="mb-8">
-          <div className="h-6 w-32 animate-pulse rounded bg-secondary" />
+        {/* Back link skeleton */}
+        <div className="mb-8 flex items-center gap-1.5">
+          <div className="h-3.5 w-3.5 animate-pulse rounded bg-secondary" />
+          <div className="h-3 w-8 animate-pulse rounded bg-secondary" />
         </div>
+
+        {/* Header skeleton */}
+        <div className="mb-8">
+          <div className="flex items-start justify-between">
+            <div className="space-y-2">
+              <div className="h-7 w-40 animate-pulse rounded-lg bg-secondary" />
+              <div className="h-3 w-24 animate-pulse rounded bg-secondary" />
+            </div>
+            <div className="h-9 w-24 animate-pulse rounded-full bg-secondary" />
+          </div>
+        </div>
+
+        {/* Rankings skeleton */}
         <div className="rounded-xl border border-border">
           <LoadingSkeleton />
         </div>

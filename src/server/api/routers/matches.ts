@@ -325,13 +325,15 @@ export const matchesRouter = router({
             ? opponentMembership.id
             : null;
 
+      const now = new Date();
       const [match] = await ctx.db
         .insert(matches)
         .values({
           leaderboardId: input.leaderboardId,
           winnerMembershipId: winnerId,
           isDraw: input.outcome === "draw",
-          ratedAt: new Date(),
+          matchTime: now,
+          ratedAt: now,
         })
         .returning();
 
@@ -463,7 +465,12 @@ export const matchesRouter = router({
         updateRecentOpponent(opponentMembership.id, userMembership.id),
       ]);
 
-      return match;
+      // Return match with rating change for feedback
+      return {
+        ...match,
+        ratingDelta: Math.round(newRatings.player1.rating - userRating.rating),
+        newRating: Math.round(newRatings.player1.rating),
+      };
     }),
 
   // Head-to-head stats between two players
@@ -636,13 +643,15 @@ export const matchesRouter = router({
       );
 
       // Create match
+      const now = new Date();
       const [match] = await ctx.db
         .insert(matches)
         .values({
           leaderboardId: input.leaderboardId,
           winnerMembershipId: input.winnerId,
           isDraw: input.winnerId === null,
-          ratedAt: new Date(),
+          matchTime: now,
+          ratedAt: now,
         })
         .returning();
 

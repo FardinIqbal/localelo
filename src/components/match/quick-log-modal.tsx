@@ -6,6 +6,7 @@ import { X, Trophy, Minus, XCircle, ChevronLeft, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { trpc } from "@/lib/trpc";
 import { OpponentGrid } from "./opponent-grid";
+import { useToast } from "@/components/ui/simple-toast";
 
 type MatchOutcome = "win" | "loss" | "draw";
 
@@ -36,6 +37,7 @@ export function QuickLogModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const utils = trpc.useUtils();
+  const { toast } = useToast();
 
   // Get recent opponents
   const { data: recentOpponents, isLoading: loadingOpponents } =
@@ -51,11 +53,19 @@ export function QuickLogModal({
   );
 
   const logMatch = trpc.matches.create.useMutation({
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Invalidate all relevant queries
       utils.leaderboards.rankings.invalidate();
       utils.matches.recentOpponents.invalidate();
+      utils.activity.recentActivity.invalidate();
+      utils.rankings.myRankings.invalidate();
+      utils.rankings.myRankingsStats.invalidate();
       onSuccess?.();
       handleClose();
+      // Show rating change feedback
+      const delta = data.ratingDelta;
+      const sign = delta >= 0 ? "+" : "";
+      toast(`${sign}${delta} rating`, delta >= 0 ? "success" : "error");
       // Haptic feedback for success
       if (navigator.vibrate) {
         navigator.vibrate([10, 50, 10]);
@@ -219,23 +229,23 @@ export function QuickLogModal({
                     className="space-y-4"
                   >
                     {/* Opponent Preview */}
-                    <div className="flex items-center justify-center gap-4 py-4">
+                    <div className="flex items-center justify-center gap-6 py-6">
                       <div className="text-center">
-                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-xl font-bold text-primary">
+                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-lg font-bold text-primary">
                           You
                         </div>
                       </div>
-                      <span className="text-2xl font-bold text-muted-foreground">
+                      <span className="text-sm font-medium text-muted-foreground/60">
                         vs
                       </span>
                       <div className="text-center">
-                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-secondary text-xl font-bold">
+                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-lg font-bold text-foreground">
                           {selectedOpponent?.username.charAt(0).toUpperCase()}
                         </div>
-                        <p className="mt-2 text-sm font-medium">
+                        <p className="mt-2 text-[14px] font-medium text-foreground">
                           {selectedOpponent?.username}
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="font-mono text-[15px] font-semibold text-muted-foreground">
                           {Math.round(selectedOpponent?.rating ?? 1500)}
                         </p>
                       </div>

@@ -6,6 +6,8 @@ import { activityRouter } from "./routers/activity";
 import { streaksRouter } from "./routers/streaks";
 import { leaguesRouter } from "./routers/leagues";
 import { challengesRouter } from "./routers/challenges";
+import { rankingsRouter } from "./routers/rankings";
+import { invitesRouter } from "./routers/invites";
 
 export const appRouter = router({
   organizations: organizationsRouter,
@@ -15,6 +17,8 @@ export const appRouter = router({
   streaks: streaksRouter,
   leagues: leaguesRouter,
   challenges: challengesRouter,
+  rankings: rankingsRouter,
+  invites: invitesRouter,
 });
 
 export type AppRouter = typeof appRouter;

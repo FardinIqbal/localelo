@@ -16,6 +16,7 @@ import {
   Users,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { InviteButton } from "@/components/invite/invite-modal";
 
 const colors = {
   gold: "text-amber-400",
@@ -244,6 +245,7 @@ function RivalryCard({
 }
 
 function OrgCard({
+  organizationId,
   name,
   slug,
   role,
@@ -253,6 +255,7 @@ function OrgCard({
   streak,
   index,
 }: {
+  organizationId: string;
   name: string;
   slug: string;
   role: string;
@@ -263,26 +266,26 @@ function OrgCard({
   index: number;
 }) {
   return (
-    <Link href={`/org/${slug}`}>
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.05 }}
-        className="group rounded-2xl border border-border bg-card p-4 transition-all hover:border-border/80 hover:bg-secondary/50"
-      >
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-secondary to-secondary/80 text-[14px] font-bold text-foreground/80">
-              {name.slice(0, 2).toUpperCase()}
-            </div>
-            <div>
-              <p className="text-[15px] font-semibold text-foreground">{name}</p>
-              <p className="text-[13px] text-muted-foreground">{role}</p>
-            </div>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05 }}
+      className="group rounded-2xl border border-border bg-card p-4 transition-all hover:border-border/80"
+    >
+      <div className="flex items-start justify-between">
+        <Link href={`/org/${slug}`} className="flex items-center gap-3 flex-1">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-secondary to-secondary/80 text-[14px] font-bold text-foreground/80">
+            {name.slice(0, 2).toUpperCase()}
           </div>
-          <ChevronRight className="h-5 w-5 text-muted-foreground/50 transition-transform group-hover:translate-x-0.5 group-hover:text-muted-foreground" />
-        </div>
+          <div>
+            <p className="text-[15px] font-semibold text-foreground">{name}</p>
+            <p className="text-[13px] text-muted-foreground">{role}</p>
+          </div>
+        </Link>
+        <InviteButton organizationId={organizationId} orgName={name} />
+      </div>
 
+      <Link href={`/org/${slug}`}>
         {(rank || rating) && (
           <div className="mt-4 flex items-center gap-4 border-t border-border/50 pt-4">
             {rank && (
@@ -318,8 +321,8 @@ function OrgCard({
             )}
           </div>
         )}
-      </motion.div>
-    </Link>
+      </Link>
+    </motion.div>
   );
 }
 
@@ -404,14 +407,45 @@ function EmptyState() {
 function LoadingSkeleton() {
   return (
     <div className="space-y-6">
+      {/* Header skeleton */}
+      <div className="space-y-2">
+        <div className="h-8 w-24 animate-pulse rounded-lg bg-secondary" />
+        <div className="h-4 w-40 animate-pulse rounded bg-secondary" />
+      </div>
+
+      {/* Stats grid skeleton */}
       <div className="grid grid-cols-3 gap-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-24 animate-pulse rounded-2xl bg-secondary" />
+          <div key={i} className="rounded-2xl border border-border bg-card p-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 animate-pulse rounded-xl bg-secondary" />
+              <div className="space-y-2">
+                <div className="h-3 w-16 animate-pulse rounded bg-secondary" />
+                <div className="h-5 w-10 animate-pulse rounded bg-secondary" />
+              </div>
+            </div>
+          </div>
         ))}
       </div>
+
+      {/* Section header skeleton */}
+      <div className="h-4 w-32 animate-pulse rounded bg-secondary" />
+
+      {/* Cards skeleton */}
       <div className="space-y-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-28 animate-pulse rounded-2xl bg-secondary" />
+          <div key={i} className="rounded-2xl border border-border bg-card p-4">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-12 animate-pulse rounded-xl bg-secondary" />
+                <div className="space-y-2">
+                  <div className="h-4 w-32 animate-pulse rounded bg-secondary" />
+                  <div className="h-3 w-20 animate-pulse rounded bg-secondary" />
+                </div>
+              </div>
+              <div className="h-5 w-5 animate-pulse rounded bg-secondary" />
+            </div>
+          </div>
         ))}
       </div>
     </div>
@@ -574,6 +608,7 @@ export default function DashboardPage() {
           {orgStats.map((org, i) => (
             <OrgCard
               key={org.organizationId}
+              organizationId={org.organizationId}
               name={org.name}
               slug={org.slug}
               role={org.role}

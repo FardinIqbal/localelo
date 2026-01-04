@@ -4,8 +4,9 @@ import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Plus, ChevronRight, X, Link2, Check } from "lucide-react";
+import { ArrowLeft, Plus, ChevronRight, X } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { InviteButton } from "@/components/invite/invite-modal";
 
 function CreateLeaderboardModal({
   isOpen,
@@ -126,37 +127,6 @@ function LeaderboardRow({
   );
 }
 
-function InviteLinkButton({ orgSlug }: { orgSlug: string }) {
-  const [copied, setCopied] = useState(false);
-
-  const copyLink = () => {
-    const link = `${window.location.origin}/join/${orgSlug}`;
-    navigator.clipboard.writeText(link);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  return (
-    <motion.button
-      onClick={copyLink}
-      className="inline-flex items-center gap-1.5 text-[12px] text-zinc-600 transition-colors hover:text-zinc-400"
-      whileTap={{ scale: 0.95 }}
-    >
-      {copied ? (
-        <>
-          <Check className="h-3 w-3 text-emerald-500" />
-          <span className="text-emerald-500">Copied</span>
-        </>
-      ) : (
-        <>
-          <Link2 className="h-3 w-3" />
-          Invite link
-        </>
-      )}
-    </motion.button>
-  );
-}
-
 function LoadingSkeleton() {
   return (
     <div className="space-y-1">
@@ -271,22 +241,21 @@ export default function OrganizationPage() {
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-[22px] font-semibold tracking-tight">{org.name}</h1>
-            <div className="mt-1 flex items-center gap-3">
-              <span className="text-[13px] text-zinc-600">
-                {members?.length ?? 0} members
-              </span>
-              <InviteLinkButton orgSlug={org.slug} />
-            </div>
+            <p className="mt-1 text-[13px] text-zinc-600">
+              {members?.length ?? 0} members
+            </p>
           </div>
-          {leaderboards && leaderboards.length > 0 && (
-            <button
-              onClick={() => setModalOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-zinc-800 px-3 py-1.5 text-[12px] font-medium text-zinc-400 transition-colors hover:border-zinc-700 hover:text-white"
-            >
-              <Plus className="h-3 w-3" />
-              New
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            <InviteButton organizationId={org.id} orgName={org.name} />
+            {leaderboards && leaderboards.length > 0 && (
+              <button
+                onClick={() => setModalOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-zinc-800 px-3 py-2 text-[12px] font-medium text-zinc-400 transition-colors hover:border-zinc-700 hover:text-white"
+              >
+                <Plus className="h-3 w-3" />
+              </button>
+            )}
+          </div>
         </div>
       </motion.div>
 

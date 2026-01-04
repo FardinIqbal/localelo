@@ -5,6 +5,7 @@ import { httpBatchLink } from "@trpc/client";
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import superjson from "superjson";
+import { ToastProvider } from "@/components/ui/simple-toast";
 
 function getBaseUrl() {
   if (typeof window !== "undefined") return "";
@@ -27,7 +28,9 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <ToastProvider>{children}</ToastProvider>
+      </QueryClientProvider>
     </trpc.Provider>
   );
 }

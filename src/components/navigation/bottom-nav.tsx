@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Home, Gamepad2, Trophy, User } from "lucide-react";
+import { Home, Plus, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
@@ -21,21 +21,15 @@ const navItems: NavItem[] = [
     matchPaths: ["/dashboard"],
   },
   {
-    label: "Play",
-    href: "#play", // Opens quick-log modal instead of navigating
-    icon: Gamepad2,
+    label: "Log",
+    href: "#play",
+    icon: Plus,
   },
   {
     label: "Rankings",
     href: "/rankings",
     icon: Trophy,
     matchPaths: ["/rankings", "/org"],
-  },
-  {
-    label: "Profile",
-    href: "/profile",
-    icon: User,
-    matchPaths: ["/profile", "/settings"],
   },
 ];
 

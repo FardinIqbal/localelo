@@ -130,6 +130,29 @@ export const organizationMemberships = pgTable(
   ]
 );
 
+// Organization Invites (shareable invite links)
+export const organizationInvites = pgTable(
+  "organization_invites",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .references(() => organizations.id, { onDelete: "cascade" })
+      .notNull(),
+    code: text("code").notNull().unique(), // Short code for URL (8 chars)
+    createdById: uuid("created_by_id")
+      .references(() => users.id)
+      .notNull(),
+    maxUses: integer("max_uses"), // null = unlimited
+    uses: integer("uses").default(0).notNull(),
+    expiresAt: timestamp("expires_at"), // null = never expires
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("invites_org_idx").on(table.organizationId),
+    index("invites_code_idx").on(table.code),
+  ]
+);
+
 // Leaderboards (ranking ladders within an organization)
 export const leaderboards = pgTable(
   "leaderboards",
@@ -499,7 +522,22 @@ export const organizationsRelations = relations(organizations, ({ one, many }) =
   }),
   memberships: many(organizationMemberships),
   leaderboards: many(leaderboards),
+  invites: many(organizationInvites),
 }));
+
+export const organizationInvitesRelations = relations(
+  organizationInvites,
+  ({ one }) => ({
+    organization: one(organizations, {
+      fields: [organizationInvites.organizationId],
+      references: [organizations.id],
+    }),
+    createdBy: one(users, {
+      fields: [organizationInvites.createdById],
+      references: [users.id],
+    }),
+  })
+);
 
 export const organizationMembershipsRelations = relations(
   organizationMemberships,
