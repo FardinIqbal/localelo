@@ -57,13 +57,13 @@ export function InviteModal({ organizationId, orgName, isOpen, onClose }: Invite
 
   // Create invite when modal opens
   const handleOpen = () => {
-    if (!createInvite.data && !createInvite.isPending) {
+    if (!createInvite.data && !createInvite.isPending && !createInvite.isError) {
       createInvite.mutate({ organizationId });
     }
   };
 
-  // Trigger on open
-  if (isOpen && !inviteUrl && !createInvite.isPending && !createInvite.data) {
+  // Trigger on open (only if no data, not pending, and no error)
+  if (isOpen && !inviteUrl && !createInvite.isPending && !createInvite.data && !createInvite.isError) {
     handleOpen();
   }
 
@@ -123,6 +123,24 @@ export function InviteModal({ organizationId, orgName, isOpen, onClose }: Invite
               {createInvite.isPending ? (
                 <div className="flex items-center justify-center py-16">
                   <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : createInvite.isError ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="rounded-full bg-rose-500/10 p-4 mb-4">
+                    <QrCode className="h-8 w-8 text-rose-400" />
+                  </div>
+                  <p className="text-[15px] font-medium text-foreground mb-2">
+                    Can't create invite
+                  </p>
+                  <p className="text-[13px] text-muted-foreground mb-6 max-w-[250px]">
+                    Only admins and owners can create invite links
+                  </p>
+                  <button
+                    onClick={onClose}
+                    className="rounded-xl bg-secondary px-6 py-2.5 text-[14px] font-medium text-foreground"
+                  >
+                    Close
+                  </button>
                 </div>
               ) : qrCodeUrl ? (
                 <>
