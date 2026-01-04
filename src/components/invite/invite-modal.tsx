@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { QrCode, Copy, Check, Share2, Loader2 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
@@ -16,25 +16,40 @@ export function InviteModal({ organizationId, orgName, isOpen, onClose }: Invite
   const [copied, setCopied] = useState(false);
   const [qrLoaded, setQrLoaded] = useState(false);
   const [qrError, setQrError] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const createInvite = trpc.invites.create.useMutation();
 
-  // Reset QR state when modal opens, with timeout fallback
+  // Reset QR state when modal opens
   useEffect(() => {
     if (isOpen) {
       setQrLoaded(false);
       setQrError(false);
 
-      // Timeout after 5 seconds - show fallback if QR doesn't load
-      const timeout = setTimeout(() => {
-        if (!qrLoaded) {
-          setQrError(true);
-        }
-      }, 5000);
+      // Clear any existing timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
 
-      return () => clearTimeout(timeout);
+      // Timeout after 8 seconds - show fallback if QR doesn't load
+      timeoutRef.current = setTimeout(() => {
+        setQrError(true);
+      }, 8000);
     }
-  }, [isOpen, qrLoaded]);
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [isOpen]);
+
+  // Clear timeout when QR loads successfully
+  useEffect(() => {
+    if (qrLoaded && timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+  }, [qrLoaded]);
 
   const inviteUrl = createInvite.data
     ? `${typeof window !== "undefined" ? window.location.origin : ""}/invite/${createInvite.data.code}`
