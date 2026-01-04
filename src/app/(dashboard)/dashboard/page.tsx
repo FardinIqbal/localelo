@@ -51,16 +51,16 @@ function StatCard({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl border border-border bg-card p-4"
+      className="rounded-2xl border border-border bg-card p-3"
     >
-      <div className="flex items-center gap-3">
-        <div className={`rounded-xl p-2.5 ${colorClasses[color]}`}>
-          <Icon className="h-5 w-5" />
+      <div className="flex flex-col items-center text-center gap-2">
+        <div className={`rounded-xl p-2 ${colorClasses[color]}`}>
+          <Icon className="h-4 w-4" />
         </div>
         <div>
-          <p className="text-[13px] text-muted-foreground">{label}</p>
-          <p className="text-xl font-semibold tracking-tight text-foreground">{value}</p>
-          {subtext && <p className="text-[12px] text-muted-foreground/70">{subtext}</p>}
+          <p className="text-[11px] text-muted-foreground leading-tight">{label}</p>
+          <p className="text-lg font-semibold tracking-tight text-foreground">{value}</p>
+          {subtext && <p className="text-[10px] text-muted-foreground/70">{subtext}</p>}
         </div>
       </div>
     </motion.div>
@@ -491,7 +491,7 @@ export default function DashboardPage() {
       </motion.div>
 
       {/* Quick Stats */}
-      <div className="mb-6 grid grid-cols-3 gap-3">
+      <div className="mb-6 grid grid-cols-3 gap-2">
         <StatCard
           icon={Trophy}
           label="Best Rank"
