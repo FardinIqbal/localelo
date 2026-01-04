@@ -52,6 +52,12 @@ export function QuickLogModal({
     { enabled: isOpen && !!leaderboardId }
   );
 
+  // Get current user's rating to filter them out of opponents
+  const { data: myRating } = trpc.leaderboards.myRating.useQuery(
+    { leaderboardId: leaderboardId ?? "" },
+    { enabled: isOpen && !!leaderboardId }
+  );
+
   const logMatch = trpc.matches.create.useMutation({
     onSuccess: (data) => {
       // Invalidate all relevant queries
@@ -125,16 +131,19 @@ export function QuickLogModal({
     }
   }, [isOpen]);
 
-  // Transform rankings to opponent format
+  // Transform rankings to opponent format (filter out current user)
+  const myMembershipId = myRating?.membershipId;
   const opponents: Opponent[] =
-    allMembers?.map((r) => ({
-      id: r.rating.id,
-      membershipId: r.membership.id,
-      username: r.membership.username,
-      imageUrl: null, // Would come from user data
-      rating: r.rating.rating,
-      matchCount: 0,
-    })) ?? [];
+    allMembers
+      ?.filter((r) => r.membership.id !== myMembershipId)
+      .map((r) => ({
+        id: r.rating.id,
+        membershipId: r.membership.id,
+        username: r.membership.username,
+        imageUrl: null, // Would come from user data
+        rating: r.rating.rating,
+        matchCount: 0,
+      })) ?? [];
 
   // Recent opponents with match counts
   const recentWithCounts: Opponent[] =
