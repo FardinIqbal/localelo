@@ -37,10 +37,10 @@ export const invitesRouter = router({
         ),
       });
 
-      if (!membership || (!membership.isAdmin && !membership.isOwner)) {
+      if (!membership) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "Only admins can create invite links",
+          message: "You must be a member to create invite links",
         });
       }
 

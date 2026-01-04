@@ -133,7 +133,7 @@ export function InviteModal({ organizationId, orgName, isOpen, onClose }: Invite
                     Can't create invite
                   </p>
                   <p className="text-[13px] text-muted-foreground mb-6 max-w-[250px]">
-                    Only admins and owners can create invite links
+                    You must be a member to create invite links
                   </p>
                   <button
                     onClick={onClose}
