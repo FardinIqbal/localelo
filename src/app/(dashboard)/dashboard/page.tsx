@@ -349,26 +349,26 @@ function EmptyState() {
       animate={{ opacity: 1, y: 0 }}
       className="flex flex-col items-center justify-center py-16 text-center"
     >
-      <div className="mb-6 rounded-2xl bg-secondary p-4">
-        <Zap className="h-8 w-8 text-amber-400" />
+      <div className="mb-6 rounded-2xl bg-orange-500/10 border border-orange-500/20 p-4">
+        <Zap className="h-8 w-8 text-orange-400" />
       </div>
 
       {!showJoin ? (
         <>
-          <h2 className="text-xl font-semibold text-foreground">Ready to compete?</h2>
-          <p className="mt-2 max-w-xs text-[14px] text-muted-foreground">
+          <h2 className="text-xl font-bold text-white">Ready to compete?</h2>
+          <p className="mt-2 max-w-xs text-[14px] text-zinc-500">
             Join an organization or create your own to start tracking rankings
           </p>
           <div className="mt-8 flex items-center gap-3">
             <Link
               href="/dashboard/new-org"
-              className="rounded-full bg-foreground px-6 py-2.5 text-[14px] font-medium text-background transition-colors hover:bg-foreground/90"
+              className="rounded-lg bg-orange-500 px-6 py-2.5 text-[14px] font-semibold text-black transition-colors hover:bg-orange-400"
             >
               Create
             </Link>
             <button
               onClick={() => setShowJoin(true)}
-              className="rounded-full border border-border px-6 py-2.5 text-[14px] font-medium text-muted-foreground transition-colors hover:border-border/80 hover:text-foreground"
+              className="rounded-lg border border-zinc-800 px-6 py-2.5 text-[14px] font-medium text-zinc-400 transition-colors hover:border-zinc-700 hover:text-white"
             >
               Join
             </button>
@@ -376,27 +376,27 @@ function EmptyState() {
         </>
       ) : (
         <form onSubmit={handleJoin} className="w-full max-w-xs">
-          <h2 className="text-xl font-semibold text-foreground">Join organization</h2>
+          <h2 className="text-xl font-bold text-white">Join organization</h2>
           <input
             type="text"
             placeholder="Paste invite link or org name"
             value={inviteCode}
             onChange={(e) => setInviteCode(e.target.value)}
-            className="mt-6 w-full rounded-xl border border-border bg-secondary px-4 py-3 text-center text-[15px] text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-border/80"
+            className="mt-6 w-full rounded-lg border border-zinc-800 bg-zinc-900/50 px-4 py-3 text-center text-[15px] text-white outline-none transition-colors placeholder:text-zinc-600 focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20"
             autoFocus
           />
           <div className="mt-4 flex gap-3">
             <button
               type="button"
               onClick={() => setShowJoin(false)}
-              className="flex-1 rounded-full border border-border py-2.5 text-[14px] font-medium text-muted-foreground transition-colors hover:border-border/80 hover:text-foreground"
+              className="flex-1 rounded-lg border border-zinc-800 py-2.5 text-[14px] font-medium text-zinc-400 transition-colors hover:border-zinc-700 hover:text-white"
             >
               Back
             </button>
             <button
               type="submit"
               disabled={!inviteCode.trim()}
-              className="flex-1 rounded-full bg-foreground py-2.5 text-[14px] font-medium text-background transition-colors hover:bg-foreground/90 disabled:opacity-40"
+              className="flex-1 rounded-lg bg-orange-500 py-2.5 text-[14px] font-semibold text-black transition-colors hover:bg-orange-400 disabled:opacity-40"
             >
               Continue
             </button>
