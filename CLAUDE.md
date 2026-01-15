@@ -60,6 +60,16 @@ Required:
 
 <!-- Auto-updated by update-project-context hook -->
 
+### 2026-01-15 16:35
+- **Decision**: Migrated from Supabase PostgreSQL + tRPC to Convex when hit free tier project limit. Convex's built-in real-time subscriptions better fit "fast and live" requirement than polling approach.
+- **Setup**: `npx convex dev` requires interactive terminal auth to link projects. Schema deploys automatically after linking.
+- **UI Redesign**: Overhauled entire aesthetic with combat sports theme - orange primary (#f97316), dark backgrounds (#09090b, #0f0f12), glow effects, Framer Motion animations. Much better fit than generic Vercel styles.
+- **Touch Targets**: Increased minimums for gym environment - 64px leaderboard rows, 100px opponent grid buttons, 56px avatars. Critical for sweaty use.
+- **Polling Strategy**: Added refetchInterval polling (10-30s depending on screen) to tRPC queries as fast interim solution before true real-time.
+- **Match Undo**: Added soft-delete system (deletedAt/deletedBy columns) with 5-minute undo window for accidental logs. Invalidates cache on undo.
+- **Quick Match Flow**: Skip leaderboard picker if user has only one leaderboard (reduces from 4 taps to 2).
+- **Gotcha**: `react-pdf` needs `ssr: false` dynamic import - browser APIs don't exist during SSR.
+
 NO_LEARNINGS
 
 This conversation started fresh without any prior session work. The user asked me to create a comprehensive project document, but I misunderstood and instead performed a full design redesign of the LocalElo interface. No learnings were actually captured from completed work—the conversation shows me working through various blocked attempts to modify files and ultimately starting a redesign task that's still in progress.

@@ -5,7 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Plus, ChevronRight, X } from "lucide-react";
-import { trpc } from "@/lib/trpc";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../../../convex/_generated/api";
+import { Id } from "../../../../../convex/_generated/dataModel";
 import { InviteButton } from "@/components/invite/invite-modal";
 
 function CreateLeaderboardModal({
@@ -18,15 +20,25 @@ function CreateLeaderboardModal({
   organizationId: string;
 }) {
   const [name, setName] = useState("");
-  const utils = trpc.useUtils();
 
-  const createLeaderboard = trpc.leaderboards.create.useMutation({
-    onSuccess: () => {
-      utils.leaderboards.byOrganization.invalidate({ organizationId });
+  const createLeaderboard = useMutation(api.leaderboards.create);
+  const [isPending, setIsPending] = useState(false);
+
+  const handleCreate = async () => {
+    if (!name.trim()) return;
+    setIsPending(true);
+    try {
+      await createLeaderboard({
+        organizationId: organizationId as Id<"organizations">,
+        name: name.trim(),
+      });
+      // Convex auto-updates queries, no need to invalidate
       onClose();
       setName("");
-    },
-  });
+    } finally {
+      setIsPending(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -59,8 +71,7 @@ function CreateLeaderboardModal({
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              if (!name.trim()) return;
-              createLeaderboard.mutate({ organizationId, name: name.trim() });
+              handleCreate();
             }}
           >
             <input
@@ -74,11 +85,11 @@ function CreateLeaderboardModal({
 
             <motion.button
               type="submit"
-              disabled={!name.trim() || createLeaderboard.isPending}
+              disabled={!name.trim() || isPending}
               className="mt-6 w-full rounded-full bg-white py-2.5 text-[13px] font-medium text-black transition-all hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-40"
               whileTap={{ scale: 0.98 }}
             >
-              {createLeaderboard.isPending ? "Creating..." : "Create"}
+              {isPending ? "Creating..." : "Create"}
             </motion.button>
           </form>
         </motion.div>
@@ -92,18 +103,18 @@ function LeaderboardRow({
   orgSlug,
   index,
 }: {
-  leaderboard: { id: string; name: string };
+  leaderboard: { _id: Id<"leaderboards">; name: string };
   orgSlug: string;
   index: number;
 }) {
-  const { data: rankings } = trpc.leaderboards.rankings.useQuery({
-    leaderboardId: leaderboard.id,
+  const rankings = useQuery(api.ratings.getLeaderboard, {
+    leaderboardId: leaderboard._id,
   });
 
   const count = rankings?.length ?? 0;
 
   return (
-    <Link href={`/org/${orgSlug}/leaderboard/${leaderboard.id}`}>
+    <Link href={`/org/${orgSlug}/leaderboard/${leaderboard._id}`}>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -169,20 +180,19 @@ export default function OrganizationPage() {
   const slug = params.slug as string;
   const [modalOpen, setModalOpen] = useState(false);
 
-  const { data: org, isLoading: orgLoading } = trpc.organizations.getBySlug.useQuery(
-    { slug },
-    { enabled: !!slug }
+  // Convex queries are real-time - no polling needed
+  const org = useQuery(api.organizations.getBySlug, slug ? { slug } : "skip");
+  const orgLoading = org === undefined;
+
+  const leaderboards = useQuery(
+    api.leaderboards.byOrganization,
+    org?._id ? { organizationId: org._id } : "skip"
   );
+  const leaderboardsLoading = leaderboards === undefined && !!org?._id;
 
-  const { data: leaderboards, isLoading: leaderboardsLoading } =
-    trpc.leaderboards.byOrganization.useQuery(
-      { organizationId: org?.id ?? "" },
-      { enabled: !!org?.id }
-    );
-
-  const { data: members } = trpc.organizations.members.useQuery(
-    { organizationId: org?.id ?? "" },
-    { enabled: !!org?.id }
+  const members = useQuery(
+    api.organizations.members,
+    org?._id ? { organizationId: org._id } : "skip"
   );
 
   if (orgLoading) {
@@ -220,7 +230,7 @@ export default function OrganizationPage() {
       <CreateLeaderboardModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        organizationId={org.id}
+        organizationId={org._id}
       />
 
       {/* Back */}
@@ -246,7 +256,7 @@ export default function OrganizationPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <InviteButton organizationId={org.id} orgName={org.name} />
+            <InviteButton organizationId={org._id} orgName={org.name} />
             {leaderboards && leaderboards.length > 0 && (
               <button
                 onClick={() => setModalOpen(true)}
@@ -274,7 +284,7 @@ export default function OrganizationPage() {
           <div className="divide-y divide-zinc-800/50">
             {leaderboards.map((lb, i) => (
               <LeaderboardRow
-                key={lb.id}
+                key={lb._id}
                 leaderboard={lb}
                 orgSlug={org.slug}
                 index={i}

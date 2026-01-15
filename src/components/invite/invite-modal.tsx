@@ -3,7 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { QrCode, Copy, Check, Share2, Loader2 } from "lucide-react";
-import { trpc } from "@/lib/trpc";
+import { useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
 
 interface InviteModalProps {
   organizationId: string;
@@ -16,9 +18,12 @@ export function InviteModal({ organizationId, orgName, isOpen, onClose }: Invite
   const [copied, setCopied] = useState(false);
   const [qrLoaded, setQrLoaded] = useState(false);
   const [qrError, setQrError] = useState(false);
+  const [inviteData, setInviteData] = useState<{ code: string } | null>(null);
+  const [isPending, setIsPending] = useState(false);
+  const [isError, setIsError] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const createInvite = trpc.invites.create.useMutation();
+  const createInviteMutation = useMutation(api.invites.create);
 
   // Reset QR state when modal opens
   useEffect(() => {
@@ -51,19 +56,30 @@ export function InviteModal({ organizationId, orgName, isOpen, onClose }: Invite
     }
   }, [qrLoaded]);
 
-  const inviteUrl = createInvite.data
-    ? `${typeof window !== "undefined" ? window.location.origin : ""}/invite/${createInvite.data.code}`
+  const inviteUrl = inviteData
+    ? `${typeof window !== "undefined" ? window.location.origin : ""}/invite/${inviteData.code}`
     : null;
 
   // Create invite when modal opens
-  const handleOpen = () => {
-    if (!createInvite.data && !createInvite.isPending && !createInvite.isError) {
-      createInvite.mutate({ organizationId });
+  const handleOpen = async () => {
+    if (!inviteData && !isPending && !isError) {
+      setIsPending(true);
+      setIsError(false);
+      try {
+        const result = await createInviteMutation({
+          organizationId: organizationId as Id<"organizations">,
+        });
+        setInviteData(result);
+      } catch {
+        setIsError(true);
+      } finally {
+        setIsPending(false);
+      }
     }
   };
 
   // Trigger on open (only if no data, not pending, and no error)
-  if (isOpen && !inviteUrl && !createInvite.isPending && !createInvite.data && !createInvite.isError) {
+  if (isOpen && !inviteUrl && !isPending && !inviteData && !isError) {
     handleOpen();
   }
 
@@ -120,11 +136,11 @@ export function InviteModal({ organizationId, orgName, isOpen, onClose }: Invite
             </div>
 
             <div className="px-6 pb-8">
-              {createInvite.isPending ? (
+              {isPending ? (
                 <div className="flex items-center justify-center py-16">
                   <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>
-              ) : createInvite.isError ? (
+              ) : isError ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <div className="rounded-full bg-rose-500/10 p-4 mb-4">
                     <QrCode className="h-8 w-8 text-rose-400" />

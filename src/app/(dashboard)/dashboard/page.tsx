@@ -15,7 +15,8 @@ import {
   Zap,
   Users,
 } from "lucide-react";
-import { trpc } from "@/lib/trpc";
+import { useQuery } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
 import { InviteButton } from "@/components/invite/invite-modal";
 import { HeroCard, HeroCardEmpty } from "@/components/dashboard/hero-card";
 
@@ -455,29 +456,14 @@ function LoadingSkeleton() {
 }
 
 export default function DashboardPage() {
-  const { data: orgStats, isLoading: orgStatsLoading } = trpc.activity.orgStats.useQuery(
-    undefined,
-    { refetchInterval: 30000 } // Refresh every 30s
-  );
-  const { data: stats, isLoading: statsLoading } = trpc.activity.dashboardStats.useQuery(
-    undefined,
-    { refetchInterval: 30000 }
-  );
-  const { data: activity, isLoading: activityLoading } = trpc.activity.recentActivity.useQuery(
-    undefined,
-    { refetchInterval: 15000 } // Activity feed refreshes faster
-  );
-  const { data: duckingAlerts } = trpc.activity.duckingAlerts.useQuery();
-  const { data: rivalries } = trpc.activity.rivalries.useQuery(
-    undefined,
-    { refetchInterval: 30000 }
-  );
-  const { data: rankings } = trpc.rankings.myRankings.useQuery(
-    undefined,
-    { refetchInterval: 30000 }
-  );
+  // Convex queries are automatically real-time (no polling needed!)
+  const orgStats = useQuery(api.activity.orgStats);
+  const stats = useQuery(api.activity.dashboardStats);
+  const activity = useQuery(api.activity.recentActivity);
+  const rivalries = useQuery(api.activity.rivalries);
+  const rankings = useQuery(api.ratings.myRankings);
 
-  const isLoading = orgStatsLoading || statsLoading || activityLoading;
+  const isLoading = orgStats === undefined || stats === undefined || activity === undefined;
 
   // Get primary ranking (most recent activity or best rank)
   const primaryRanking = rankings?.[0];
@@ -541,21 +527,7 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* Ducking Alert */}
-      {duckingAlerts && duckingAlerts.length > 0 && (
-        <div className="mb-6 space-y-2">
-          {duckingAlerts.slice(0, 1).map((alert, i) => (
-            <DuckingAlert
-              key={i}
-              name={alert.name}
-              days={alert.days}
-              org={alert.org}
-              orgSlug={alert.orgSlug}
-              leaderboardName={alert.leaderboardName}
-            />
-          ))}
-        </div>
-      )}
+      {/* Ducking Alert - TODO: implement in Convex */}
 
       {/* Rivalries */}
       {rivalries && rivalries.length > 0 && (

@@ -16,7 +16,9 @@ import {
   Medal,
   Crown,
 } from "lucide-react";
-import { trpc } from "@/lib/trpc";
+import { useQuery } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
+import { Id } from "../../../../convex/_generated/dataModel";
 import { formatDistanceToNow } from "date-fns";
 
 type SortOption = "recent" | "rank" | "rating" | "active";
@@ -323,10 +325,11 @@ function LeaderboardSummaryCard({
   onToggle: () => void;
   index: number;
 }) {
-  const { data: preview, isLoading: previewLoading } = trpc.rankings.leaderboardPreview.useQuery(
-    { leaderboardId },
-    { enabled: isExpanded }
+  const preview = useQuery(
+    api.ratings.leaderboardPreview,
+    isExpanded ? { leaderboardId: leaderboardId as Id<"leaderboards"> } : "skip"
   );
+  const previewLoading = preview === undefined && isExpanded;
 
   return (
     <motion.div
@@ -490,16 +493,11 @@ export default function RankingsPage() {
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>("recent");
 
-  const { data: rankings, isLoading: rankingsLoading } = trpc.rankings.myRankings.useQuery(
-    undefined,
-    { refetchInterval: 15000 } // Live updates every 15s
-  );
-  const { data: stats, isLoading: statsLoading } = trpc.rankings.myRankingsStats.useQuery(
-    undefined,
-    { refetchInterval: 30000 }
-  );
+  // Convex queries are real-time - no polling needed
+  const rankings = useQuery(api.ratings.myRankings);
+  const stats = useQuery(api.ratings.myRankingsStats);
 
-  const isLoading = rankingsLoading || statsLoading;
+  const isLoading = rankings === undefined || stats === undefined;
 
   // Extract unique organizations
   const organizations = useMemo(() => {

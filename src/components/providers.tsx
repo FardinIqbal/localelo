@@ -1,36 +1,25 @@
 "use client";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { httpBatchLink } from "@trpc/client";
-import { useState } from "react";
-import { trpc } from "@/lib/trpc";
-import superjson from "superjson";
+import { ConvexReactClient } from "convex/react";
+import { ConvexProviderWithClerk } from "convex/react-clerk";
+import { useAuth } from "@clerk/nextjs";
 import { ToastProvider } from "@/components/ui/simple-toast";
 
-function getBaseUrl() {
-  if (typeof window !== "undefined") return "";
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return `http://localhost:${process.env.PORT ?? 3000}`;
-}
+const convex = new ConvexReactClient(
+  process.env.NEXT_PUBLIC_CONVEX_URL as string
+);
 
-export function TRPCProvider({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient());
-  const [trpcClient] = useState(() =>
-    trpc.createClient({
-      links: [
-        httpBatchLink({
-          url: `${getBaseUrl()}/api/trpc`,
-          transformer: superjson,
-        }),
-      ],
-    })
-  );
-
+export function ConvexClientProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        <ToastProvider>{children}</ToastProvider>
-      </QueryClientProvider>
-    </trpc.Provider>
+    <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+      <ToastProvider>{children}</ToastProvider>
+    </ConvexProviderWithClerk>
   );
 }
+
+// Keep old name for backwards compatibility during migration
+export const TRPCProvider = ConvexClientProvider;

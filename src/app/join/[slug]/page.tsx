@@ -5,7 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, Users } from "lucide-react";
-import { trpc } from "@/lib/trpc";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
 
 export default function JoinOrganizationPage() {
@@ -16,26 +17,26 @@ export default function JoinOrganizationPage() {
 
   const [username, setUsername] = useState("");
   const [error, setError] = useState("");
+  const [isPending, setIsPending] = useState(false);
 
-  const { data: org, isLoading: orgLoading } = trpc.organizations.getBySlug.useQuery(
-    { slug },
-    { enabled: !!slug }
-  );
+  const org = useQuery(api.organizations.getBySlug, slug ? { slug } : "skip");
+  const orgLoading = org === undefined;
 
-  const joinOrg = trpc.organizations.joinBySlug.useMutation({
-    onSuccess: (data) => {
-      router.push(`/org/${data.organization.slug}`);
-    },
-    onError: (err) => {
-      setError(err.message);
-    },
-  });
+  const joinOrgMutation = useMutation(api.memberships.joinBySlug);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username.trim()) return;
+    if (!username.trim() || isPending) return;
     setError("");
-    joinOrg.mutate({ slug, username: username.trim() });
+    setIsPending(true);
+    try {
+      await joinOrgMutation({ slug, username: username.trim() });
+      router.push(`/org/${slug}`);
+    } catch (err: any) {
+      setError(err.message || "Failed to join");
+    } finally {
+      setIsPending(false);
+    }
   };
 
   // Loading state
@@ -191,11 +192,11 @@ export default function JoinOrganizationPage() {
 
             <motion.button
               type="submit"
-              disabled={!username.trim() || joinOrg.isPending}
+              disabled={!username.trim() || isPending}
               className="group flex w-full items-center justify-center gap-2 rounded-full bg-white py-3 text-[14px] font-medium text-black transition-all hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-40"
               whileTap={{ scale: 0.98 }}
             >
-              {joinOrg.isPending ? (
+              {isPending ? (
                 <span className="text-zinc-600">Joining...</span>
               ) : (
                 <>

@@ -4,7 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Trophy, Minus, XCircle, ChevronLeft, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { trpc } from "@/lib/trpc";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
 import { OpponentGrid } from "./opponent-grid";
 import { useToast } from "@/components/ui/simple-toast";
 
@@ -36,84 +38,30 @@ export function QuickLogModal({
   const [selectedOpponent, setSelectedOpponent] = useState<Opponent | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const utils = trpc.useUtils();
   const { toast, toastWithUndo } = useToast();
-  const lastMatchIdRef = useRef<string | null>(null);
+  const lastMatchIdRef = useRef<Id<"matches"> | null>(null);
 
-  // Get recent opponents
-  const { data: recentOpponents, isLoading: loadingOpponents } =
-    trpc.matches.recentOpponents.useQuery(
-      { leaderboardId: leaderboardId ?? "" },
-      { enabled: isOpen && !!leaderboardId }
-    );
-
-  // Undo mutation
-  const undoMatch = trpc.matches.undo.useMutation({
-    onSuccess: () => {
-      utils.leaderboards.rankings.invalidate();
-      utils.matches.recentOpponents.invalidate();
-      utils.activity.recentActivity.invalidate();
-      utils.rankings.myRankings.invalidate();
-      utils.rankings.myRankingsStats.invalidate();
-      toast("Match undone", "default");
-      if (navigator.vibrate) {
-        navigator.vibrate([10, 30, 10]);
-      }
-    },
-    onError: (error) => {
-      toast(error.message || "Failed to undo", "error");
-    },
-  });
-
-  // Get all leaderboard members for search
-  const { data: allMembers } = trpc.leaderboards.rankings.useQuery(
-    { leaderboardId: leaderboardId ?? "" },
-    { enabled: isOpen && !!leaderboardId }
+  // Convex queries - real-time by default
+  const recentOpponents = useQuery(
+    api.matches.recentOpponents,
+    isOpen && leaderboardId ? { leaderboardId: leaderboardId as Id<"leaderboards"> } : "skip"
   );
 
-  // Get current user's rating to filter them out of opponents
-  const { data: myRating } = trpc.leaderboards.myRating.useQuery(
-    { leaderboardId: leaderboardId ?? "" },
-    { enabled: isOpen && !!leaderboardId }
+  const allMembers = useQuery(
+    api.ratings.getLeaderboard,
+    isOpen && leaderboardId ? { leaderboardId: leaderboardId as Id<"leaderboards"> } : "skip"
   );
 
-  const logMatch = trpc.matches.create.useMutation({
-    onSuccess: (data) => {
-      // Store match ID for potential undo
-      lastMatchIdRef.current = data.id;
+  const myRating = useQuery(
+    api.leaderboards.myRating,
+    isOpen && leaderboardId ? { leaderboardId: leaderboardId as Id<"leaderboards"> } : "skip"
+  );
 
-      // Invalidate all relevant queries
-      utils.leaderboards.rankings.invalidate();
-      utils.matches.recentOpponents.invalidate();
-      utils.activity.recentActivity.invalidate();
-      utils.rankings.myRankings.invalidate();
-      utils.rankings.myRankingsStats.invalidate();
-      onSuccess?.();
-      handleClose();
+  // Convex mutations
+  const logMatchMutation = useMutation(api.matches.create);
+  const undoMatchMutation = useMutation(api.matches.undo);
 
-      // Show rating change feedback with undo option
-      const delta = data.ratingDelta;
-      const sign = delta >= 0 ? "+" : "";
-      const matchId = data.id;
-
-      toastWithUndo(
-        `${sign}${delta} rating`,
-        delta >= 0 ? "success" : "error",
-        () => {
-          undoMatch.mutate({ matchId });
-        }
-      );
-
-      // Haptic feedback for success
-      if (navigator.vibrate) {
-        navigator.vibrate([10, 50, 10]);
-      }
-    },
-    onError: (error) => {
-      console.error("Failed to log match:", error);
-      setIsSubmitting(false);
-    },
-  });
+  const loadingOpponents = recentOpponents === undefined;
 
   const handleClose = () => {
     setStep("opponent");
@@ -139,11 +87,48 @@ export function QuickLogModal({
 
     setIsSubmitting(true);
 
-    logMatch.mutate({
-      leaderboardId,
-      opponentMembershipId: selectedOpponent.membershipId,
-      outcome,
-    });
+    try {
+      const result = await logMatchMutation({
+        leaderboardId: leaderboardId as Id<"leaderboards">,
+        opponentMembershipId: selectedOpponent.membershipId as Id<"memberships">,
+        outcome,
+      });
+
+      // Store match ID for potential undo
+      lastMatchIdRef.current = result.id;
+      onSuccess?.();
+      handleClose();
+
+      // Show rating change feedback with undo option
+      const delta = result.ratingDelta;
+      const sign = delta >= 0 ? "+" : "";
+
+      toastWithUndo(
+        `${sign}${delta} rating`,
+        delta >= 0 ? "success" : "error",
+        async () => {
+          try {
+            await undoMatchMutation({ matchId: result.id });
+            toast("Match undone", "default");
+            if (navigator.vibrate) {
+              navigator.vibrate([10, 30, 10]);
+            }
+          } catch (error) {
+            toast("Failed to undo", "error");
+          }
+        }
+      );
+
+      // Haptic feedback for success
+      if (navigator.vibrate) {
+        navigator.vibrate([10, 50, 10]);
+      }
+    } catch (error) {
+      console.error("Failed to log match:", error);
+      toast("Failed to log match", "error");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleBack = () => {

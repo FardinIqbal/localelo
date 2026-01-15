@@ -7,7 +7,8 @@ import { ChevronRight, Trophy } from "lucide-react";
 import { UserButton } from "@/components/user-button";
 import { BottomNav } from "@/components/navigation/bottom-nav";
 import { QuickLogModal } from "@/components/match/quick-log-modal";
-import { trpc } from "@/lib/trpc";
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 
 export default function DashboardLayout({
   children,
@@ -17,7 +18,8 @@ export default function DashboardLayout({
   const [leaderboardPickerOpen, setLeaderboardPickerOpen] = useState(false);
   const [selectedLeaderboardId, setSelectedLeaderboardId] = useState<string | null>(null);
 
-  const { data: rankings } = trpc.rankings.myRankings.useQuery();
+  // Convex queries are real-time - no polling needed
+  const rankings = useQuery(api.ratings.myRankings);
 
   // Smart play button: skip picker if only one leaderboard
   const handlePlayClick = () => {

@@ -5,21 +5,16 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { trpc } from "@/lib/trpc";
+import { useMutation } from "convex/react";
+import { api } from "../../../../../convex/_generated/api";
 
 export default function NewOrganizationPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [error, setError] = useState("");
+  const [isPending, setIsPending] = useState(false);
 
-  const createOrg = trpc.organizations.create.useMutation({
-    onSuccess: (org) => {
-      router.push(`/org/${org.slug}`);
-    },
-    onError: (err) => {
-      setError(err.message);
-    },
-  });
+  const createOrgMutation = useMutation(api.organizations.create);
 
   const slug = name
     .toLowerCase()
@@ -28,15 +23,24 @@ export default function NewOrganizationPage() {
     .replace(/-+/g, "-")
     .slice(0, 50);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || isPending) return;
     setError("");
-    createOrg.mutate({
-      name: name.trim(),
-      slug,
-      visibility: "public",
-    });
+    setIsPending(true);
+    try {
+      const orgId = await createOrgMutation({
+        name: name.trim(),
+        slug,
+        visibility: "public",
+      });
+      // Get org by id to navigate to slug
+      router.push(`/org/${slug}`);
+    } catch (err: any) {
+      setError(err.message || "Failed to create organization");
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (
@@ -92,11 +96,11 @@ export default function NewOrganizationPage() {
 
           <motion.button
             type="submit"
-            disabled={!name.trim() || createOrg.isPending}
+            disabled={!name.trim() || isPending}
             className="group flex w-full items-center justify-center gap-2 rounded-full bg-white py-3 text-[14px] font-medium text-black transition-all hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-40"
             whileTap={{ scale: 0.98 }}
           >
-            {createOrg.isPending ? (
+            {isPending ? (
               <span className="text-zinc-600">Creating...</span>
             ) : (
               <>

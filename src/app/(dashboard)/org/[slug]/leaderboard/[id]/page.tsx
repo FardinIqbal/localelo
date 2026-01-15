@@ -14,7 +14,9 @@ import {
   ChevronDown,
   Flame,
 } from "lucide-react";
-import { trpc } from "@/lib/trpc";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../../../../../convex/_generated/api";
+import { Id } from "../../../../../../../convex/_generated/dataModel";
 
 function PlayerSelect({
   value,
@@ -92,32 +94,34 @@ function LogMatchModal({
   const [player1Id, setPlayer1Id] = useState("");
   const [player2Id, setPlayer2Id] = useState("");
   const [result, setResult] = useState<"1" | "2" | "draw" | "">("");
+  const [isPending, setIsPending] = useState(false);
 
-  const utils = trpc.useUtils();
-  const logMatch = trpc.matches.adminCreate.useMutation({
-    onSuccess: () => {
-      utils.leaderboards.rankings.invalidate({ leaderboardId });
-      utils.matches.byLeaderboard.invalidate({ leaderboardId });
-      onClose();
-      setPlayer1Id("");
-      setPlayer2Id("");
-      setResult("");
-    },
-  });
+  const logMatch = useMutation(api.matches.adminCreate);
 
   const canSubmit = player1Id && player2Id && result && player1Id !== player2Id;
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canSubmit) return;
-    logMatch.mutate({
-      leaderboardId,
-      player1MembershipId: player1Id,
-      player2MembershipId: player2Id,
-      winnerId: result === "draw" ? null : result === "1" ? player1Id : player2Id,
-    });
+    if (!canSubmit || isPending) return;
+
+    setIsPending(true);
+    try {
+      await logMatch({
+        leaderboardId: leaderboardId as Id<"leaderboards">,
+        player1MembershipId: player1Id as Id<"memberships">,
+        player2MembershipId: player2Id as Id<"memberships">,
+        winnerId: result === "draw" ? undefined : (result === "1" ? player1Id : player2Id) as Id<"memberships">,
+      });
+      // Convex auto-updates queries, no need to invalidate
+      onClose();
+      setPlayer1Id("");
+      setPlayer2Id("");
+      setResult("");
+    } finally {
+      setIsPending(false);
+    }
   };
 
   const player1 = players.find((p) => p.id === player1Id);
@@ -214,11 +218,11 @@ function LogMatchModal({
 
             <motion.button
               type="submit"
-              disabled={!canSubmit || logMatch.isPending}
+              disabled={!canSubmit || isPending}
               className="w-full rounded-full bg-foreground py-2.5 text-[13px] font-medium text-background transition-all hover:bg-foreground/90 disabled:cursor-not-allowed disabled:opacity-40"
               whileTap={{ scale: 0.98 }}
             >
-              {logMatch.isPending ? "Recording..." : "Record"}
+              {isPending ? "Recording..." : "Record"}
             </motion.button>
           </form>
         </motion.div>
@@ -467,23 +471,21 @@ export default function LeaderboardPage() {
   const leaderboardId = params.id as string;
   const [modalOpen, setModalOpen] = useState(false);
 
-  const { data: leaderboard, isLoading: leaderboardLoading } =
-    trpc.leaderboards.getById.useQuery(
-      { id: leaderboardId },
-      { enabled: !!leaderboardId }
-    );
+  // Convex queries are real-time - no polling needed
+  const leaderboard = useQuery(
+    api.leaderboards.get,
+    leaderboardId ? { id: leaderboardId as Id<"leaderboards"> } : "skip"
+  );
+  const leaderboardLoading = leaderboard === undefined;
 
-  const { data: rankings, isLoading: rankingsLoading } =
-    trpc.leaderboards.rankings.useQuery(
-      { leaderboardId },
-      {
-        enabled: !!leaderboardId,
-        refetchInterval: 10000, // Live updates every 10s
-      }
-    );
+  const rankings = useQuery(
+    api.ratings.getLeaderboard,
+    leaderboardId ? { leaderboardId: leaderboardId as Id<"leaderboards"> } : "skip"
+  );
+  const rankingsLoading = rankings === undefined;
 
   const players = rankings?.map((r) => ({
-    id: r.membership.id,
+    id: r.membership._id as string,
     username: r.membership.username,
     rating: r.rating.rating,
   })) ?? [];
@@ -621,7 +623,7 @@ export default function LeaderboardPage() {
               {/* Show all rankings if less than 3, otherwise skip top 3 */}
               {(rankings.length < 3 ? rankings : rankings.slice(3)).map((entry, i) => (
                 <RankingRow
-                  key={entry.rating.id}
+                  key={entry.rating._id}
                   rank={rankings.length < 3 ? i + 1 : i + 4}
                   username={entry.membership.username}
                   rating={entry.rating.rating}
