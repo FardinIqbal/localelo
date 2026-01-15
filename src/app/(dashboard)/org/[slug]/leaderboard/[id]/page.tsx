@@ -484,7 +484,7 @@ export default function LeaderboardPage() {
   );
   const rankingsLoading = rankings === undefined;
 
-  const players = rankings?.map((r) => ({
+  const players = rankings?.filter((r) => r !== null).map((r) => ({
     id: r.membership._id as string,
     username: r.membership.username,
     rating: r.rating.rating,
@@ -598,9 +598,9 @@ export default function LeaderboardPage() {
       ) : (
         <>
           {/* Top 3 Podium */}
-          {rankings.length >= 3 && (
+          {rankings.filter((e) => e !== null).length >= 3 && (
             <TopThreePodium
-              rankings={rankings.slice(0, 3).map((entry) => ({
+              rankings={rankings.filter((e) => e !== null).slice(0, 3).map((entry) => ({
                 username: entry.membership.username,
                 rating: entry.rating.rating,
                 wins: entry.rating.wins,
@@ -621,10 +621,10 @@ export default function LeaderboardPage() {
           >
             <div className="divide-y divide-zinc-800/50">
               {/* Show all rankings if less than 3, otherwise skip top 3 */}
-              {(rankings.length < 3 ? rankings : rankings.slice(3)).map((entry, i) => (
+              {(rankings.filter((e) => e !== null).length < 3 ? rankings.filter((e) => e !== null) : rankings.filter((e) => e !== null).slice(3)).map((entry, i) => (
                 <RankingRow
                   key={entry.rating._id}
-                  rank={rankings.length < 3 ? i + 1 : i + 4}
+                  rank={rankings.filter((e) => e !== null).length < 3 ? i + 1 : i + 4}
                   username={entry.membership.username}
                   rating={entry.rating.rating}
                   wins={entry.rating.wins}

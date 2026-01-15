@@ -192,7 +192,14 @@ export const accept = mutation({
       });
     }
 
-    return membershipId;
+    return {
+      membershipId,
+      organization: {
+        id: org._id,
+        name: org.name,
+        slug: org.slug,
+      },
+    };
   },
 });
 

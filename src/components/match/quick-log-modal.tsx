@@ -150,28 +150,30 @@ export function QuickLogModal({
 
   // Transform rankings to opponent format (filter out current user)
   const myMembershipId = myRating?.membershipId;
-  const opponents: Opponent[] =
-    allMembers
-      ?.filter((r) => r.membership.id !== myMembershipId)
-      .map((r) => ({
-        id: r.rating.id,
-        membershipId: r.membership.id,
-        username: r.membership.username,
-        imageUrl: null, // Would come from user data
-        rating: r.rating.rating,
-        matchCount: 0,
-      })) ?? [];
+  const validMembers = allMembers?.filter(
+    (r): r is NonNullable<typeof r> => r !== null && r.membership._id !== myMembershipId
+  ) ?? [];
+  const opponents: Opponent[] = validMembers.map((r) => ({
+    id: r.rating._id as string,
+    membershipId: r.membership._id as string,
+    username: r.membership.username,
+    imageUrl: null, // Would come from user data
+    rating: r.rating.rating,
+    matchCount: 0,
+  }));
 
   // Recent opponents with match counts
-  const recentWithCounts: Opponent[] =
-    recentOpponents?.map((ro) => ({
-      id: ro.id,
-      membershipId: ro.opponentMembershipId,
-      username: ro.opponentUsername,
-      imageUrl: null,
-      rating: ro.opponentRating ?? 1500,
-      matchCount: ro.matchCount,
-    })) ?? [];
+  const validRecent = recentOpponents?.filter(
+    (ro): ro is NonNullable<typeof ro> => ro !== null
+  ) ?? [];
+  const recentWithCounts: Opponent[] = validRecent.map((ro) => ({
+    id: ro.id as string,
+    membershipId: ro.opponentMembershipId as string,
+    username: ro.opponentUsername,
+    imageUrl: null,
+    rating: ro.opponentRating ?? 1500,
+    matchCount: ro.matchCount,
+  }));
 
   return (
     <AnimatePresence>

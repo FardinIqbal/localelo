@@ -83,3 +83,22 @@ export const syncFromClerk = mutation({
     });
   },
 });
+
+/**
+ * Clerk webhook handler - delete user
+ */
+export const deleteFromClerk = mutation({
+  args: {
+    clerkId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", args.clerkId))
+      .unique();
+
+    if (user) {
+      await ctx.db.delete(user._id);
+    }
+  },
+});

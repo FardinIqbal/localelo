@@ -542,7 +542,7 @@ export default function DashboardPage() {
             <h2 className="text-[15px] font-bold text-white">Top Rivalries</h2>
           </div>
           <div className="space-y-2">
-            {rivalries.slice(0, 3).map((rivalry, i) => (
+            {rivalries.filter((r) => r !== null).slice(0, 3).map((rivalry, i) => (
               <RivalryCard
                 key={`${rivalry.opponentMembershipId}-${rivalry.leaderboardId}`}
                 opponentName={rivalry.opponentName}

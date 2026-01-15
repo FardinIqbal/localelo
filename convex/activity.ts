@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
+import { Id } from "./_generated/dataModel";
 import { getUser, getMembership } from "./auth";
 
 /**
@@ -349,10 +350,10 @@ export const rivalries = query({
 
     const enriched = await Promise.all(
       rivalries.map(async (r) => {
-        const opponentMembership = await ctx.db.get(r.opponentMembershipId as any);
+        const opponentMembership = await ctx.db.get(r.opponentMembershipId as Id<"memberships">);
         if (!opponentMembership) return null;
 
-        const leaderboard = await ctx.db.get(r.leaderboardId as any);
+        const leaderboard = await ctx.db.get(r.leaderboardId as Id<"leaderboards">);
         if (!leaderboard) return null;
 
         const org = await ctx.db.get(leaderboard.organizationId);

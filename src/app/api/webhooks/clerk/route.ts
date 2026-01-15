@@ -1,9 +1,10 @@
 import { Webhook } from "svix";
 import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
-import { db } from "@/db";
-import { users } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "../../../../../convex/_generated/api";
+
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export async function POST(req: Request) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
@@ -48,31 +49,19 @@ export async function POST(req: Request) {
       return new Response("No email found", { status: 400 });
     }
 
-    await db
-      .insert(users)
-      .values({
-        clerkId: id,
-        email: primaryEmail,
-        firstName: first_name ?? null,
-        lastName: last_name ?? null,
-        imageUrl: image_url ?? null,
-      })
-      .onConflictDoUpdate({
-        target: users.clerkId,
-        set: {
-          email: primaryEmail,
-          firstName: first_name ?? null,
-          lastName: last_name ?? null,
-          imageUrl: image_url ?? null,
-          updatedAt: new Date(),
-        },
-      });
+    await convex.mutation(api.users.syncFromClerk, {
+      clerkId: id,
+      email: primaryEmail,
+      firstName: first_name ?? undefined,
+      lastName: last_name ?? undefined,
+      imageUrl: image_url ?? undefined,
+    });
   }
 
   if (eventType === "user.deleted") {
     const { id } = evt.data;
     if (id) {
-      await db.delete(users).where(eq(users.clerkId, id));
+      await convex.mutation(api.users.deleteFromClerk, { clerkId: id });
     }
   }
 

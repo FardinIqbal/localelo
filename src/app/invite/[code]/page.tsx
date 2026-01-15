@@ -5,7 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuth, SignIn, SignUp } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "framer-motion";
 import { Users, Loader2, AlertCircle, Check, ArrowRight } from "lucide-react";
-import { trpc } from "@/lib/trpc";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
 
 export default function InvitePage() {
   const params = useParams();
@@ -16,33 +17,33 @@ export default function InvitePage() {
   const [username, setUsername] = useState("");
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signup");
   const [isJoining, setIsJoining] = useState(false);
+  const [joinError, setJoinError] = useState<string | null>(null);
 
-  // Validate invite
-  const {
-    data: invite,
-    isLoading,
-    error,
-  } = trpc.invites.validate.useQuery(
-    { code },
-    { enabled: !!code, retry: false }
-  );
+  // Validate invite - Convex query
+  const invite = useQuery(api.invites.validate, code ? { code } : "skip");
+  const isLoading = invite === undefined;
+  const error = invite && !invite.valid ? invite.error : null;
 
   // Accept invite mutation
-  const acceptInvite = trpc.invites.accept.useMutation({
-    onSuccess: (data) => {
-      if (data.organization) {
-        router.push(`/org/${data.organization.slug}`);
-      }
-    },
-    onError: (error) => {
-      setIsJoining(false);
-    },
-  });
+  const acceptInviteMutation = useMutation(api.invites.accept);
 
-  const handleJoin = () => {
+  const handleJoin = async () => {
     if (!username.trim() || isJoining) return;
     setIsJoining(true);
-    acceptInvite.mutate({ code, username: username.trim() });
+    setJoinError(null);
+    try {
+      const result = await acceptInviteMutation({ code, username: username.trim() });
+      // Result can be a membershipId (already member) or { membershipId, organization }
+      if (typeof result === "object" && "organization" in result && result.organization) {
+        router.push(`/org/${result.organization.slug}`);
+      } else {
+        // Already a member, just redirect to dashboard
+        router.push("/dashboard");
+      }
+    } catch (err: any) {
+      setJoinError(err.message || "Failed to join");
+      setIsJoining(false);
+    }
   };
 
   // Loading state
@@ -107,28 +108,11 @@ export default function InvitePage() {
             className="mb-8 text-center"
           >
             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10 text-2xl font-bold text-primary">
-              {org.imageUrl ? (
-                <img
-                  src={org.imageUrl}
-                  alt={org.name}
-                  className="h-20 w-20 rounded-2xl object-cover"
-                />
-              ) : (
-                org.name.charAt(0).toUpperCase()
-              )}
+              {org.name.charAt(0).toUpperCase()}
             </div>
             <h1 className="mt-4 text-xl font-semibold text-foreground">
               Join {org.name}
             </h1>
-            <div className="mt-2 flex items-center justify-center gap-1.5 text-sm text-muted-foreground">
-              <Users className="h-4 w-4" />
-              <span>{org.memberCount} members</span>
-            </div>
-            {invite.invitedBy && (
-              <p className="mt-2 text-sm text-muted-foreground">
-                Invited by {invite.invitedBy.firstName}
-              </p>
-            )}
           </motion.div>
 
           {/* Auth Toggle */}
@@ -217,23 +201,11 @@ export default function InvitePage() {
         {/* Org Header */}
         <div className="mb-8 text-center">
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10 text-2xl font-bold text-primary">
-            {org.imageUrl ? (
-              <img
-                src={org.imageUrl}
-                alt={org.name}
-                className="h-20 w-20 rounded-2xl object-cover"
-              />
-            ) : (
-              org.name.charAt(0).toUpperCase()
-            )}
+            {org.name.charAt(0).toUpperCase()}
           </div>
           <h1 className="mt-4 text-xl font-semibold text-foreground">
             Join {org.name}
           </h1>
-          <div className="mt-2 flex items-center justify-center gap-1.5 text-sm text-muted-foreground">
-            <Users className="h-4 w-4" />
-            <span>{org.memberCount} members</span>
-          </div>
         </div>
 
         {/* Username Form */}
@@ -260,13 +232,13 @@ export default function InvitePage() {
             </p>
           </div>
 
-          {acceptInvite.error && (
+          {joinError && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive"
             >
-              {acceptInvite.error.message}
+              {joinError}
             </motion.div>
           )}
 

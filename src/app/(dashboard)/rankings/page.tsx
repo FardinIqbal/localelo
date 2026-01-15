@@ -320,7 +320,7 @@ function LeaderboardSummaryCard({
   losses: number;
   draws: number;
   streak: number;
-  lastMatchDate: Date | null;
+  lastMatchDate: number | null;
   isExpanded: boolean;
   onToggle: () => void;
   index: number;
@@ -538,7 +538,7 @@ export default function RankingsPage() {
         case "recent":
         default:
           if (a.lastMatchDate && b.lastMatchDate) {
-            return new Date(b.lastMatchDate).getTime() - new Date(a.lastMatchDate).getTime();
+            return b.lastMatchDate - a.lastMatchDate;
           }
           if (a.lastMatchDate && !b.lastMatchDate) return -1;
           if (!a.lastMatchDate && b.lastMatchDate) return 1;

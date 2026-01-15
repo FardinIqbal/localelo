@@ -16,29 +16,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { trpc } from "@/lib/trpc";
+import { useQuery } from "convex/react";
+import { api } from "../../../../../convex/_generated/api";
 import { useState } from "react";
 
-function OrgCard({
-  org,
-}: {
-  org: {
-    organization: {
-      id: string;
-      name: string;
-      slug: string;
-      description: string | null;
-      visibility: string;
-    };
-    membership: {
-      isOwner: boolean;
-      isAdmin: boolean;
-      status: string;
-    };
-  };
-}) {
+function OrgCard({ org }: { org: { name: string; slug: string; role: string; rank: number | null; rating: number | null; organizationId: unknown } }) {
   return (
-    <Link href={`/org/${org.organization.slug}`}>
+    <Link href={`/org/${org.slug}`}>
       <Card className="group cursor-pointer transition-all hover:border-zinc-700 hover:bg-zinc-900">
         <CardContent className="flex items-center gap-4 p-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20">
@@ -46,29 +30,25 @@ function OrgCard({
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h3 className="truncate font-semibold">{org.organization.name}</h3>
-              {org.organization.visibility === "public" ? (
-                <Globe className="h-3.5 w-3.5 text-zinc-500" />
-              ) : (
-                <Lock className="h-3.5 w-3.5 text-zinc-500" />
-              )}
+              <h3 className="truncate font-semibold">{org.name}</h3>
+              <Globe className="h-3.5 w-3.5 text-zinc-500" />
             </div>
             <div className="flex items-center gap-2">
-              <p className="text-sm text-zinc-400">/{org.organization.slug}</p>
-              {org.membership.isOwner && (
+              <p className="text-sm text-zinc-400">/{org.slug}</p>
+              {org.role === "Owner" && (
                 <Badge variant="secondary" className="text-xs">
                   Owner
                 </Badge>
               )}
-              {org.membership.isAdmin && !org.membership.isOwner && (
+              {org.role === "Admin" && (
                 <Badge variant="secondary" className="text-xs">
                   Admin
                 </Badge>
               )}
             </div>
-            {org.organization.description && (
-              <p className="mt-1 truncate text-sm text-zinc-500">
-                {org.organization.description}
+            {org.rank && (
+              <p className="mt-1 text-sm text-zinc-500">
+                Rank #{org.rank} · {Math.round(org.rating ?? 1500)} rating
               </p>
             )}
           </div>
@@ -124,13 +104,16 @@ function EmptyState() {
 
 export default function OrganizationsPage() {
   const [search, setSearch] = useState("");
-  const { data: orgs, isLoading } = trpc.organizations.myOrganizations.useQuery();
+  const orgs = useQuery(api.organizations.myOrganizations);
+  const isLoading = orgs === undefined;
 
-  const filteredOrgs = orgs?.filter(
-    (org) =>
-      org.organization.name.toLowerCase().includes(search.toLowerCase()) ||
-      org.organization.slug.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredOrgs = orgs
+    ?.filter((org) => org !== null)
+    .filter(
+      (org) =>
+        org.name.toLowerCase().includes(search.toLowerCase()) ||
+        org.slug.toLowerCase().includes(search.toLowerCase())
+    );
 
   return (
     <div className="space-y-8">
@@ -196,7 +179,7 @@ export default function OrganizationsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold">
-                {orgs?.filter((o) => o.membership.isOwner).length ?? 0}
+                {orgs?.filter((o) => o?.role === "Owner").length ?? 0}
               </p>
               <p className="text-sm text-zinc-400">You Own</p>
             </div>
@@ -209,8 +192,7 @@ export default function OrganizationsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold">
-                {orgs?.filter((o) => o.organization.visibility === "public")
-                  .length ?? 0}
+                {orgs?.length ?? 0}
               </p>
               <p className="text-sm text-zinc-400">Public</p>
             </div>
@@ -239,7 +221,7 @@ export default function OrganizationsPage() {
           <div className="space-y-3">
             {filteredOrgs?.map((org, index) => (
               <motion.div
-                key={org.organization.id}
+                key={String(org.organizationId)}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}

@@ -5,45 +5,49 @@ Multi-organization Elo/Glicko-2 ranking platform for competitive communities (BJ
 ## Stack
 
 - Next.js 15 (App Router), TypeScript
-- PostgreSQL + Drizzle ORM
-- tRPC (end-to-end type safety)
+- Convex (real-time database + backend functions)
 - Clerk auth (webhooks sync users)
 - Tailwind CSS + shadcn/ui
-- Recharts, Vercel hosting
+- Framer Motion, Vercel hosting
 
 ## Key Directories
 
 ```
 src/
 ├── app/                    # Next.js pages + API routes
-│   ├── api/trpc/[trpc]/   # tRPC endpoint
-│   ├── api/webhooks/clerk # User sync webhook
-│   └── api/cron/          # Vercel cron jobs
+│   └── api/webhooks/clerk # User sync webhook (calls Convex)
 ├── components/            # React components
-├── db/                    # Drizzle schema & connection
-├── lib/                   # Elo/Glicko-2 algorithms, tRPC client
-├── server/api/            # tRPC routers (orgs, leaderboards, matches)
+├── lib/                   # Glicko-2 algorithms, utilities
 └── types/                 # TypeScript types
+
+convex/
+├── schema.ts              # Database schema
+├── auth.ts                # Clerk integration helpers
+├── lib/glicko2.ts         # Rating algorithm
+├── users.ts               # User sync from Clerk
+├── organizations.ts       # Org CRUD
+├── memberships.ts         # Join/leave orgs
+├── invites.ts             # Invite management
+├── leaderboards.ts        # Leaderboard CRUD
+├── ratings.ts             # Rating queries
+├── matches.ts             # Match logging + undo
+└── activity.ts            # Dashboard data
 ```
 
 ## Commands
 
 ```bash
-npm run dev           # Start dev server
+npm run dev           # Start dev server + Convex dev
 npm run build         # Production build
-npm run test          # Run Vitest
-npm run test:coverage # Coverage report
-npm run db:push       # Push schema (dev only)
-npm run db:generate   # Generate migrations
-npm run db:migrate    # Run migrations
-npm run db:studio     # Drizzle Studio
-npm run db:seed       # Seed database
+npx convex dev        # Run Convex in dev mode
+npx convex deploy     # Deploy Convex to production
 ```
 
 ## Environment Variables
 
 Required:
-- `DATABASE_URL` - PostgreSQL connection
+- `NEXT_PUBLIC_CONVEX_URL` - Convex deployment URL
+- `CONVEX_DEPLOYMENT` - Convex deployment ID
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
 - `CLERK_SECRET_KEY`
 - `CLERK_WEBHOOK_SECRET`
@@ -51,14 +55,25 @@ Required:
 ## Important Notes
 
 - Uses **Glicko-2** rating system (not basic Elo)
-- tRPC for type-safe APIs (client/server share types)
+- Convex for real-time reactive queries (no polling needed)
 - Multi-organization with separate leaderboards per org
-- Clerk webhooks keep User table in sync
-- Cron jobs: Weekly league reset (Mon 00:00), Streak reminders (daily 18:00)
+- Clerk webhooks sync users to Convex via HTTP mutations
+- All frontend uses `useQuery`/`useMutation` from `convex/react`
 
 ## Session Learnings
 
 <!-- Auto-updated by update-project-context hook -->
+
+### 2026-01-15 16:49
+- **Gotcha**: `react-pdf` requires `ssr: false` dynamic import - browser APIs don't exist during SSR
+- **Pattern**: Soft delete system for matches - use `deletedAt`/`deletedBy` columns with 5-minute undo window instead of hard delete
+- **Pattern**: Add `refetchInterval` polling to tRPC queries for "live" feel (10s leaderboard, 15s activity, 30s stats)
+- **Gotcha**: Convex document names need `_id` field, not `id` - different from Drizzle
+- **Decision**: Migrated from Supabase PostgreSQL → Convex when hit free tier limit. Convex's built-in real-time subscriptions better fit "fast and live" requirement than polling approach
+- **Setup**: `npx convex dev` requires interactive terminal auth to link projects. Schema deploys automatically after linking.
+- **UI Design**: Combat sports aesthetic - orange primary (#f97316), deep black backgrounds (#09090b, #0f0f12), glow effects with Framer Motion, 64px+ touch targets for gym environment
+- **Migration**: 18 tables + 52 tRPC procedures → Convex functions. Convex types auto-generate from schema - don't manually create.
+- **Pattern**: Glow utilities (.glow-orange, .glow-green, .glow-red) with box-shadow for polish in dark UI
 
 ### 2026-01-15 16:35
 - **Decision**: Migrated from Supabase PostgreSQL + tRPC to Convex when hit free tier project limit. Convex's built-in real-time subscriptions better fit "fast and live" requirement than polling approach.
