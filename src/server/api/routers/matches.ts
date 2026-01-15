@@ -9,9 +9,12 @@ import {
   ratingHistory,
   recentOpponents,
 } from "@/db/schema";
-import { eq, and, desc, or, sql } from "drizzle-orm";
+import { eq, and, desc, or, sql, isNull, gte } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { processMatch } from "@/lib/elo";
+
+// Time window for undo (5 minutes)
+const UNDO_WINDOW_MS = 5 * 60 * 1000;
 
 export const matchesRouter = router({
   // Get recent opponents for quick match
@@ -117,7 +120,8 @@ export const matchesRouter = router({
         .where(
           and(
             eq(matches.leaderboardId, input.leaderboardId),
-            eq(matches.status, "active")
+            eq(matches.status, "active"),
+            isNull(matches.deletedAt)
           )
         )
         .orderBy(desc(matches.matchTime))
@@ -172,7 +176,8 @@ export const matchesRouter = router({
         .where(
           and(
             or(...matchIds.map((id) => eq(matches.id, id))),
-            eq(matches.status, "active")
+            eq(matches.status, "active"),
+            isNull(matches.deletedAt)
           )
         )
         .orderBy(desc(matches.matchTime));
@@ -517,7 +522,8 @@ export const matchesRouter = router({
           and(
             or(...commonMatchIds.map((id) => eq(matches.id, id))),
             eq(matches.leaderboardId, input.leaderboardId),
-            eq(matches.status, "active")
+            eq(matches.status, "active"),
+            isNull(matches.deletedAt)
           )
         )
         .orderBy(desc(matches.matchTime))
@@ -745,5 +751,222 @@ export const matchesRouter = router({
       ]);
 
       return match;
+    }),
+
+  // Undo a recent match (within 5 minutes)
+  undo: protectedProcedure
+    .input(z.object({ matchId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      // Get the match
+      const [match] = await ctx.db
+        .select()
+        .from(matches)
+        .where(
+          and(
+            eq(matches.id, input.matchId),
+            isNull(matches.deletedAt)
+          )
+        )
+        .limit(1);
+
+      if (!match) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Match not found or already deleted",
+        });
+      }
+
+      // Check if within undo window
+      const matchAge = Date.now() - match.createdAt.getTime();
+      if (matchAge > UNDO_WINDOW_MS) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Match can only be undone within 5 minutes",
+        });
+      }
+
+      // Get leaderboard to verify user
+      const [leaderboard] = await ctx.db
+        .select()
+        .from(leaderboards)
+        .where(eq(leaderboards.id, match.leaderboardId))
+        .limit(1);
+
+      if (!leaderboard) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+
+      // Get user's membership
+      const [userMembership] = await ctx.db
+        .select()
+        .from(organizationMemberships)
+        .where(
+          and(
+            eq(organizationMemberships.organizationId, leaderboard.organizationId),
+            eq(organizationMemberships.userId, ctx.user.id),
+            eq(organizationMemberships.status, "approved")
+          )
+        )
+        .limit(1);
+
+      if (!userMembership) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You must be a member to undo matches",
+        });
+      }
+
+      // Get participants to verify user was in match and get rating snapshots
+      const participants = await ctx.db
+        .select()
+        .from(matchParticipants)
+        .where(eq(matchParticipants.matchId, input.matchId));
+
+      const userParticipant = participants.find(
+        (p) => p.membershipId === userMembership.id
+      );
+
+      // Allow undo if user was a participant OR is admin/owner
+      if (!userParticipant && !userMembership.isAdmin && !userMembership.isOwner) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You can only undo your own matches",
+        });
+      }
+
+      // Soft delete the match
+      await ctx.db
+        .update(matches)
+        .set({
+          deletedAt: new Date(),
+          deletedBy: ctx.user.id,
+          updatedAt: new Date(),
+        })
+        .where(eq(matches.id, input.matchId));
+
+      // Restore ratings from before the match
+      for (const participant of participants) {
+        if (
+          participant.ratingBefore !== null &&
+          participant.ratingDeviationBefore !== null &&
+          participant.volatilityBefore !== null
+        ) {
+          // Calculate win/loss/draw adjustment
+          const wasWinner = participant.isWinner;
+          const wasDraw = match.isDraw;
+
+          await ctx.db
+            .update(leaderboardRatings)
+            .set({
+              rating: participant.ratingBefore,
+              ratingDeviation: participant.ratingDeviationBefore,
+              volatility: participant.volatilityBefore,
+              wins: wasWinner
+                ? sql`${leaderboardRatings.wins} - 1`
+                : leaderboardRatings.wins,
+              losses: !wasWinner && !wasDraw
+                ? sql`${leaderboardRatings.losses} - 1`
+                : leaderboardRatings.losses,
+              draws: wasDraw
+                ? sql`${leaderboardRatings.draws} - 1`
+                : leaderboardRatings.draws,
+              updatedAt: new Date(),
+            })
+            .where(
+              and(
+                eq(leaderboardRatings.leaderboardId, match.leaderboardId),
+                eq(leaderboardRatings.membershipId, participant.membershipId)
+              )
+            );
+        }
+      }
+
+      // Delete rating history entries for this match
+      await ctx.db
+        .delete(ratingHistory)
+        .where(eq(ratingHistory.matchId, input.matchId));
+
+      // Decrement recent opponents match count
+      for (const participant of participants) {
+        const otherParticipant = participants.find(
+          (p) => p.membershipId !== participant.membershipId
+        );
+        if (otherParticipant) {
+          const [existing] = await ctx.db
+            .select()
+            .from(recentOpponents)
+            .where(
+              and(
+                eq(recentOpponents.membershipId, participant.membershipId),
+                eq(recentOpponents.opponentMembershipId, otherParticipant.membershipId),
+                eq(recentOpponents.leaderboardId, match.leaderboardId)
+              )
+            )
+            .limit(1);
+
+          if (existing && existing.matchCount > 1) {
+            await ctx.db
+              .update(recentOpponents)
+              .set({ matchCount: existing.matchCount - 1 })
+              .where(eq(recentOpponents.id, existing.id));
+          } else if (existing) {
+            await ctx.db
+              .delete(recentOpponents)
+              .where(eq(recentOpponents.id, existing.id));
+          }
+        }
+      }
+
+      return { success: true };
+    }),
+
+  // Get matches that can be undone (within time window)
+  undoable: protectedProcedure
+    .input(z.object({ leaderboardId: z.string().uuid().optional() }))
+    .query(async ({ ctx, input }) => {
+      const cutoff = new Date(Date.now() - UNDO_WINDOW_MS);
+
+      // Get user's memberships
+      const userMemberships = await ctx.db
+        .select()
+        .from(organizationMemberships)
+        .where(
+          and(
+            eq(organizationMemberships.userId, ctx.user.id),
+            eq(organizationMemberships.status, "approved")
+          )
+        );
+
+      const membershipIds = userMemberships.map((m) => m.id);
+      if (membershipIds.length === 0) return [];
+
+      // Get recent matches user participated in
+      const recentParticipations = await ctx.db
+        .select({ matchId: matchParticipants.matchId })
+        .from(matchParticipants)
+        .where(
+          or(...membershipIds.map((id) => eq(matchParticipants.membershipId, id)))
+        );
+
+      const matchIds = [...new Set(recentParticipations.map((p) => p.matchId))];
+      if (matchIds.length === 0) return [];
+
+      // Get undoable matches
+      let query = ctx.db
+        .select()
+        .from(matches)
+        .where(
+          and(
+            or(...matchIds.map((id) => eq(matches.id, id))),
+            isNull(matches.deletedAt),
+            gte(matches.createdAt, cutoff)
+          )
+        )
+        .orderBy(desc(matches.createdAt))
+        .limit(5);
+
+      const undoableMatches = await query;
+
+      return undoableMatches;
     }),
 });

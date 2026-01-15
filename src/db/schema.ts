@@ -219,11 +219,15 @@ export const matches = pgTable(
     ratedAt: timestamp("rated_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    // Soft delete for undo functionality
+    deletedAt: timestamp("deleted_at"),
+    deletedBy: uuid("deleted_by").references(() => users.id),
   },
   (table) => [
     index("matches_leaderboard_idx").on(table.leaderboardId),
     index("matches_time_idx").on(table.matchTime),
     index("matches_status_idx").on(table.status),
+    index("matches_not_deleted_idx").on(table.deletedAt),
   ]
 );
 

@@ -47,15 +47,15 @@
 }
 
 :root {
-  --radius: 0.5rem;
+  --radius: 0.625rem;
   --background: #ffffff;
   --foreground: #0a0a0a;
   --card: #ffffff;
   --card-foreground: #0a0a0a;
   --popover: #ffffff;
   --popover-foreground: #0a0a0a;
-  --primary: #0a0a0a;
-  --primary-foreground: #fafafa;
+  --primary: #f97316;
+  --primary-foreground: #ffffff;
   --secondary: #f5f5f5;
   --secondary-foreground: #0a0a0a;
   --muted: #f5f5f5;
@@ -65,8 +65,8 @@
   --destructive: #ef4444;
   --border: #e5e5e5;
   --input: #e5e5e5;
-  --ring: #0a0a0a;
-  --chart-1: #3b82f6;
+  --ring: #f97316;
+  --chart-1: #f97316;
   --chart-2: #10b981;
   --chart-3: #f59e0b;
   --chart-4: #8b5cf6;
@@ -74,39 +74,41 @@
 }
 
 .dark {
-  /* Improved readability: dark gray instead of pure black, off-white text */
-  --background: #121212;
-  --foreground: #E0E0E0;
-  --card: #1E1E1E;
-  --card-foreground: #E0E0E0;
-  --popover: #1E1E1E;
-  --popover-foreground: #E0E0E0;
-  --primary: #E0E0E0;
-  --primary-foreground: #121212;
-  --secondary: #2A2A2A;
-  --secondary-foreground: #E0E0E0;
-  --muted: #2A2A2A;
-  --muted-foreground: #B0B0B0;
-  --accent: #2A2A2A;
-  --accent-foreground: #E0E0E0;
+  /* Combat sports aesthetic: deep blacks with warm undertones */
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #0f0f12;
+  --card-foreground: #fafafa;
+  --popover: #0f0f12;
+  --popover-foreground: #fafafa;
+  /* Orange primary for energy/competition */
+  --primary: #f97316;
+  --primary-foreground: #09090b;
+  --secondary: #18181b;
+  --secondary-foreground: #fafafa;
+  --muted: #18181b;
+  --muted-foreground: #a1a1aa;
+  --accent: #27272a;
+  --accent-foreground: #fafafa;
   --destructive: #ef4444;
-  --border: #3A3A3A;
-  --input: #3A3A3A;
-  --ring: #3b82f6;
-  --chart-1: #60a5fa;
-  --chart-2: #34d399;
-  --chart-3: #fbbf24;
-  --chart-4: #a78bfa;
-  --chart-5: #f87171;
-  /* Sidebar specific */
-  --sidebar: #181818;
-  --sidebar-foreground: #E0E0E0;
-  --sidebar-primary: #60a5fa;
-  --sidebar-primary-foreground: #121212;
-  --sidebar-accent: #2A2A2A;
-  --sidebar-accent-foreground: #E0E0E0;
-  --sidebar-border: #3A3A3A;
-  --sidebar-ring: #3b82f6;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #f97316;
+  /* Charts with athletic colors */
+  --chart-1: #f97316;
+  --chart-2: #22c55e;
+  --chart-3: #eab308;
+  --chart-4: #a855f7;
+  --chart-5: #ef4444;
+  /* Sidebar */
+  --sidebar: #0a0a0c;
+  --sidebar-foreground: #fafafa;
+  --sidebar-primary: #f97316;
+  --sidebar-primary-foreground: #09090b;
+  --sidebar-accent: #18181b;
+  --sidebar-accent-foreground: #fafafa;
+  --sidebar-border: #27272a;
+  --sidebar-ring: #f97316;
 }
 
 @layer base {
@@ -115,13 +117,22 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+  /* Athletic typography - tighter, bolder */
+  h1, h2, h3, h4, h5, h6 {
+    @apply tracking-tight font-semibold;
+  }
+  /* Monospace numbers for stats */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
   }
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar - minimal */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
@@ -129,27 +140,71 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #404040;
-  border-radius: 3px;
+  background: #3f3f46;
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #525252;
+  background: #52525b;
 }
 
-/* Selection */
+/* Selection - orange accent */
 ::selection {
-  background: #3b82f6;
-  color: white;
+  background: #f97316;
+  color: #09090b;
 }
 
-/* Focus visible */
+/* Focus visible - orange ring */
 :focus-visible {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid #f97316;
   outline-offset: 2px;
 }
 
 /* Smooth scroll */
 html {
   scroll-behavior: smooth;
+}
+
+/* Hide scrollbar utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Glow effects for highlights */
+.glow-orange {
+  box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
+}
+
+.glow-green {
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+}
+
+.glow-red {
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+}
+
+/* Gradient text utility */
+.gradient-text {
+  background: linear-gradient(135deg, #f97316, #fb923c);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Athletic card hover effect */
+.card-athletic {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-athletic:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+.card-athletic:active {
+  transform: translateY(0);
 }

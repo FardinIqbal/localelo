@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Trophy, Minus, XCircle, ChevronLeft, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -37,7 +37,8 @@ export function QuickLogModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const utils = trpc.useUtils();
-  const { toast } = useToast();
+  const { toast, toastWithUndo } = useToast();
+  const lastMatchIdRef = useRef<string | null>(null);
 
   // Get recent opponents
   const { data: recentOpponents, isLoading: loadingOpponents } =
@@ -45,6 +46,24 @@ export function QuickLogModal({
       { leaderboardId: leaderboardId ?? "" },
       { enabled: isOpen && !!leaderboardId }
     );
+
+  // Undo mutation
+  const undoMatch = trpc.matches.undo.useMutation({
+    onSuccess: () => {
+      utils.leaderboards.rankings.invalidate();
+      utils.matches.recentOpponents.invalidate();
+      utils.activity.recentActivity.invalidate();
+      utils.rankings.myRankings.invalidate();
+      utils.rankings.myRankingsStats.invalidate();
+      toast("Match undone", "default");
+      if (navigator.vibrate) {
+        navigator.vibrate([10, 30, 10]);
+      }
+    },
+    onError: (error) => {
+      toast(error.message || "Failed to undo", "error");
+    },
+  });
 
   // Get all leaderboard members for search
   const { data: allMembers } = trpc.leaderboards.rankings.useQuery(
@@ -60,6 +79,9 @@ export function QuickLogModal({
 
   const logMatch = trpc.matches.create.useMutation({
     onSuccess: (data) => {
+      // Store match ID for potential undo
+      lastMatchIdRef.current = data.id;
+
       // Invalidate all relevant queries
       utils.leaderboards.rankings.invalidate();
       utils.matches.recentOpponents.invalidate();
@@ -68,10 +90,20 @@ export function QuickLogModal({
       utils.rankings.myRankingsStats.invalidate();
       onSuccess?.();
       handleClose();
-      // Show rating change feedback
+
+      // Show rating change feedback with undo option
       const delta = data.ratingDelta;
       const sign = delta >= 0 ? "+" : "";
-      toast(`${sign}${delta} rating`, delta >= 0 ? "success" : "error");
+      const matchId = data.id;
+
+      toastWithUndo(
+        `${sign}${delta} rating`,
+        delta >= 0 ? "success" : "error",
+        () => {
+          undoMatch.mutate({ matchId });
+        }
+      );
+
       // Haptic feedback for success
       if (navigator.vibrate) {
         navigator.vibrate([10, 50, 10]);
@@ -175,29 +207,29 @@ export function QuickLogModal({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-hidden rounded-t-3xl border-t border-border bg-background pb-[env(safe-area-inset-bottom)]"
+            className="fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-hidden rounded-t-3xl border-t border-zinc-800 bg-zinc-950 pb-[env(safe-area-inset-bottom)]"
           >
             {/* Handle */}
             <div className="flex justify-center py-3">
-              <div className="h-1.5 w-12 rounded-full bg-muted-foreground/30" />
+              <div className="h-1.5 w-12 rounded-full bg-zinc-700" />
             </div>
 
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-border px-4 pb-4">
+            <div className="flex items-center justify-between border-b border-zinc-800 px-4 pb-4">
               <div className="flex items-center gap-3">
                 {step === "result" && (
                   <button
                     onClick={handleBack}
-                    className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-secondary"
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors"
                   >
                     <ChevronLeft className="h-5 w-5" />
                   </button>
                 )}
                 <div>
-                  <h2 className="text-lg font-semibold">
+                  <h2 className="text-lg font-bold text-white">
                     {step === "opponent" ? "Log Match" : "Match Result"}
                   </h2>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-zinc-500">
                     {step === "opponent"
                       ? "Select your opponent"
                       : `vs ${selectedOpponent?.username}`}
@@ -206,7 +238,7 @@ export function QuickLogModal({
               </div>
               <button
                 onClick={handleClose}
-                className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-secondary"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -240,34 +272,35 @@ export function QuickLogModal({
                     {/* Opponent Preview */}
                     <div className="flex items-center justify-center gap-6 py-6">
                       <div className="text-center">
-                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-lg font-bold text-primary">
+                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-orange-500/10 border border-orange-500/30 text-lg font-bold text-orange-400">
                           You
                         </div>
                       </div>
-                      <span className="text-sm font-medium text-muted-foreground/60">
+                      <span className="text-sm font-bold text-zinc-600 uppercase tracking-wider">
                         vs
                       </span>
                       <div className="text-center">
-                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-lg font-bold text-foreground">
+                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-zinc-800 border border-zinc-700 text-lg font-bold text-white">
                           {selectedOpponent?.username.charAt(0).toUpperCase()}
                         </div>
-                        <p className="mt-2 text-[14px] font-medium text-foreground">
+                        <p className="mt-2 text-[14px] font-semibold text-white">
                           {selectedOpponent?.username}
                         </p>
-                        <p className="font-mono text-[15px] font-semibold text-muted-foreground">
+                        <p className="font-mono text-[15px] font-bold text-zinc-500 tabular-nums">
                           {Math.round(selectedOpponent?.rating ?? 1500)}
                         </p>
                       </div>
                     </div>
 
-                    {/* Result Buttons */}
+                    {/* Result Buttons - Large for easy tapping */}
                     <div className="grid grid-cols-3 gap-3">
                       <ResultButton
                         outcome="win"
                         icon={Trophy}
                         label="I Won"
-                        color="text-emerald-500"
-                        bgColor="bg-emerald-500/10 hover:bg-emerald-500/20"
+                        color="text-emerald-400"
+                        bgColor="bg-emerald-500/10 hover:bg-emerald-500/20 active:bg-emerald-500/30 border-emerald-500/30"
+                        glowColor="shadow-emerald-500/20"
                         onClick={() => handleResult("win")}
                         disabled={isSubmitting}
                       />
@@ -275,8 +308,9 @@ export function QuickLogModal({
                         outcome="draw"
                         icon={Minus}
                         label="Draw"
-                        color="text-amber-500"
-                        bgColor="bg-amber-500/10 hover:bg-amber-500/20"
+                        color="text-zinc-400"
+                        bgColor="bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 border-zinc-700"
+                        glowColor=""
                         onClick={() => handleResult("draw")}
                         disabled={isSubmitting}
                       />
@@ -284,16 +318,17 @@ export function QuickLogModal({
                         outcome="loss"
                         icon={XCircle}
                         label="I Lost"
-                        color="text-rose-500"
-                        bgColor="bg-rose-500/10 hover:bg-rose-500/20"
+                        color="text-rose-400"
+                        bgColor="bg-rose-500/10 hover:bg-rose-500/20 active:bg-rose-500/30 border-rose-500/30"
+                        glowColor="shadow-rose-500/20"
                         onClick={() => handleResult("loss")}
                         disabled={isSubmitting}
                       />
                     </div>
 
                     {isSubmitting && (
-                      <div className="flex items-center justify-center gap-2 pt-4 text-sm text-muted-foreground">
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                      <div className="flex items-center justify-center gap-2 pt-4 text-sm text-zinc-400">
+                        <Loader2 className="h-4 w-4 animate-spin text-orange-400" />
                         Logging match...
                       </div>
                     )}
@@ -314,6 +349,7 @@ interface ResultButtonProps {
   label: string;
   color: string;
   bgColor: string;
+  glowColor: string;
   onClick: () => void;
   disabled?: boolean;
 }
@@ -323,22 +359,25 @@ function ResultButton({
   label,
   color,
   bgColor,
+  glowColor,
   onClick,
   disabled,
 }: ResultButtonProps) {
   return (
     <motion.button
       whileTap={{ scale: 0.95 }}
+      whileHover={{ scale: 1.02 }}
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "flex min-h-[100px] flex-col items-center justify-center gap-2 rounded-2xl border border-border p-4 transition-colors",
+        "flex min-h-[110px] flex-col items-center justify-center gap-2 rounded-2xl border p-4 transition-all",
         bgColor,
+        glowColor && `shadow-lg ${glowColor}`,
         disabled && "opacity-50 cursor-not-allowed"
       )}
     >
-      <Icon className={cn("h-8 w-8", color)} />
-      <span className={cn("text-sm font-medium", color)}>{label}</span>
+      <Icon className={cn("h-10 w-10", color)} />
+      <span className={cn("text-[15px] font-bold", color)}>{label}</span>
     </motion.button>
   );
 }

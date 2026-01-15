@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, Trophy } from "lucide-react";
@@ -18,6 +18,16 @@ export default function DashboardLayout({
   const [selectedLeaderboardId, setSelectedLeaderboardId] = useState<string | null>(null);
 
   const { data: rankings } = trpc.rankings.myRankings.useQuery();
+
+  // Smart play button: skip picker if only one leaderboard
+  const handlePlayClick = () => {
+    if (rankings && rankings.length === 1) {
+      // Skip straight to match logging
+      setSelectedLeaderboardId(rankings[0].leaderboardId);
+    } else {
+      setLeaderboardPickerOpen(true);
+    }
+  };
 
   const handleSelectLeaderboard = (leaderboardId: string) => {
     setSelectedLeaderboardId(leaderboardId);
@@ -49,7 +59,7 @@ export default function DashboardLayout({
       </main>
 
       {/* Bottom navigation */}
-      <BottomNav onPlayClick={() => setLeaderboardPickerOpen(true)} />
+      <BottomNav onPlayClick={handlePlayClick} />
 
       {/* Leaderboard Picker Modal */}
       <AnimatePresence>

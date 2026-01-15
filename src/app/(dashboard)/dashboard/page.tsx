@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { InviteButton } from "@/components/invite/invite-modal";
+import { HeroCard, HeroCardEmpty } from "@/components/dashboard/hero-card";
 
 const colors = {
   gold: "text-amber-400",
@@ -42,25 +43,25 @@ function StatCard({
   color?: "gold" | "emerald" | "default";
 }) {
   const colorClasses = {
-    gold: "text-amber-400 bg-amber-400/10",
-    emerald: "text-emerald-400 bg-emerald-400/10",
-    default: "text-muted-foreground bg-secondary",
+    gold: "text-amber-400 bg-amber-400/10 border-amber-400/20",
+    emerald: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
+    default: "text-zinc-400 bg-zinc-800 border-zinc-700",
   };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl border border-border bg-card p-3"
+      className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3"
     >
       <div className="flex flex-col items-center text-center gap-2">
-        <div className={`rounded-xl p-2 ${colorClasses[color]}`}>
+        <div className={`rounded-lg p-2 border ${colorClasses[color]}`}>
           <Icon className="h-4 w-4" />
         </div>
         <div>
-          <p className="text-[11px] text-muted-foreground leading-tight">{label}</p>
-          <p className="text-lg font-semibold tracking-tight text-foreground">{value}</p>
-          {subtext && <p className="text-[10px] text-muted-foreground/70">{subtext}</p>}
+          <p className="text-[11px] text-zinc-500 font-medium uppercase tracking-wider leading-tight">{label}</p>
+          <p className="text-lg font-bold tracking-tight text-white tabular-nums">{value}</p>
+          {subtext && <p className="text-[10px] text-zinc-600">{subtext}</p>}
         </div>
       </div>
     </motion.div>
@@ -81,9 +82,9 @@ function ActivityItem({
   index: number;
 }) {
   const icons = {
-    win: { icon: TrendingUp, color: "text-emerald-400", bg: "bg-emerald-400/10", glow: "shadow-emerald-500/20" },
-    loss: { icon: TrendingDown, color: "text-rose-400", bg: "bg-rose-400/10", glow: "shadow-rose-500/20" },
-    draw: { icon: Swords, color: "text-muted-foreground", bg: "bg-secondary", glow: "" },
+    win: { icon: TrendingUp, color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20", glow: "shadow-emerald-500/20" },
+    loss: { icon: TrendingDown, color: "text-rose-400", bg: "bg-rose-500/10 border-rose-500/20", glow: "shadow-rose-500/20" },
+    draw: { icon: Swords, color: "text-zinc-400", bg: "bg-zinc-800 border-zinc-700", glow: "" },
   };
 
   const { icon: Icon, color, bg, glow } = icons[type];
@@ -97,10 +98,10 @@ function ActivityItem({
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.05, type: "spring", stiffness: 300, damping: 30 }}
-      className="flex items-start gap-4 px-4 py-4 transition-colors hover:bg-secondary/50"
+      className="flex items-start gap-4 px-4 py-4 transition-colors hover:bg-zinc-800/50"
     >
       <motion.div
-        className={`mt-0.5 rounded-xl p-2 ${bg} ${glow ? `shadow-lg ${glow}` : ""}`}
+        className={`mt-0.5 rounded-lg p-2 border ${bg} ${glow ? `shadow-lg ${glow}` : ""}`}
         initial={{ scale: 0.8 }}
         animate={{ scale: 1 }}
         transition={{ delay: index * 0.05 + 0.1, type: "spring", stiffness: 400, damping: 15 }}
@@ -114,15 +115,15 @@ function ActivityItem({
         </motion.div>
       </motion.div>
       <div className="flex-1 min-w-0">
-        <p className="text-[14px] font-medium text-foreground">{title}</p>
+        <p className="text-[14px] font-semibold text-white">{title}</p>
         <motion.p
-          className="text-[13px] text-muted-foreground"
+          className="text-[13px] text-zinc-500"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: index * 0.05 + 0.2 }}
         >
           {ratingChange !== 0 && (
-            <span className={`font-medium ${ratingChange > 0 ? "text-emerald-400" : "text-rose-400"}`}>
+            <span className={`font-bold tabular-nums ${ratingChange > 0 ? "text-emerald-400" : "text-rose-400"}`}>
               {ratingChange > 0 ? "+" : ""}{ratingChange}
             </span>
           )}
@@ -130,7 +131,7 @@ function ActivityItem({
           {subtitle.replace(/[+-]\d+ rating in /, "")}
         </motion.p>
       </div>
-      <span className="text-[12px] text-muted-foreground/70 whitespace-nowrap">{time}</span>
+      <span className="text-[12px] text-zinc-600 whitespace-nowrap">{time}</span>
     </motion.div>
   );
 }
@@ -153,16 +154,16 @@ function DuckingAlert({
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="flex items-center gap-3 rounded-xl border border-rose-500/30 bg-rose-500/5 px-4 py-3 transition-colors hover:bg-rose-500/10"
+        className="flex items-center gap-3 rounded-xl border border-rose-500/30 bg-rose-500/5 px-4 py-3 transition-all hover:bg-rose-500/10 hover:border-rose-500/40 shadow-lg shadow-rose-500/5"
       >
-        <div className="rounded-lg bg-rose-500/10 p-2">
+        <div className="rounded-lg bg-rose-500/10 border border-rose-500/20 p-2">
           <Target className="h-4 w-4 text-rose-400" />
         </div>
         <div className="flex-1">
-          <p className="text-[13px] font-medium text-rose-400">
+          <p className="text-[13px] font-bold text-rose-400">
             Ducking {name}?
           </p>
-          <p className="text-[12px] text-muted-foreground">
+          <p className="text-[12px] text-zinc-500">
             {days === null
               ? `Never faced in ${leaderboardName}`
               : `${days} days since your last match in ${org}`}
@@ -209,35 +210,35 @@ function RivalryCard({
         initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: index * 0.05 }}
-        className="group flex items-center gap-4 rounded-xl border border-border bg-card p-4 transition-all hover:border-border/80 hover:bg-secondary/50"
+        className="group flex items-center gap-4 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 transition-all hover:border-zinc-700 hover:bg-zinc-800/50"
       >
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-[12px] font-bold text-muted-foreground">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800 border border-zinc-700 text-[12px] font-bold text-zinc-400">
           {opponentName.slice(0, 2).toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <p className="text-[14px] font-medium text-foreground truncate">{opponentName}</p>
-            <span className={`text-[11px] font-medium ${
-              isWinning ? "text-emerald-400" : isLosing ? "text-rose-400" : "text-muted-foreground"
+            <p className="text-[14px] font-semibold text-white truncate">{opponentName}</p>
+            <span className={`text-[11px] font-bold tabular-nums ${
+              isWinning ? "text-emerald-400" : isLosing ? "text-rose-400" : "text-zinc-500"
             }`}>
               {userWins}-{opponentWins}{draws > 0 ? `-${draws}` : ""}
             </span>
           </div>
-          <p className="text-[12px] text-muted-foreground/70">
+          <p className="text-[12px] text-zinc-600">
             {leaderboardName} · {totalMatches} matches
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className={`flex items-center gap-1 rounded-full px-2 py-1 ${
-            isWinning ? "bg-emerald-500/10" : isLosing ? "bg-rose-500/10" : "bg-secondary"
+          <div className={`flex items-center gap-1 rounded-full px-2.5 py-1 border ${
+            isWinning ? "bg-emerald-500/10 border-emerald-500/20" : isLosing ? "bg-rose-500/10 border-rose-500/20" : "bg-zinc-800 border-zinc-700"
           }`}>
-            <span className={`text-[11px] font-medium ${
-              isWinning ? "text-emerald-400" : isLosing ? "text-rose-400" : "text-muted-foreground"
+            <span className={`text-[11px] font-bold ${
+              isWinning ? "text-emerald-400" : isLosing ? "text-rose-400" : "text-zinc-500"
             }`}>
               {isWinning ? "Leading" : isLosing ? "Behind" : "Tied"}
             </span>
           </div>
-          <ChevronRight className="h-4 w-4 text-muted-foreground/50 transition-transform group-hover:translate-x-0.5 group-hover:text-muted-foreground" />
+          <ChevronRight className="h-4 w-4 text-zinc-600 transition-transform group-hover:translate-x-0.5 group-hover:text-zinc-400" />
         </div>
       </motion.div>
     </Link>
@@ -270,16 +271,16 @@ function OrgCard({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      className="group rounded-2xl border border-border bg-card p-4 transition-all hover:border-border/80"
+      className="group rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 transition-all hover:border-zinc-700 hover:bg-zinc-800/30"
     >
       <div className="flex items-start justify-between">
         <Link href={`/org/${slug}`} className="flex items-center gap-3 flex-1">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-secondary to-secondary/80 text-[14px] font-bold text-foreground/80">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-zinc-800 to-zinc-800/50 border border-zinc-700 text-[14px] font-bold text-zinc-300">
             {name.slice(0, 2).toUpperCase()}
           </div>
           <div>
-            <p className="text-[15px] font-semibold text-foreground">{name}</p>
-            <p className="text-[13px] text-muted-foreground">{role}</p>
+            <p className="text-[15px] font-bold text-white">{name}</p>
+            <p className="text-[13px] text-zinc-500">{role}</p>
           </div>
         </Link>
         <InviteButton organizationId={organizationId} orgName={name} />
@@ -287,24 +288,24 @@ function OrgCard({
 
       <Link href={`/org/${slug}`}>
         {(rank || rating) && (
-          <div className="mt-4 flex items-center justify-between border-t border-border/50 pt-4">
+          <div className="mt-4 flex items-center justify-between border-t border-zinc-800 pt-4">
             <div className="flex items-center gap-3">
               {rank && (
                 <div className="flex items-center gap-1.5">
-                  <span className={`text-[14px] font-semibold ${rank <= 3 ? colors.gold : "text-foreground"}`}>
+                  <span className={`text-[14px] font-bold tabular-nums ${rank <= 3 ? "text-amber-400" : "text-white"}`}>
                     #{rank}
                   </span>
                 </div>
               )}
               {rating && (
                 <div className="flex items-center gap-1.5">
-                  <span className="font-mono text-[14px] text-muted-foreground">
+                  <span className="font-mono text-[14px] font-bold text-zinc-400 tabular-nums">
                     {Math.round(rating)}
                   </span>
                   {typeof recentChange === "number" && recentChange !== 0 && (
                     <span
-                      className={`text-[12px] font-medium ${
-                        recentChange > 0 ? colors.emerald : colors.loss
+                      className={`text-[12px] font-bold tabular-nums ${
+                        recentChange > 0 ? "text-emerald-400" : "text-rose-400"
                       }`}
                     >
                       {recentChange > 0 ? "+" : ""}
@@ -315,9 +316,9 @@ function OrgCard({
               )}
             </div>
             {typeof streak === "number" && streak >= 3 && (
-              <div className="flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5">
-                <Flame className="h-3 w-3 text-amber-400" />
-                <span className="text-[11px] font-medium text-amber-400">{streak}</span>
+              <div className="flex items-center gap-1 rounded-full bg-orange-500/10 border border-orange-500/20 px-2 py-0.5">
+                <Flame className="h-3 w-3 text-orange-400" />
+                <span className="text-[11px] font-bold text-orange-400">{streak}</span>
               </div>
             )}
           </div>
@@ -454,13 +455,32 @@ function LoadingSkeleton() {
 }
 
 export default function DashboardPage() {
-  const { data: orgStats, isLoading: orgStatsLoading } = trpc.activity.orgStats.useQuery();
-  const { data: stats, isLoading: statsLoading } = trpc.activity.dashboardStats.useQuery();
-  const { data: activity, isLoading: activityLoading } = trpc.activity.recentActivity.useQuery();
+  const { data: orgStats, isLoading: orgStatsLoading } = trpc.activity.orgStats.useQuery(
+    undefined,
+    { refetchInterval: 30000 } // Refresh every 30s
+  );
+  const { data: stats, isLoading: statsLoading } = trpc.activity.dashboardStats.useQuery(
+    undefined,
+    { refetchInterval: 30000 }
+  );
+  const { data: activity, isLoading: activityLoading } = trpc.activity.recentActivity.useQuery(
+    undefined,
+    { refetchInterval: 15000 } // Activity feed refreshes faster
+  );
   const { data: duckingAlerts } = trpc.activity.duckingAlerts.useQuery();
-  const { data: rivalries } = trpc.activity.rivalries.useQuery();
+  const { data: rivalries } = trpc.activity.rivalries.useQuery(
+    undefined,
+    { refetchInterval: 30000 }
+  );
+  const { data: rankings } = trpc.rankings.myRankings.useQuery(
+    undefined,
+    { refetchInterval: 30000 }
+  );
 
   const isLoading = orgStatsLoading || statsLoading || activityLoading;
+
+  // Get primary ranking (most recent activity or best rank)
+  const primaryRanking = rankings?.[0];
 
   if (isLoading) {
     return (
@@ -480,15 +500,23 @@ export default function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-6"
-      >
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Home</h1>
-        <p className="mt-1 text-[14px] text-muted-foreground">Your competition hub</p>
-      </motion.div>
+      {/* Hero Card - Primary Ranking */}
+      <div className="mb-6">
+        {primaryRanking ? (
+          <HeroCard
+            rating={primaryRanking.rating}
+            rank={primaryRanking.rank}
+            recentChange={primaryRanking.ratingDelta}
+            streak={primaryRanking.streak}
+            totalWins={primaryRanking.wins}
+            totalMatches={primaryRanking.wins + primaryRanking.losses + primaryRanking.draws}
+            leaderboardName={primaryRanking.leaderboardName}
+            orgName={primaryRanking.organizationName}
+          />
+        ) : (
+          <HeroCardEmpty />
+        )}
+      </div>
 
       {/* Quick Stats */}
       <div className="mb-6 grid grid-cols-3 gap-2">
@@ -538,8 +566,8 @@ export default function DashboardPage() {
           className="mb-6"
         >
           <div className="mb-3 flex items-center gap-2 px-1">
-            <Users className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-[15px] font-semibold text-foreground">Top Rivalries</h2>
+            <Users className="h-4 w-4 text-zinc-500" />
+            <h2 className="text-[15px] font-bold text-white">Top Rivalries</h2>
           </div>
           <div className="space-y-2">
             {rivalries.slice(0, 3).map((rivalry, i) => (
@@ -571,10 +599,10 @@ export default function DashboardPage() {
           className="mb-6"
         >
           <div className="mb-3 flex items-center justify-between px-1">
-            <h2 className="text-[15px] font-semibold text-foreground">Recent Activity</h2>
+            <h2 className="text-[15px] font-bold text-white">Recent Activity</h2>
           </div>
-          <div className="overflow-hidden rounded-2xl border border-border bg-card">
-            <div className="divide-y divide-border/50">
+          <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/50">
+            <div className="divide-y divide-zinc-800/50">
               {activity.slice(0, 5).map((item, i) => (
                 <ActivityItem
                   key={i}
@@ -597,10 +625,10 @@ export default function DashboardPage() {
         transition={{ delay: 0.2 }}
       >
         <div className="mb-3 flex items-center justify-between px-1">
-          <h2 className="text-[15px] font-semibold text-foreground">Your Organizations</h2>
+          <h2 className="text-[15px] font-bold text-white">Your Organizations</h2>
           <Link
             href="/dashboard/new-org"
-            className="text-[13px] text-muted-foreground hover:text-foreground"
+            className="text-[13px] font-medium text-orange-400 hover:text-orange-300 transition-colors"
           >
             + New
           </Link>

@@ -256,6 +256,85 @@ function RatingDelta({ delta }: { delta: number }) {
   );
 }
 
+// Top 3 podium display
+function TopThreePodium({
+  rankings,
+}: {
+  rankings: Array<{
+    username: string;
+    rating: number;
+    wins: number;
+    losses: number;
+    draws: number;
+    delta: number;
+    streak: number;
+  }>;
+}) {
+  if (rankings.length < 3) return null;
+
+  const [first, second, third] = rankings;
+  const podiumOrder = [second, first, third]; // Display order: 2nd, 1st, 3rd
+
+  const heights = ["h-20", "h-28", "h-16"]; // Podium heights
+  const ranks = [2, 1, 3];
+  const colors = [
+    "from-zinc-400/20 to-zinc-400/5 border-zinc-500/30", // Silver
+    "from-amber-400/25 to-amber-400/5 border-amber-500/40", // Gold
+    "from-orange-600/20 to-orange-600/5 border-orange-600/30", // Bronze
+  ];
+  const textColors = ["text-zinc-300", "text-amber-400", "text-orange-500"];
+  const glowColors = ["", "shadow-amber-500/20", ""];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mb-6 rounded-xl border border-zinc-800 bg-gradient-to-b from-zinc-900 to-zinc-950 p-6"
+    >
+      <div className="flex items-end justify-center gap-4">
+        {podiumOrder.map((player, i) => (
+          <motion.div
+            key={ranks[i]}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 + i * 0.1 }}
+            className="flex flex-col items-center"
+          >
+            {/* Avatar and info */}
+            <div className="mb-2 flex flex-col items-center">
+              <div
+                className={`relative flex ${ranks[i] === 1 ? "h-16 w-16" : "h-12 w-12"} items-center justify-center rounded-full bg-gradient-to-br ${colors[i]} border-2 ${textColors[i].replace("text-", "border-")} text-sm font-black ${textColors[i]} ${glowColors[i] ? `shadow-lg ${glowColors[i]}` : ""}`}
+              >
+                {player.username.slice(0, 2).toUpperCase()}
+                {player.streak >= 3 && (
+                  <div className="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 shadow-lg shadow-orange-500/30">
+                    <Flame className="h-3 w-3 text-white" />
+                  </div>
+                )}
+              </div>
+              <p className="mt-2 max-w-[80px] truncate text-xs font-bold text-white">
+                {player.username}
+              </p>
+              <p className={`font-mono text-xl font-black tabular-nums ${textColors[i]}`}>
+                {Math.round(player.rating)}
+              </p>
+            </div>
+
+            {/* Podium block */}
+            <div
+              className={`${heights[i]} w-20 rounded-t-lg bg-gradient-to-t ${colors[i]} flex items-center justify-center border-t border-l border-r`}
+            >
+              <span className={`text-2xl font-black ${textColors[i]}`}>
+                {ranks[i]}
+              </span>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
 function RankingRow({
   rank,
   username,
@@ -285,23 +364,23 @@ function RankingRow({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay: index * 0.03 }}
-      className="flex items-center gap-4 px-4 py-3.5 transition-colors hover:bg-secondary/50"
+      className="flex items-center gap-4 px-4 py-4 min-h-[64px] transition-colors hover:bg-zinc-800/50 active:bg-zinc-800/70"
     >
       {/* Rank */}
       <span
-        className={`w-6 text-center text-[12px] font-medium tabular-nums ${
-          rank === 1 ? "text-amber-400" : rank <= 3 ? "text-muted-foreground" : "text-muted-foreground/60"
+        className={`w-8 text-center text-[14px] font-black tabular-nums ${
+          rank === 1 ? "text-amber-400" : rank <= 3 ? "text-zinc-400" : "text-zinc-600"
         }`}
       >
         {rank}
       </span>
 
       {/* Avatar */}
-      <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-[11px] font-medium text-muted-foreground">
+      <div className="relative flex h-11 w-11 items-center justify-center rounded-full bg-zinc-800 border border-zinc-700 text-[12px] font-bold text-zinc-400">
         {username.slice(0, 2).toUpperCase()}
         {streak >= 3 && (
-          <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500">
-            <Flame className="h-2.5 w-2.5 text-white" />
+          <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 shadow-lg shadow-orange-500/30">
+            <Flame className="h-3 w-3 text-white" />
           </div>
         )}
       </div>
@@ -309,17 +388,17 @@ function RankingRow({
       {/* Name and record */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <p className="text-[14px] font-medium text-foreground truncate">{username}</p>
+          <p className="text-[15px] font-semibold text-white truncate">{username}</p>
           {streak >= 3 && (
-            <span className="text-[10px] font-medium text-amber-400">
+            <span className="text-[11px] font-bold text-orange-400">
               {streak} streak
             </span>
           )}
         </div>
-        <p className="text-[11px] text-muted-foreground/70">
+        <p className="text-[12px] text-zinc-500">
           {wins}W - {losses}L{draws > 0 ? ` - ${draws}D` : ""}
-          <span className="mx-1">·</span>
-          <span className={winRate >= 60 ? "text-emerald-400" : winRate <= 40 ? "text-rose-400" : ""}>
+          <span className="mx-1.5 text-zinc-700">·</span>
+          <span className={`font-bold ${winRate >= 60 ? "text-emerald-400" : winRate <= 40 ? "text-rose-400" : "text-zinc-400"}`}>
             {winRate}%
           </span>
         </p>
@@ -328,8 +407,8 @@ function RankingRow({
       {/* Rating */}
       <div className="flex items-center gap-2">
         <motion.span
-          className={`font-mono text-[15px] font-semibold tabular-nums text-foreground ${
-            rank === 1 ? "text-amber-400" : ""
+          className={`font-mono text-[17px] font-black tabular-nums ${
+            rank === 1 ? "text-amber-400" : "text-white"
           }`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -368,12 +447,12 @@ function EmptyState({ onLogMatch }: { onLogMatch: () => void }) {
       animate={{ opacity: 1, y: 0 }}
       className="flex flex-col items-center justify-center py-16"
     >
-      <p className="mb-6 text-[14px] text-muted-foreground">
+      <p className="mb-6 text-[14px] text-zinc-500">
         No competitors yet
       </p>
       <button
         onClick={onLogMatch}
-        className="inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2 text-[13px] font-medium text-background transition-colors hover:bg-foreground/90"
+        className="inline-flex items-center gap-2 rounded-full bg-orange-500 px-4 py-2 text-[13px] font-bold text-white transition-all hover:bg-orange-400 shadow-lg shadow-orange-500/20"
       >
         <Plus className="h-3.5 w-3.5" />
         Log first match
@@ -397,7 +476,10 @@ export default function LeaderboardPage() {
   const { data: rankings, isLoading: rankingsLoading } =
     trpc.leaderboards.rankings.useQuery(
       { leaderboardId },
-      { enabled: !!leaderboardId }
+      {
+        enabled: !!leaderboardId,
+        refetchInterval: 10000, // Live updates every 10s
+      }
     );
 
   const players = rankings?.map((r) => ({
@@ -463,7 +545,7 @@ export default function LeaderboardPage() {
       {/* Back */}
       <Link
         href={`/org/${slug}`}
-        className="mb-8 inline-flex items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+        className="mb-8 inline-flex items-center gap-1.5 text-[13px] text-zinc-500 transition-colors hover:text-white"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
         Back
@@ -477,15 +559,15 @@ export default function LeaderboardPage() {
       >
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-[22px] font-semibold tracking-tight text-foreground">{leaderboard.name}</h1>
-            <p className="mt-1 text-[13px] text-muted-foreground">
+            <h1 className="text-[22px] font-black tracking-tight text-white">{leaderboard.name}</h1>
+            <p className="mt-1 text-[13px] text-zinc-500">
               {rankings?.length ?? 0} competitors
             </p>
           </div>
           {rankings && rankings.length > 0 && (
             <button
               onClick={() => setModalOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-[12px] font-medium text-background transition-colors hover:bg-foreground/90"
+              className="inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-4 py-2 text-[12px] font-bold text-white transition-all hover:bg-orange-400 shadow-lg shadow-orange-500/20"
             >
               <Plus className="h-3 w-3" />
               Log match
@@ -495,35 +577,66 @@ export default function LeaderboardPage() {
       </motion.div>
 
       {/* Rankings */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.1 }}
-        className="rounded-xl border border-border"
-      >
-        {rankingsLoading ? (
+      {rankingsLoading ? (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="rounded-xl border border-border"
+        >
           <LoadingSkeleton />
-        ) : !rankings || rankings.length === 0 ? (
+        </motion.div>
+      ) : !rankings || rankings.length === 0 ? (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="rounded-xl border border-border"
+        >
           <EmptyState onLogMatch={() => setModalOpen(true)} />
-        ) : (
-          <div className="divide-y divide-border/50">
-            {rankings.map((entry, i) => (
-              <RankingRow
-                key={entry.rating.id}
-                rank={i + 1}
-                username={entry.membership.username}
-                rating={entry.rating.rating}
-                wins={entry.rating.wins}
-                losses={entry.rating.losses}
-                draws={entry.rating.draws}
-                delta={entry.recentChange}
-                streak={entry.streak}
-                index={i}
-              />
-            ))}
-          </div>
-        )}
-      </motion.div>
+        </motion.div>
+      ) : (
+        <>
+          {/* Top 3 Podium */}
+          {rankings.length >= 3 && (
+            <TopThreePodium
+              rankings={rankings.slice(0, 3).map((entry) => ({
+                username: entry.membership.username,
+                rating: entry.rating.rating,
+                wins: entry.rating.wins,
+                losses: entry.rating.losses,
+                draws: entry.rating.draws,
+                delta: entry.recentChange,
+                streak: entry.streak,
+              }))}
+            />
+          )}
+
+          {/* Rest of rankings */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="rounded-xl border border-zinc-800 bg-zinc-900/50"
+          >
+            <div className="divide-y divide-zinc-800/50">
+              {/* Show all rankings if less than 3, otherwise skip top 3 */}
+              {(rankings.length < 3 ? rankings : rankings.slice(3)).map((entry, i) => (
+                <RankingRow
+                  key={entry.rating.id}
+                  rank={rankings.length < 3 ? i + 1 : i + 4}
+                  username={entry.membership.username}
+                  rating={entry.rating.rating}
+                  wins={entry.rating.wins}
+                  losses={entry.rating.losses}
+                  draws={entry.rating.draws}
+                  delta={entry.recentChange}
+                  streak={entry.streak}
+                  index={i}
+                />
+              ))}
+            </div>
+          </motion.div>
+        </>
+      )}
     </div>
   );
 }

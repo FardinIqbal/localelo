@@ -61,7 +61,7 @@ export function BottomNav({ onPlayClick }: BottomNavProps) {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-zinc-800 bg-zinc-950/95 backdrop-blur-md supports-[backdrop-filter]:bg-zinc-950/80">
       <div className="mx-auto flex h-16 max-w-lg items-center justify-around px-4">
         {navItems.map((item) => {
           const active = isActive(item);
@@ -73,13 +73,16 @@ export function BottomNav({ onPlayClick }: BottomNavProps) {
               <button
                 key={item.label}
                 onClick={(e) => handleClick(item, e)}
-                className="relative flex min-h-[44px] min-w-[44px] flex-col items-center justify-center rounded-full"
+                className="relative flex min-h-[56px] min-w-[56px] flex-col items-center justify-center rounded-full"
               >
                 <motion.div
                   whileTap={{ scale: 0.9 }}
-                  className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg"
+                  whileHover={{ scale: 1.05 }}
+                  className="relative flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/40"
                 >
-                  <Icon className="h-6 w-6" />
+                  {/* Glow ring */}
+                  <div className="absolute inset-0 rounded-full bg-orange-500/20 blur-md" />
+                  <Icon className="relative h-7 w-7" />
                 </motion.div>
               </button>
             );
@@ -93,16 +96,16 @@ export function BottomNav({ onPlayClick }: BottomNavProps) {
               className={cn(
                 "relative flex min-h-[44px] min-w-[44px] flex-col items-center justify-center gap-1 rounded-lg px-3 py-2 transition-colors",
                 active
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "text-orange-400"
+                  : "text-zinc-500 hover:text-zinc-300"
               )}
             >
-              <Icon className="h-5 w-5" />
+              <Icon className={cn("h-5 w-5", active && "drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]")} />
               <span className="text-[10px] font-medium">{item.label}</span>
               {active && (
                 <motion.div
                   layoutId="activeTab"
-                  className="absolute -top-[1px] left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-primary"
+                  className="absolute -top-[1px] left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.5)]"
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 />
               )}

@@ -490,8 +490,14 @@ export default function RankingsPage() {
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>("recent");
 
-  const { data: rankings, isLoading: rankingsLoading } = trpc.rankings.myRankings.useQuery();
-  const { data: stats, isLoading: statsLoading } = trpc.rankings.myRankingsStats.useQuery();
+  const { data: rankings, isLoading: rankingsLoading } = trpc.rankings.myRankings.useQuery(
+    undefined,
+    { refetchInterval: 15000 } // Live updates every 15s
+  );
+  const { data: stats, isLoading: statsLoading } = trpc.rankings.myRankingsStats.useQuery(
+    undefined,
+    { refetchInterval: 30000 }
+  );
 
   const isLoading = rankingsLoading || statsLoading;
 
