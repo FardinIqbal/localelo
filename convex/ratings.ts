@@ -178,8 +178,15 @@ export const myRankings = query({
       }
     }
 
-    // Sort by rating descending
-    return results.sort((a, b) => b.rating - a.rating);
+    // Sort by most recent activity first, then by rating
+    return results.sort((a, b) => {
+      // Most recent match first
+      const aDate = a.lastMatchDate ?? 0;
+      const bDate = b.lastMatchDate ?? 0;
+      if (aDate !== bDate) return bDate - aDate;
+      // Then by rating
+      return b.rating - a.rating;
+    });
   },
 });
 
