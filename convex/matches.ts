@@ -206,6 +206,12 @@ export const create = mutation({
     await updateRecentOpponent(ctx, myMembership._id, args.opponentMembershipId, args.leaderboardId, now);
     await updateRecentOpponent(ctx, args.opponentMembershipId, myMembership._id, args.leaderboardId, now);
 
+    // Record streak activity and get streak info for XP bonus
+    const streakInfo = await recordStreakActivity(ctx, user._id, now);
+
+    // Award XP
+    await awardXp(ctx, user._id, args.outcome === "win", args.outcome === "draw", streakInfo.isFirstMatchToday, streakInfo.currentStreak);
+
     const ratingDelta = result.player1.rating - myRating.rating;
 
     return {
@@ -245,6 +251,260 @@ async function updateRecentOpponent(
       leaderboardId,
       matchCount: 1,
       lastPlayedAt: now,
+    });
+  }
+}
+
+// Helper to get start of day
+function getStartOfDay(timestamp: number): number {
+  const date = new Date(timestamp);
+  date.setUTCHours(0, 0, 0, 0);
+  return date.getTime();
+}
+
+// Helper to check if two timestamps are on the same day
+function isSameDay(ts1: number, ts2: number): boolean {
+  return getStartOfDay(ts1) === getStartOfDay(ts2);
+}
+
+// Helper to check if ts1 is exactly one day before ts2
+function isConsecutiveDay(ts1: number, ts2: number): boolean {
+  const day1 = getStartOfDay(ts1);
+  const day2 = getStartOfDay(ts2);
+  const oneDayMs = 24 * 60 * 60 * 1000;
+  return day2 - day1 === oneDayMs;
+}
+
+// Record streak activity when a match is logged
+async function recordStreakActivity(
+  ctx: any,
+  userId: Id<"users">,
+  now: number
+): Promise<{ isFirstMatchToday: boolean; currentStreak: number }> {
+  const today = getStartOfDay(now);
+
+  // Get or create streak record
+  let streak = await ctx.db
+    .query("userStreaks")
+    .withIndex("by_user", (q: any) => q.eq("userId", userId))
+    .unique();
+
+  if (!streak) {
+    // Create new streak record
+    await ctx.db.insert("userStreaks", {
+      userId,
+      currentStreak: 1,
+      longestStreak: 1,
+      lastActivityDate: now,
+      freezesAvailable: 1,
+      weekendAmuletActive: false,
+    });
+
+    // Log daily activity
+    await ctx.db.insert("dailyActivity", {
+      userId,
+      activityDate: today,
+      matchesPlayed: 1,
+      xpEarned: 10,
+    });
+    return { isFirstMatchToday: true, currentStreak: 1 };
+  }
+
+  const lastActivity = streak.lastActivityDate ?? 0;
+  const lastActivityDay = getStartOfDay(lastActivity);
+
+  // Already active today - just update activity log
+  if (isSameDay(now, lastActivity)) {
+    const todayActivity = await ctx.db
+      .query("dailyActivity")
+      .withIndex("by_user_date", (q: any) => q.eq("userId", userId).eq("activityDate", today))
+      .unique();
+
+    if (todayActivity) {
+      await ctx.db.patch(todayActivity._id, {
+        matchesPlayed: todayActivity.matchesPlayed + 1,
+        xpEarned: todayActivity.xpEarned + 10,
+      });
+    }
+    return { isFirstMatchToday: false, currentStreak: streak.currentStreak };
+  }
+
+  // Check if consecutive day
+  const isConsecutive = isConsecutiveDay(lastActivity, now);
+  const daysSinceActivity = Math.floor((today - lastActivityDay) / (24 * 60 * 60 * 1000));
+
+  let newStreak = streak.currentStreak;
+
+  if (isConsecutive) {
+    // Continue streak
+    newStreak = streak.currentStreak + 1;
+  } else if (daysSinceActivity > 1) {
+    // Streak broken - start fresh
+    newStreak = 1;
+  }
+
+  const newLongest = Math.max(streak.longestStreak, newStreak);
+
+  await ctx.db.patch(streak._id, {
+    currentStreak: newStreak,
+    longestStreak: newLongest,
+    lastActivityDate: now,
+  });
+
+  // Log daily activity
+  await ctx.db.insert("dailyActivity", {
+    userId,
+    activityDate: today,
+    matchesPlayed: 1,
+    xpEarned: 10,
+  });
+
+  return { isFirstMatchToday: true, currentStreak: newStreak };
+}
+
+// XP rewards
+const XP_REWARDS = {
+  WIN: 25,
+  LOSS: 10,
+  DRAW: 15,
+  DAILY_BONUS: 5,
+  STREAK_BONUS: 2,
+};
+
+const TIER_ORDER = ["bronze", "silver", "gold", "platinum", "diamond", "champion"] as const;
+type Tier = (typeof TIER_ORDER)[number];
+
+const TIER_XP_THRESHOLD: Record<Tier, number> = {
+  bronze: 0,
+  silver: 100,
+  gold: 300,
+  platinum: 600,
+  diamond: 1000,
+  champion: 2000,
+};
+
+// Get start of current week (Monday 00:00 UTC)
+function getWeekStart(timestamp: number): number {
+  const date = new Date(timestamp);
+  const day = date.getUTCDay();
+  const diff = day === 0 ? 6 : day - 1;
+  date.setUTCHours(0, 0, 0, 0);
+  date.setUTCDate(date.getUTCDate() - diff);
+  return date.getTime();
+}
+
+function getWeekEnd(timestamp: number): number {
+  const weekStart = getWeekStart(timestamp);
+  return weekStart + 7 * 24 * 60 * 60 * 1000 - 1;
+}
+
+// Award XP for a match
+async function awardXp(
+  ctx: any,
+  userId: Id<"users">,
+  isWin: boolean,
+  isDraw: boolean,
+  isFirstMatchToday: boolean,
+  streakDays: number
+) {
+  const now = Date.now();
+  const weekStart = getWeekStart(now);
+
+  // Calculate XP
+  let xpEarned = isDraw ? XP_REWARDS.DRAW : isWin ? XP_REWARDS.WIN : XP_REWARDS.LOSS;
+
+  if (isFirstMatchToday) {
+    xpEarned += XP_REWARDS.DAILY_BONUS;
+  }
+
+  xpEarned += streakDays * XP_REWARDS.STREAK_BONUS;
+
+  // Get or create user XP record
+  let userXp = await ctx.db
+    .query("userXp")
+    .withIndex("by_user", (q: any) => q.eq("userId", userId))
+    .unique();
+
+  let currentTier: Tier = "bronze";
+
+  if (!userXp) {
+    await ctx.db.insert("userXp", {
+      userId,
+      totalXp: xpEarned,
+      weeklyXp: xpEarned,
+      currentTier: "bronze",
+    });
+  } else {
+    const newTotalXp = userXp.totalXp + xpEarned;
+    const newWeeklyXp = userXp.weeklyXp + xpEarned;
+
+    // Check for tier promotion
+    let newTier = userXp.currentTier;
+    for (let i = TIER_ORDER.length - 1; i >= 0; i--) {
+      if (newTotalXp >= TIER_XP_THRESHOLD[TIER_ORDER[i]]) {
+        newTier = TIER_ORDER[i];
+        break;
+      }
+    }
+
+    await ctx.db.patch(userXp._id, {
+      totalXp: newTotalXp,
+      weeklyXp: newWeeklyXp,
+      currentTier: newTier,
+    });
+    currentTier = newTier;
+  }
+
+  // Ensure user is in a league this week
+  await ensureLeagueMembership(ctx, userId, currentTier, weekStart, xpEarned);
+
+  return { xpEarned };
+}
+
+// Helper to ensure user is in a league
+async function ensureLeagueMembership(
+  ctx: any,
+  userId: Id<"users">,
+  tier: Tier,
+  weekStart: number,
+  xpToAdd: number
+) {
+  const weekEnd = getWeekEnd(weekStart);
+
+  // Get or create league for this tier/week
+  let league = await ctx.db
+    .query("weeklyLeagues")
+    .withIndex("by_week", (q: any) => q.eq("weekStart", weekStart))
+    .filter((q: any) => q.eq(q.field("tier"), tier))
+    .unique();
+
+  if (!league) {
+    const leagueId = await ctx.db.insert("weeklyLeagues", {
+      tier,
+      weekStart,
+      weekEnd,
+    });
+    league = await ctx.db.get(leagueId);
+  }
+
+  // Get or create membership
+  const existingMembership = await ctx.db
+    .query("leagueMemberships")
+    .withIndex("by_league", (q: any) => q.eq("leagueId", league._id))
+    .filter((q: any) => q.eq(q.field("userId"), userId))
+    .unique();
+
+  if (existingMembership) {
+    await ctx.db.patch(existingMembership._id, {
+      weeklyXp: existingMembership.weeklyXp + xpToAdd,
+    });
+  } else {
+    await ctx.db.insert("leagueMemberships", {
+      leagueId: league._id,
+      userId,
+      weeklyXp: xpToAdd,
+      promoted: false,
+      demoted: false,
     });
   }
 }

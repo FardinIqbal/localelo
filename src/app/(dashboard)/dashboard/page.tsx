@@ -19,6 +19,10 @@ import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { InviteButton } from "@/components/invite/invite-modal";
 import { HeroCard, HeroCardEmpty } from "@/components/dashboard/hero-card";
+import { StreakWidget } from "@/components/gamification/streak-widget";
+import { WeeklyLeagueWidget } from "@/components/gamification/weekly-league-widget";
+import { AchievementsWidget } from "@/components/gamification/achievements-widget";
+import { WeeklyGoalsWidget } from "@/components/gamification/weekly-goals-widget";
 
 const colors = {
   gold: "text-amber-400",
@@ -487,7 +491,7 @@ export default function DashboardPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
       {/* Hero Card - Primary Ranking */}
-      <div className="mb-6">
+      <div className="mb-4">
         {primaryRanking ? (
           <HeroCard
             rating={primaryRanking.rating}
@@ -504,27 +508,16 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* Quick Stats */}
-      <div className="mb-6 grid grid-cols-3 gap-2">
-        <StatCard
-          icon={Trophy}
-          label="Best Rank"
-          value={stats?.bestRank ? `#${stats.bestRank}` : "-"}
-          color={stats?.bestRank && stats.bestRank <= 3 ? "gold" : "default"}
-        />
-        <StatCard
-          icon={Flame}
-          label="Win Streak"
-          value={stats?.topStreak || 0}
-          subtext="wins"
-          color={stats?.topStreak && stats.topStreak >= 3 ? "emerald" : "default"}
-        />
-        <StatCard
-          icon={Swords}
-          label="This Week"
-          value={stats?.matchesThisWeek || 0}
-          subtext="matches"
-        />
+      {/* Gamification Row 1 */}
+      <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <StreakWidget />
+        <WeeklyLeagueWidget />
+      </div>
+
+      {/* Goals & Achievements */}
+      <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <WeeklyGoalsWidget />
+        <AchievementsWidget />
       </div>
 
       {/* Ducking Alert - TODO: implement in Convex */}
